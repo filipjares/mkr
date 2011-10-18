@@ -1,14 +1,39 @@
-#include "ros/ros.h"
-#include "sensor_msgs/LaserScan.h"
-#include "std_msgs/String.h"
-
+#include "listener.h"
 /**
  * This tutorial demonstrates simple receipt of messages over the ROS system.
  */
-void chatterCallback(const sensor_msgs::LaserScan msg)
+void laserCallback(const sensor_msgs::LaserScan msg)
 {
+ROS_INFO("laser");
+  /*
   ROS_INFO("I heard: [%f]", msg.ranges[100]);
+  ros::NodeHandle n;
+  ros::ServiceClient client = n.serviceClient<project::AddTwoInts>("add_two_ints");
+  project::AddTwoInts srv;
+  srv.request.a = 1;
+  srv.request.b = 2;
+  if (client.call(srv))
+  {
+    ROS_INFO("Sum: %ld", (long int)srv.response.sum);
+  }
+  else
+  {
+    ROS_ERROR("Failed to call service add_two_ints");
+  }*/
+  //clipper::Polygons subj(1), clip(1), solution;
+  for(unsigned int i = 0; i<msg.ranges.size();i++){
+  	//clip[0].push_back(clipper::IntPoint(100,100,true,true));
+	//ROS_INFO(msg.ranges[i]);
+  }
 }
+
+void odomCallback(const nav_msgs::Odometry msg)
+{
+ROS_INFO("odometry");
+//ROS_INFO((int)msg.pose.pose.position.x);  
+//pos.x = msg.pose.pose.position.x;
+}
+
 
 int main(int argc, char **argv)
 {
@@ -46,14 +71,24 @@ int main(int argc, char **argv)
    * is the number of messages that will be buffered up before beginning to throw
    * away the oldest ones.
    */
-  ros::Subscriber sub = n.subscribe("base_scan", 100, chatterCallback);
-
+  ros::Subscriber sub_laser = n.subscribe("base_scan", 1, laserCallback);
+  ros::Subscriber sub_odom = n.subscribe("odom", 1, odomCallback);
   /**
    * ros::spin() will enter a loop, pumping callbacks.  With this version, all
    * callbacks will be called from within this thread (the main one).  ros::spin()
    * will exit when Ctrl-C is pressed, or the node is shutdown by the master.
    */
-  ros::spin();
+  project::Robot explorer();
+  
+  ros::Rate r(1); // 10 hz
+  while (ros::ok())
+  {
+ 	 ROS_INFO("GO");	
+	 ros::spinOnce();
+	 r.sleep();
+	}
+  
+  //ros::spin();
 
   return 0;
 }
