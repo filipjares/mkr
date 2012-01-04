@@ -1,0 +1,3 @@
+[submodule "VRONI_6.0"]
+	path = VRONI_6.0
+	url = ssh://filip@quido/home/filip/fel/lib/VRONI_6.0/.git
