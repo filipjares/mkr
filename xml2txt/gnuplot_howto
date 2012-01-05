@@ -1,0 +1,1 @@
+plot "aa.txt" i 0 w l,"" i 1 w l

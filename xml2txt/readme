@@ -1,0 +1,7 @@
+How to run vroni:
+
+
+./vroni --file ../data/sites_format/logo.site --X11 --Ipe logo.xml
+
+then convert xml to txt
+./xml2txt logo.xml logo.txt
