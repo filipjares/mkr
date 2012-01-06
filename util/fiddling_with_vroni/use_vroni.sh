@@ -33,7 +33,7 @@ echo "Press enter"
 read
 
 # expects vroni is in PATH; may want to use --X11 instead of --OGL
-vroni --OGL --Ipe $VRONI_OUTPUT --mic --wmat --ma $VRONI_MA_OUTPUT --file $VRONI_INPUT
+vroni --OGL --Ipe $VRONI_OUTPUT --wmat --ma $VRONI_MA_OUTPUT --file $VRONI_INPUT
 
 # expects xml2txt (a converter by Vojtech Vonasek) is in PATH
 xml2txt $VRONI_OUTPUT $VRONI_TXT_OUTPUT
