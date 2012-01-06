@@ -5,10 +5,27 @@
 #include "sensor_msgs/LaserScan.h"
 #include "nav_msgs/Odometry.h"
 #include "std_msgs/String.h"
-#include "Map.h"
 #include "clipper.hpp"
+#include <vector>
+#include <fstream>
+#include <string>
+#include <cstring>
+#include <cmath>
 
 #define PI 3.14159265
+#define ZERO 0.0
+#define MIN_ANGLE -2.0
+#define MAX_ANGLE 2.0
+
+//struct State {
+//  double posX;
+//  double posY;
+extern float orientation;
+extern float posX;
+extern float posY;
+//};
+
+extern struct State robot_state;
 
 namespace project
 {

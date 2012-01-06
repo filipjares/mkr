@@ -22,4 +22,7 @@ rosrun stage stageros world/willow-erratic.world
 % in project directory run:
 rosmake
 rosrun project listener
- 
+
+running vroni
+./bin/vroni --file util/fiddling_with_vroni/data/map_from_the_paper.dxf --wmat --OGL --full
+
