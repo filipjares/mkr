@@ -72,29 +72,29 @@ boolean poly2VD(void)
 //
 //	// TODO clean YES
 //
-//	API_ComputeWMAT(
-//                false,    /* shall we use my heuristic    */
-//		          /* for finding nice WMAT        */
-//		          /* thresholds?                  */
-//		0.0,      /* angle threshold for WMAT     */
-//		          /* computation;in radians, out  */
-//		          /* of the interval [0, pi]      */
-//		0.0,      /* distance threshold for WMAT  */
-//		          /* computation                  */
-//                false,    /* do you want to time the      */
-//		          /* computation?                 */
-//                false,    /* true if WMAT is to be        */
-//		          /* computed only on the left    */
-//		          /* side of input segments       */
-//                false);   /* true if WMAT is to be        */
-//		          /* computed only on the right   */
-//		          /* side of input segments       */
+	API_ComputeWMAT(
+                _false,    /* shall we use my heuristic    */
+		          /* for finding nice WMAT        */
+		          /* thresholds?                  */
+		0.0,      /* angle threshold for WMAT     */
+		          /* computation;in radians, out  */
+		          /* of the interval [0, pi]      */
+		0.0,      /* distance threshold for WMAT  */
+		          /* computation                  */
+                _false,    /* do you want to time the      */
+		          /* computation?                 */
+                _false,    /* true if WMAT is to be        */
+		          /* computed only on the left    */
+		          /* side of input segments       */
+                _false);   /* true if WMAT is to be        */
+		          /* computed only on the right   */
+		          /* side of input segments       */
+
+	char o_file[] = "./tmp/my_ma_output.txt";
+	API_OutputMA(o_file);
+	API_ResetAll();
 //
-//	char o_file[] = "/tmp/my_ma_output.txt";
-//	API_OutputMA(o_file);
-//	// API_ResetAll();
-//
-//	API_TerminateProgram();
+	API_TerminateProgram();
 	std::cout << "Program finished succesfully." << std::endl;
 	return EXIT_SUCCESS;
 }				/* ----------  end of function poly2VD -------- */
