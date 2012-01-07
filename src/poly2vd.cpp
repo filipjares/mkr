@@ -15,6 +15,11 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <iostream>
+#include <vector>
+#include <fstream>
+#include <string>
+#include <cstring>
 #include "clipper.hpp"
 
 #define HAVE_BOOL	// boolean defined in types.h, included by dvi_graphics_header.h
@@ -26,67 +31,71 @@
 boolean poly2VD(void)
 {
 	boolean input_ok = false;
-
+	std::cout << "start" << std::endl;
 	API_InitializeProgram();
-	API_FileInput("/home/filip/fel/MKR-cviceni/util/" 
-			"fiddling_with_vroni/data/map_from_the_paper.dxf",
-			&input_ok);
+	char fileName[]="./util/fiddling_with_vroni/data/map_from_the_paper.dxf";
+	API_FileInput(fileName,&input_ok);
 	if (!input_ok) {
 		printf("Could not load data file\n");
 		return EXIT_FAILURE;
 	}
 
+	char ofile[]="";
+	boolean _false = false;
+	boolean _true = true;
+
 	API_ComputeVD(
-		false,    /* save input data to file?     */
-		true,     /* first call for this data?    */
-		false,    /* don't measure time           */
+		_false,    /* save input data to file?     */
+		_true,     /* first call for this data?    */
+		_false,    /* don't measure time           */
 		3,        /* scale factor for bounding box; default: 1 */
 		0,        /* sampling factor              */
 		0,        /* approximation factor for circular arcs */
-		"",       /* name of the output file;     */
-		false,    /* check for duplicate segs prior to the computation?     */
-		false,    /* compute an approximate VD for circular arcs and        */
-			  /*  use it for subsequent operations (such as offsetting) */
+		ofile,    /* name of the output file;     */
+		_false,    /* check for duplicate segs prior to the computation?     */
+		_false,    /* compute an approximate VD for circular arcs and        */
+					 /*  use it for subsequent operations (such as offsetting) */
 		0.0,      /* approximation threshold for  */
-			  /* circular arcs; see           */
-			  /* see ApproxArcsBounded() in   */
-			  /* in approx.cc; default = 0.0  */
+					 /* circular arcs; see           */
+			  		 /* see ApproxArcsBounded() in   */
+			  		 /* in approx.cc; default = 0.0  */
 		0.0,      /* approximation threshold for  */
-			  /* circular arcs; see           */
-			  /* see ApproxArcsBounded() in   */
-			  /* in approx.cc; default = 0.0  */
-		false,    /* shall we use my heuristic    */
-			  /* approximation threshold?     */
-		false,    /* compute VD/DT of points only */
-		false,    /* output point VD/DT           */
-		false,    /* output file for point VD/DT  */
-		false);   /* shall we clean up the data prior to the VD computation? */
-
-	// TODO clean YES
-
-	API_ComputeWMAT(
-                false,    /* shall we use my heuristic    */
-		          /* for finding nice WMAT        */
-		          /* thresholds?                  */
-		0.0,      /* angle threshold for WMAT     */
-		          /* computation;in radians, out  */
-		          /* of the interval [0, pi]      */
-		0.0,      /* distance threshold for WMAT  */
-		          /* computation                  */
-                false,    /* do you want to time the      */
-		          /* computation?                 */
-                false,    /* true if WMAT is to be        */
-		          /* computed only on the left    */
-		          /* side of input segments       */
-                false);   /* true if WMAT is to be        */
-		          /* computed only on the right   */
-		          /* side of input segments       */
-
-	char o_file[] = "/tmp/my_ma_output.txt";
-	API_OutputMA(o_file);
-	// API_ResetAll();
-
-	API_TerminateProgram();
+			  		 /* circular arcs; see           */
+			  		 /* see ApproxArcsBounded() in   */
+			  		 /* in approx.cc; default = 0.0  */
+		_false,    /* shall we use my heuristic    */
+			  		 /* approximation threshold?     */
+		_false,    /* compute VD/DT of points only */
+		_false,    /* output point VD/DT           */
+		ofile,    /* output file for point VD/DT  */
+		_false);   /* shall we clean up the data prior to the VD computation? */
+//
+//	// TODO clean YES
+//
+//	API_ComputeWMAT(
+//                false,    /* shall we use my heuristic    */
+//		          /* for finding nice WMAT        */
+//		          /* thresholds?                  */
+//		0.0,      /* angle threshold for WMAT     */
+//		          /* computation;in radians, out  */
+//		          /* of the interval [0, pi]      */
+//		0.0,      /* distance threshold for WMAT  */
+//		          /* computation                  */
+//                false,    /* do you want to time the      */
+//		          /* computation?                 */
+//                false,    /* true if WMAT is to be        */
+//		          /* computed only on the left    */
+//		          /* side of input segments       */
+//                false);   /* true if WMAT is to be        */
+//		          /* computed only on the right   */
+//		          /* side of input segments       */
+//
+//	char o_file[] = "/tmp/my_ma_output.txt";
+//	API_OutputMA(o_file);
+//	// API_ResetAll();
+//
+//	API_TerminateProgram();
+	std::cout << "Program finished succesfully." << std::endl;
 	return EXIT_SUCCESS;
 }				/* ----------  end of function poly2VD -------- */
 
