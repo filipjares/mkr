@@ -1,7 +1,7 @@
 
 
-VRONI_SRC_DIR = /home/filip/fel/lib/VRONI_6.0/src/
-VRONI_LIB_DIR = /home/filip/fel/lib/VRONI_6.0/build/src/
+VRONI_SRC_DIR = ../VRONI_6.0/src/
+VRONI_LIB_DIR = ../build/vroni/src/
 
 TLIB = $(VRONI_LIB_DIR)
 INCLUDES = -I. -I$(VRONI_SRC_DIR)
