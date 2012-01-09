@@ -92,6 +92,7 @@ boolean poly2VD(in_segs * segs, unsigned int size)
 		          /* computed only on the right   */
 		          /* side of input segments       */
 
+	std::cout << "PNTS size: " << API_getVD() << std::endl;
 	char o_file[] = "./tmp/my_ma_output.txt";
 	API_OutputMA(o_file);
 	API_ResetAll();
@@ -102,7 +103,7 @@ boolean poly2VD(in_segs * segs, unsigned int size)
 	return EXIT_SUCCESS;
 }				/* ----------  end of function poly2VD -------- */
 
-void convertPoly2segs(ClipperLib::Polygons & poly, in_segs * s, unsigned int size)
+void convertPoly2Segs(ClipperLib::Polygons & poly, in_segs * s, unsigned int size)
 {
 	in_segs init;
 	init.x1 = 0.0;
@@ -142,7 +143,7 @@ int main ( int argc, char *argv[] )
 		size += poly[i].size();
 
 	in_segs segs[size];
-	convertPoly2segs(poly, segs, size);
+	convertPoly2Segs(poly, segs, size);
 	std::cout << "Polygon structure after conversion: " << std::endl;
 	for(unsigned int i = 0; i < size; i++) {
 		std::cout << "x1: " << segs[i].x1 << std::endl; 
