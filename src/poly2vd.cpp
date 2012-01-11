@@ -13,6 +13,7 @@
  *
  * ===========================================================================
  */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
@@ -72,7 +73,6 @@ boolean poly2VD(in_segs * segs, unsigned int size)
 		ofile,    /* output file for point VD/DT  */
 		_false);   /* shall we clean up the data prior to the VD computation? */
 //
-//	// TODO clean YES
 //
 	API_ComputeWMAT(
                 _false,    /* shall we use my heuristic    */
@@ -92,14 +92,25 @@ boolean poly2VD(in_segs * segs, unsigned int size)
 		          /* computed only on the right   */
 		          /* side of input segments       */
 
-	std::cout << "PNTS size: " << API_getVD() << std::endl;
-	char o_file[] = "./tmp/my_ma_output.txt";
-	API_OutputMA(o_file);
+	int num = API_getVD();
+	std::cout << "Num of VD edges: " << num << std::endl;
+	std::cout << "Edges: " << std::endl;
+	in_segs VD[num];
+	API_getVDedges(VD);
+	for(int i = 0; i < num; i++) {
+		std::cout << "x1: " << VD[i].x1 << std::endl; 
+		std::cout << "y1: " << VD[i].y1 << std::endl; 
+		std::cout << "x2: " << VD[i].x2 << std::endl; 
+		std::cout << "y2: " << VD[i].y2 << std::endl; 
+		std::cout << "--------------" << std::endl; 
+	}
+//	char o_file[] = "../tmp/my_ma_output.txt";
+//	API_OutputMA(o_file);
 	API_ResetAll();
 //
 	API_TerminateProgram();
 	std::cout << "Program finished succesfully." << std::endl;
-	std::cout << "Output written to: " << o_file << std::endl;
+//	std::cout << "Output written to: " << o_file << std::endl;
 	return EXIT_SUCCESS;
 }				/* ----------  end of function poly2VD -------- */
 
