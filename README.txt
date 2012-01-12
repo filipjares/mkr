@@ -11,6 +11,8 @@ This repository represents our semestral work for the MKR (Mobile and Collective
 course) at CTU / FEE (Czech Technical University, Faculty of Electrical Engineering) from
 fall/winter 2011/2012.
 
+Read src/README.txt for information about how to build the source.
+
 Authors:
 	Filip Jares	jaresfil@fel.cvut.cz
 	Tomas Juchelka	juchetom@fel.cvut.cz
@@ -41,9 +43,12 @@ Dijkstra implementation by Jan Faigl
 DIRECTORY STRUCTURE:
 ====================
 
-Source files are located in src/ directory. Important submodules used in the
-project include
+Source files are located in src/ directory. Important (git) submodule is Vroni
+which resides in its VRONI_6.0 directory.
 
+	build/				# In future everything should be built
+					# here
+	build/vroni			# this is where Vroni is built
 	VRONI_6.0/			# Vroni submodule tree
 	presentation/			# Slides for end-of-the-class presentation
 	src/				# source files (see src/README.txt for details)
