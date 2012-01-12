@@ -1,0 +1,6 @@
+
+Note on reading the output data of Vroni:
+
+Four dummy points are added in the exterior of the bounding box of input sites prior
+computation of the Voronoi diagram. Hence when scanning the Voronoi diagram, it is
+prudent to check whether both defining sites belong to the initial input.
