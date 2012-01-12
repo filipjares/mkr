@@ -35,7 +35,8 @@ ROS					http://www.ros.org/
 
 Boost Graph Library (BGL)		http://www.boost.org/libs/graph
 
-	
+Dijkstra implementation by Jan Faigl
+
 
 DIRECTORY STRUCTURE:
 ====================
