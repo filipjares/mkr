@@ -13,6 +13,8 @@
   <depend package="roscpp"/>
   <depend package="sensor_msgs"/>
   <depend package="nav_msgs"/>
+  <depend package="visualization_msgs"/>
+ 
 </package>
 
 

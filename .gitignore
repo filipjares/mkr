@@ -1,3 +1,6 @@
+.svn*
+srv
 srv_gen
-build
 bin
+build
+.git*
