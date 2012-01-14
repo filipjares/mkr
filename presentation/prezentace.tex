@@ -1,0 +1,265 @@
+\RequirePackage{ifpdf}
+%\documentclass[notes,handout]{beamer}
+\documentclass[notes=false,pdftex]{beamer}
+\usepackage[latin1,utf8]{inputenc}
+\usepackage[czech]{babel}
+\usepackage{multimedia}
+\usepackage{listings}
+\lstset{
+	language=C,
+	basicstyle=\small,
+	tabsize=2,
+	numbers=left,             
+	numberstyle=\scriptsize,  
+	stepnumber=1,             
+	numbersep=10pt            
+}
+
+\usetheme{umbc2}
+%\useoutertheme{umbcfootline} 
+
+\author{Jména autorů} 
+\title{Téma\\možná na víc řádků} 
+\institute[FEL ČVUT] {
+  Katedra kybernetiky\\[2ex]
+  Elektrotechnická fakulta\\[2ex]
+  České vysoké učení technické\\[2ex]
+  \vspace{1ex}
+  \texttt{email@subdomena.domena}
+  \vspace{1ex}
+}
+\date{3. února 2010\hspace{15ex}Vedoucí práce: XXX}
+
+%\setbeamertemplate{items}[ball] 
+%\setbeamertemplate{navigation symbols}{} 
+%\setbeamertemplate{blocks}[rounded][shadow=true] 
+\setbeamercovered{transparent}
+
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Titulní slide %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}[plain]
+  \titlepage
+\end{frame}
+
+\section*{Obsah}
+\begin{frame}
+	\frametitle{Obsah prezentace}
+	\tableofcontents
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Přehled %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Nazev sekce (zobrazuje se v obsahu)}
+\begin{frame}
+	\frametitle{Nadpis slidu}
+
+\note{
+	poznámky, které se vygenerují zvlášť:
+	\begin{itemize}
+		\item pomocné "knihovny"
+		\item ORTE
+		\item ruzné verze fsmact
+		\item případně zmiňovaný "okolní software" zmínit pouze velmi stručně, nezabíhat do detailů
+	\end{itemize}
+}
+
+
+	\begin{itemize}
+		\item udělat to
+			\begin{itemize}
+				\item něco
+				\item něco dalšího
+				\item a ještě něco
+			\end{itemize}
+		\item implementovat ...
+	\end{itemize}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Název sekce %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Název sekce (do obsahu)}
+{
+% Tenhle slide je zvláštní tím, že má na pozadí jenom tenhle obrázek:
+%\setbeamertemplate{background canvas}{\includegraphics[width=\paperwidth,height=\paperheight]{}} 
+
+%\setbeamercolor{structure}{fg=white!30}
+%\setbeamercolor{normal text}{fg=white!30}
+\begin{frame}[plain] % plain znamena, bez standardniho pozadi, ktere maji ostanti slidy
+	\frametitle{Nadpis slidu bez standardniho pozadi}
+
+\note{
+	U takoveho slidu se muze dat na pozadi obrazek pres celou stranku.
+	\begin{itemize}
+		\item vlastnost 1
+		\item vlastnost 2
+		\item vlastnost 3
+		\item vlastnost 4
+	\end{itemize}
+}
+
+	{
+	\renewcommand{\thefootnote}{\fnsymbol{footnote}} 
+	\footnotetext{poznámka pod čarou}
+	}
+
+\end{frame}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Název sekce %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Název sekce}
+\begin{frame}
+	\frametitle{Nadpis}
+
+\note{
+	Text poznámek...
+
+	\begin{itemize}
+		\item body poznámek
+		\item body poznámek
+			\begin{itemize}
+				\item třeba ve více úrovních
+				\item třeba ve více úrovních
+			\end{itemize}
+	\end{itemize}
+}
+
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Název sekce %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Tahle stránka obsahuje odkaz (\hyperlink{diagram}) na jinou stránku, která má
+% přiřazený label "diagram"
+\begin{frame}[fragile,label=code]
+	\frametitle{Příklad s kódem, který se postupně odkrývá}
+\note{
+	\begin{itemize}
+		\item definice stavové funkce stavu \texttt{wait\_for\_command}
+		\item komentář ...
+	\end{itemize}
+}
+
+	\small{
+	\begin{semiverbatim}
+	\uncover<1->{FSM_STATE(wait_for_command) \{ }
+	\uncover<1->{  switch (FSM_EVENT) \{ }
+	\uncover<2->{  case EV_ENTRY: // zde zajistime uvedeni mechanismu }
+	\uncover<2->{  	  break;      // do transportni polohy }
+	\uncover<3->{  case EV_LOAD_THE_PUCK: FSM_TRANSITION(load_the_puck); }
+	\uncover<3->{  	  break; }
+	\uncover<4->{  case EV_PREPARE_THE_UNLOAD: }
+	\uncover<4->{  	  if (robot.pucks_inside == 0) \{ }
+	\uncover<4->{  	  	  FSM_SIGNAL(MAIN, EV_ACTION_ERROR, NULL); }
+	\uncover<4->{  	  \} }\uncover<5->{ else \{ }
+	\uncover<5->{  	  	  floor_to_unload = FSM_EVENT_INT; }
+	\uncover<5->{  	  	  FSM_TRANSITION(unload_pucks); }
+	\uncover<5->{  	  \} }
+	\uncover<5->{  	  break; }
+	\uncover<6->{  case EV_EXIT: break; }
+	\uncover<6->{  \} }
+	\uncover<6->{\} } \hspace{\fill} \hyperlink{diagram}{\beamerskipbutton{odkaz na jinou stránku}}
+	\end{semiverbatim}
+	}
+
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Hlavni FSM %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Stavový automat pro řízení herní strategie}
+\begin{frame}
+	\frametitle{Stavový automat pro řízení herní strategie}
+
+\note{
+	\begin{itemize}
+		\item kombinaci puků získává od programu \emph{rozpuk}
+	\end{itemize}
+}
+	%\includegraphics[width=1\textwidth]{pics/competition.pdf} 
+
+	
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Mechanismy robotu %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Stavový automat mechanismů}
+\begin{frame}
+	\frametitle{Mechanismy robotu pro manipulaci s puky}
+\note{
+	\begin{itemize}
+		\item zmínit zde senzor -- koncový spínač
+	\end{itemize}
+
+}
+
+	\begin{columns}[T]
+		\begin{column}{0.75\textwidth}
+			%\includegraphics[width=1\textwidth]{images/ilustrace/mechanismy.pdf} 
+		\end{column}
+		\begin{column}{0.25\textwidth}
+			\begin{itemize}
+				\item[1.] čelisti
+				\item[2.] pásy
+				\item[3.] výtah
+				\item[4.] dvířka
+				\item[5.] vytlačovač
+			\end{itemize}
+		\end{column}
+	\end{columns}
+
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Automat mechanismu %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}[label=diagram]
+	\frametitle{Stavový automat mechanismů}
+
+	%\includegraphics[width=1\textwidth]{pics/fsmact.pdf} 
+	\vspace{3ex}
+	\centering
+	\hyperlink{code}{\beamerreturnbutton{definice wait\_for\_command}}
+	
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Závěr %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Závěr}
+\begin{frame}
+	% tohle byl pokus zahrnout odkaz na video, ale byly s tím spíš problémy
+	% \frametitle{\movie[externalviewer]{Závěr}{robojizda.avi}}
+	\frametitle{Závěr}
+
+	\begin{columns}[T]
+		\begin{column}{0.5\textwidth}
+			%\includegraphics[width=1\textwidth]{pics/robot-vyrez.jpg} 
+		\end{column}
+		\begin{column}{0.5\textwidth}
+			\begin{itemize}
+				\item body k tomu, co by šlo udělat lépe\pause
+				\item Citace, která se zobrazí v referencích: \cite{Wurm2008Coordinated}
+				\item ...
+			\end{itemize}
+			\pause
+			\vspace{13ex}\hspace*{\fill}Děkujeme za pozornost
+		\end{column}
+	\end{columns}
+
+\end{frame}
+
+\section{Reference}
+\begin{frame}
+	% tohle byl pokus zahrnout odkaz na video, ale byly s tím spíš problémy
+	% \frametitle{\movie[externalviewer]{Závěr}{robojizda.avi}}
+	\frametitle{Závěr}
+
+	% The Bibliography
+	\bibliographystyle{plain_cz}
+	%\bibliographystyle{czechiso}
+	\bibliography{bibliography}
+	
+\end{frame}
+
+
+
+\end{document}
+
