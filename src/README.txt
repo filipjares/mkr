@@ -1,4 +1,9 @@
 
+WARNING: this file is not up to date; build directory of Vroni was
+moved from build/vroni to VRONI_6.0/build/ to build the project,
+run rosmake in the toplevel directory...
+
+
 INTRODUCTION
 ============
 
