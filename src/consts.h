@@ -13,3 +13,5 @@
 #define CM 100
 
 #endif
+
+// vi:ai:sw=4 ts=4 sts=0

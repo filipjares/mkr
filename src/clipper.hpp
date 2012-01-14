@@ -308,3 +308,4 @@ class clipperException : public std::exception
 #endif //clipper_hpp
 
 
+// vi:ai:sw=2 ts=2 sts=0

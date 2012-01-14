@@ -38,3 +38,5 @@ std::string toString(T val)
 ClipperLib::Polygons subj(1), clip(1), clip_tmp(1), solution;
 
 #endif
+
+// vi:ai:sw=4 ts=4 sts=0

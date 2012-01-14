@@ -446,3 +446,4 @@ int main(int argc, char **argv)
   return 0;
 }
 
+// vi:ai:sw=4 ts=4 sts=0

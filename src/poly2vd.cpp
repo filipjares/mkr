@@ -166,3 +166,5 @@ int main ( int argc, char *argv[] )
 	return poly2VD(segs, size);
 	//return 0;
 }				/* ----------  end of function main  ---------- */
+
+// vi:ai:sw=4 ts=4 sts=0
