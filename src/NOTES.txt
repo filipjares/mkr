@@ -8,11 +8,22 @@ prudent to check whether both defining sites belong to the initial input.
 
 
 
-WMAT Graph, node properties (additional to those maintained by Vroni itself)
-============================================================================
+WMAT Graph, additional properties
+=================================
+				    (additional to those maintained by Vroni itself)
+
+Node properties
+===============
 
 isFrontier (boolean)
-  - isfrontier (boolean) - is either of the neighbouring sites a frontier?
+  - is either of the neighbouring sites a frontier?
+
+Edge properties
+===============
+
+length (double)
+  - length of the edge (edge can be either line segment or  parabolic segment, we
+    do not use arcs as input)
 
 
 
