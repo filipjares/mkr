@@ -1,0 +1,5 @@
+# I need this .gitignore file here (even empty one) in order to be able to
+# include empty build/vroni directory into the repository.
+#
+# And I don't want to track its contents, therefore:
+*
