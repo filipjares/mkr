@@ -44,53 +44,50 @@ boolean poly2VD(in_segs * segs, unsigned int size)
 	API_ArrayInput(0,NULL, size, segs,0,NULL, &new_input);
 
 	char ofile[]="";
-	boolean _false = false;
-	boolean _true = true;
 
 	API_ComputeVD(
-		_false,    /* save input data to file?     */
-		_true,     /* first call for this data?    */
-		_false,    /* don't measure time           */
+		false,    /* save input data to file?     */
+		true,     /* first call for this data?    */
+		false,    /* don't measure time           */
 		3,        /* scale factor for bounding box; default: 1 */
 		0,        /* sampling factor              */
 		0,        /* approximation factor for circular arcs */
 		ofile,    /* name of the output file;     */
-		_false,    /* check for duplicate segs prior to the computation?     */
-		_false,    /* compute an approximate VD for circular arcs and        */
-					 /*  use it for subsequent operations (such as offsetting) */
+		false,    /* check for duplicate segs prior to the computation?     */
+		false,    /* compute an approximate VD for circular arcs and        */
+				  /*  use it for subsequent operations (such as offsetting) */
 		0.0,      /* approximation threshold for  */
-					 /* circular arcs; see           */
-			  		 /* see ApproxArcsBounded() in   */
-			  		 /* in approx.cc; default = 0.0  */
+				  /* circular arcs; see           */
+				  /* see ApproxArcsBounded() in   */
+				  /* in approx.cc; default = 0.0  */
 		0.0,      /* approximation threshold for  */
-			  		 /* circular arcs; see           */
-			  		 /* see ApproxArcsBounded() in   */
-			  		 /* in approx.cc; default = 0.0  */
-		_false,    /* shall we use my heuristic    */
-			  		 /* approximation threshold?     */
-		_false,    /* compute VD/DT of points only */
-		_false,    /* output point VD/DT           */
+				  /* circular arcs; see           */
+				  /* see ApproxArcsBounded() in   */
+				  /* in approx.cc; default = 0.0  */
+		false,    /* shall we use my heuristic    */
+				  /* approximation threshold?     */
+		false,    /* compute VD/DT of points only */
+		false,    /* output point VD/DT           */
 		ofile,    /* output file for point VD/DT  */
-		_false);   /* shall we clean up the data prior to the VD computation? */
-//
-//
+		false);   /* shall we clean up the data prior to the VD computation? */
+
 	API_ComputeWMAT(
-		_false,    /* shall we use my heuristic    */
-		/* for finding nice WMAT        */
-		/* thresholds?                  */
+		false,    /* shall we use my heuristic    */
+				  /* for finding nice WMAT        */
+				  /* thresholds?                  */
 		0.0,      /* angle threshold for WMAT     */
-		/* computation;in radians, out  */
-		/* of the interval [0, pi]      */
+				  /* computation;in radians, out  */
+				  /* of the interval [0, pi]      */
 		0.0,      /* distance threshold for WMAT  */
-		/* computation                  */
-        _false,    /* do you want to time the      */
-		/* computation?                 */
-        _false,    /* true if WMAT is to be        */
-		/* computed only on the left    */
-		/* side of input segments       */
-        _false);   /* true if WMAT is to be        */
-		/* computed only on the right   */
-		/* side of input segments       */
+				  /* computation                  */
+        false,    /* do you want to time the      */
+				  /* computation?                 */
+        false,    /* true if WMAT is to be        */
+				  /* computed only on the left    */
+				  /* side of input segments       */
+        false);   /* true if WMAT is to be        */
+				  /* computed only on the right   */
+				  /* side of input segments       */
 
 	int num = API_getVD();
 	std::cout << "Num of VD edges: " << num << std::endl;
