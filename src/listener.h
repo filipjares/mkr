@@ -16,6 +16,12 @@
 #include <iostream>
 #include "consts.h"
 
+#define MAT
+#define HAVE_BOOL
+
+#include "dvi_graphics_header.h"
+#include "ext_appl_inout.h"
+
 #define CLIP(i) clip[0][i]
 #define TOLERANCE (1.0e-4)
 #define NEAR_ZERO(val) (((val) > -TOLERANCE) && ((val) < TOLERANCE))

@@ -32,3 +32,6 @@ rosbuild_gensrv()
 rosbuild_add_executable(listener src/listener.cpp)
 rosbuild_add_executable(listener src/clipper.cpp)
 rosbuild_add_executable(odometry src/odometry.cpp)
+
+include_directories(VRONI_6.0/src)
+target_link_libraries(listener /home/tomas/Skola/MKR/project/VRONI_6.0/build/src/libvroni.so)

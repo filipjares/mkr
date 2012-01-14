@@ -215,29 +215,29 @@ void laserCallback(const sensor_msgs::LaserScan msg)
 }
 };
 
-void visualizeScan(ros::Publisher & marker_pub, ClipperLib::Polygons & obj) {
-   visualization_msgs::Marker line_strip;
-	line_strip.header.frame_id = "/odom";
-	line_strip.ns = "scan";
-	line_strip.action = visualization_msgs::Marker::ADD;
-	line_strip.pose.orientation.w = 1.0;
-	line_strip.id = 0;
-	line_strip.type = visualization_msgs::Marker::LINE_STRIP;
-	line_strip.scale.x = 0.1;
-	line_strip.color.g = 1.0f;
-	line_strip.color.a = 1.0;
+void visualizeVD(ros::Publisher & marker_pub, in_segs * segs, unsigned int size) {
+   visualization_msgs::Marker line_list;
+	line_list.header.frame_id = "/odom";
+	line_list.ns = "VD";
+	line_list.lifetime = ros::Duration(3);
+	line_list.action = visualization_msgs::Marker::ADD;
+	line_list.pose.orientation.w = 1.0;
+	line_list.id = 0;
+	line_list.type = visualization_msgs::Marker::LINE_LIST;
+	line_list.scale.x = 0.1;
+	line_list.color.g = 1.0f;
+	line_list.color.a = 1.0;
 	//adding point only for vizualization
-	unsigned int size = obj[0].size();
 	geometry_msgs::Point p;
-	p.x = obj[0][size-1].X/CM;
-	p.y = obj[0][size-1].Y/CM;
-	line_strip.points.push_back(p);
 	for(unsigned int i = 0; i<size;i++){
-		p.x = obj[0][i].X/CM;
-		p.y = obj[0][i].Y/CM;
-		line_strip.points.push_back(p);
+		p.x = segs[i].x1/CM;
+		p.y = segs[i].y1/CM;
+		line_list.points.push_back(p);
+		p.x = segs[i].x2/CM;
+		p.y = segs[i].y2/CM;
+		line_list.points.push_back(p);
 	}
-	marker_pub.publish(line_strip);
+	marker_pub.publish(line_list);
 }
 
 void visualizeMap(ros::Publisher & marker_pub, ClipperLib::Polygons & obj, const int id) {
@@ -297,6 +297,95 @@ void visualizeMap(ros::Publisher & marker_pub, ClipperLib::Polygons & obj, const
 	marker_pub.publish(line_list);
 }
 
+int poly2VD(in_segs * segs, in_segs * vd, unsigned int size)
+{
+	boolean new_input = true;
+	API_InitializeProgram();
+	API_ArrayInput(0,NULL, size, segs,0,NULL, &new_input);
+
+	char ofile[]="";
+	boolean _false = false;
+	boolean _true = true;
+
+	API_ComputeVD(
+		_false,    /* save input data to file?     */
+		_true,     /* first call for this data?    */
+		_false,    /* don't measure time           */
+		3,        /* scale factor for bounding box; default: 1 */
+		0,        /* sampling factor              */
+		0,        /* approximation factor for circular arcs */
+		ofile,    /* name of the output file;     */
+		_false,    /* check for duplicate segs prior to the computation?     */
+		_false,    /* compute an approximate VD for circular arcs and        */
+					 /*  use it for subsequent operations (such as offsetting) */
+		0.0,      /* approximation threshold for  */
+					 /* circular arcs; see           */
+			  		 /* see ApproxArcsBounded() in   */
+			  		 /* in approx.cc; default = 0.0  */
+		0.0,      /* approximation threshold for  */
+			  		 /* circular arcs; see           */
+			  		 /* see ApproxArcsBounded() in   */
+			  		 /* in approx.cc; default = 0.0  */
+		_false,    /* shall we use my heuristic    */
+			  		 /* approximation threshold?     */
+		_false,    /* compute VD/DT of points only */
+		_false,    /* output point VD/DT           */
+		ofile,    /* output file for point VD/DT  */
+		_false);   /* shall we clean up the data prior to the VD computation? */
+	
+	API_ComputeWMAT(
+                _false,    /* shall we use my heuristic    */
+		          /* for finding nice WMAT        */
+		          /* thresholds?                  */
+		0.0,      /* angle threshold for WMAT     */
+		          /* computation;in radians, out  */
+		          /* of the interval [0, pi]      */
+		0.0,      /* distance threshold for WMAT  */
+		          /* computation                  */
+                _false,    /* do you want to time the      */
+		          /* computation?                 */
+                _false,    /* true if WMAT is to be        */
+		          /* computed only on the left    */
+		          /* side of input segments       */
+                _false);   /* true if WMAT is to be        */
+		          /* computed only on the right   */
+		          /* side of input segments       */
+
+	int num = API_getVD();
+	ROS_INFO("Number of edges: %d", num);
+	API_getVDedges(vd);
+	API_ResetAll();
+	API_TerminateProgram();
+	return num;
+}				/* ----------  end of function poly2VD -------- */
+
+void convertPoly2Segs(ClipperLib::Polygons & poly, in_segs * s, unsigned int size)
+{
+	in_segs init;
+	init.x1 = 0.0;
+	init.x2 = 0.0;
+	init.y1 = 0.0;
+	init.y2 = 0.0;
+	for (unsigned int i = 0; i < size; i++)
+		s[i] = init;
+	unsigned int k = 0;
+	for(unsigned int n = 0; n < poly.size(); n++)	{
+		unsigned int sz = poly[n].size();
+		for(unsigned int i = 0; i < sz - 1; i++)	{
+			s[k].x1 = (double)poly[n][i].X;
+			s[k].y1 = (double)poly[n][i].Y;
+			s[k].x2 = (double)poly[n][i+1].X;
+			s[k].y2 = (double)poly[n][i+1].Y;
+			k++;
+		}
+			s[k].x1 = (double)poly[n][sz-1].X;
+			s[k].y1 = (double)poly[n][sz-1].Y;
+			s[k].x2 = (double)poly[n][0].X;
+			s[k].y2 = (double)poly[n][0].Y;
+			k++;
+	}	
+}
+
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "listener");
@@ -304,33 +393,7 @@ int main(int argc, char **argv)
   ros::Publisher marker_pub = n.advertise<visualization_msgs::Marker>("visualization_marker", 1);
   Listener l(n);
 
-  ros::Rate r(10); // hz
-  /*subj[0].push_back(ClipperLib::IntPoint(-10,-3,true,true));
-  subj[0].push_back(ClipperLib::IntPoint(10,-3,true,true));
-  subj[0].push_back(ClipperLib::IntPoint(10,3,true,true));
-  subj[0].push_back(ClipperLib::IntPoint(-10,3,true,true));
-  */
-/*
-	ClipperLib::IntPoint p1;
-	p1.X = 0;
-	p1.Y = 0;
-	ClipperLib::IntPoint p2;
-	p2.X = 0;
-	p2.Y = 100000;
-	ClipperLib::IntPoint p3;
-	p3.X = 10;
-	p3.Y = 0;
-	ClipperLib::IntPoint p4;
-	p4.X = -10;
-	p4.Y = 150000;
-	ClipperLib::IntPoint p;
-	
-	bool intersect = l.lineIntersection(p,p1,p2,p3,p4);
-	ROS_INFO("intersect: %d point: %lld %lld", intersect, p.X, p.Y);
-
-	return 0;
-*/
-  //int size = 0;
+  ros::Rate r(0.5); // hz
   while (ros::ok())
   {
 //		l.clipScan(clip_tmp, clip, subj);
@@ -343,16 +406,36 @@ int main(int argc, char **argv)
 		for(unsigned int i = 0;i<solution.size();i++){
 			visualizeMap(marker_pub,solution,i);
 		}
-	//	if(clip[0].size()>0)
-	//	visualizeMap(marker_pub,clip,0);
-	//	size = 0;
-	//	for(unsigned int i = 0;i<solution.size();i++){
-	//		size += solution[i].size();
-	//	}
-	
-	//	ROS_INFO("size: %d",size);
 		clip[0].clear();
 		l.checkMap(solution);
+
+/*
+ *	computation of VD by VRONI 
+ * */
+	unsigned int size = 0;
+	for(unsigned int i = 0; i < solution.size(); i++)
+		size += solution[i].size();
+
+	in_segs segs[size];
+	in_segs VD[1000];
+	int s = 0;
+	convertPoly2Segs(solution, segs, size);
+	if(size > 3)
+	s = poly2VD(segs, VD, size);
+/*
+	ROS_INFO("Polygon structure after conversion");
+	for(unsigned int i = 0; i < size; i++) {
+		ROS_INFO("x1: %f",segs[i].x1); 
+		ROS_INFO("y1: %f",segs[i].y1); 
+		ROS_INFO("x2: %f",segs[i].x2); 
+		ROS_INFO("y2: %f",segs[i].y2); 
+		ROS_INFO("-----------"); 
+	}
+*/
+	visualizeVD(marker_pub,VD,s);
+/* END of VRONI
+ * */
+	ROS_INFO("loop");
 	// cant be done so
 	//	l.simplifyMap(solution);
 		subj = solution;

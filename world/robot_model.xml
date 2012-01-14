@@ -1,0 +1,12 @@
+<robot name="robot_explorer">
+     <link name="base_link">
+          <visual>
+             <geometry>
+                 <box size="1 1 1" />
+              </geometry>
+              <material name="Cyan">
+                     <color rgba="0 1 1  1.0"/>
+             </material>
+         </visual>    
+    </link>
+</robot>

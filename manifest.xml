@@ -14,7 +14,11 @@
   <depend package="sensor_msgs"/>
   <depend package="nav_msgs"/>
   <depend package="visualization_msgs"/>
- 
+	<!--
+	<export>
+  	<cpp cflags="-I./VRONI_6.0/src" lflags="-L./VRONI_6.0/build/src -Wl, -rpath, ./VRONI_6.0/build/src -lvroni"/>
+  </export>
+  -->
 </package>
 
 
