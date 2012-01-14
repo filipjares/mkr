@@ -1,6 +1,6 @@
 .svn*
-srv
 srv_gen
 bin
 build
 .git*
+src/project
