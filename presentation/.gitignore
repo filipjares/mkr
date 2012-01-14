@@ -1,0 +1,12 @@
+# Ignore output files (both temporary and final):
+
+prezentace.6.vrb
+prezentace.aux
+prezentace.log
+prezentace.nav
+prezentace.out
+prezentace.pdf
+prezentace.snm
+prezentace.toc
+prezentace.bbl
+prezentace.blg
