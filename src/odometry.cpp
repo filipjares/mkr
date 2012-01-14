@@ -23,29 +23,28 @@ void odom_callback(const nav_msgs::Odometry msg)
 
 bool odom_srv(project::GetOdometry::Request  &req, project::GetOdometry::Response &res)
 {
-  res.x = X;
-  res.y = Y;
-  res.angle = orientation;
-  return true;
+	res.x = X;
+	res.y = Y;
+	res.angle = orientation;
+	return true;
 }
 
 
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "odometry");
-  ros::NodeHandle n;
-  ros::ServiceServer service = n.advertiseService("get_robot_state", odom_srv);
-  ros::Subscriber sub = n.subscribe("odom", 1, odom_callback);
-  ROS_INFO("Ready to return odometry.");
-  
-  ros::Rate r(10); // hz
-  while (ros::ok())
-  {
-	ros::spinOnce();
-	r.sleep();
+	ros::init(argc, argv, "odometry");
+	ros::NodeHandle n;
+	ros::ServiceServer service = n.advertiseService("get_robot_state", odom_srv);
+	ros::Subscriber sub = n.subscribe("odom", 1, odom_callback);
+	ROS_INFO("Ready to return odometry.");
+	
+	ros::Rate r(10); // hz
+	while (ros::ok()) {
+		ros::spinOnce();
+		r.sleep();
 	}
 
-  return 0;
+	return 0;
 }
 
 // vi:ai:sw=4 ts=4 sts=0

@@ -75,22 +75,22 @@ boolean poly2VD(in_segs * segs, unsigned int size)
 //
 //
 	API_ComputeWMAT(
-                _false,    /* shall we use my heuristic    */
-		          /* for finding nice WMAT        */
-		          /* thresholds?                  */
+		_false,    /* shall we use my heuristic    */
+		/* for finding nice WMAT        */
+		/* thresholds?                  */
 		0.0,      /* angle threshold for WMAT     */
-		          /* computation;in radians, out  */
-		          /* of the interval [0, pi]      */
+		/* computation;in radians, out  */
+		/* of the interval [0, pi]      */
 		0.0,      /* distance threshold for WMAT  */
-		          /* computation                  */
-                _false,    /* do you want to time the      */
-		          /* computation?                 */
-                _false,    /* true if WMAT is to be        */
-		          /* computed only on the left    */
-		          /* side of input segments       */
-                _false);   /* true if WMAT is to be        */
-		          /* computed only on the right   */
-		          /* side of input segments       */
+		/* computation                  */
+        _false,    /* do you want to time the      */
+		/* computation?                 */
+        _false,    /* true if WMAT is to be        */
+		/* computed only on the left    */
+		/* side of input segments       */
+        _false);   /* true if WMAT is to be        */
+		/* computed only on the right   */
+		/* side of input segments       */
 
 	int num = API_getVD();
 	std::cout << "Num of VD edges: " << num << std::endl;
@@ -133,11 +133,11 @@ void convertPoly2Segs(ClipperLib::Polygons & poly, in_segs * s, unsigned int siz
 			s[k].y2 = (double)poly[n][i+1].Y;
 			k++;
 		}
-			s[k].x1 = (double)poly[n][sz-1].X;
-			s[k].y1 = (double)poly[n][sz-1].Y;
-			s[k].x2 = (double)poly[n][0].X;
-			s[k].y2 = (double)poly[n][0].Y;
-			k++;
+		s[k].x1 = (double)poly[n][sz-1].X;
+		s[k].y1 = (double)poly[n][sz-1].Y;
+		s[k].x2 = (double)poly[n][0].X;
+		s[k].y2 = (double)poly[n][0].Y;
+		k++;
 	}	
 }
 
