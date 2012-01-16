@@ -180,31 +180,50 @@ void publish_input_data(ros::Publisher & marker_pub, visualization_msgs::Marker 
 	marker_pub.publish(prepared_marker);
 }
 
+static bool printed = false;
+
 void publish_wmat(ros::Publisher & marker_pub, visualization_msgs::Marker & prepared_marker)
 {
 	using namespace std;
 
+	int last_valid_pnt_ix = num_pnts - 3; // num_pts is Vroni's internal variable
+	if (!printed) cout << "count: " << num_pnts << endl;
+
 	geometry_msgs::Point p;
 	for (int e = 0;  e < GetNumberOfEdges(); e++) {
+		int s1, s2;
+		t_site t1, t2;
+		GetLftSiteData(e, &s1, &t1);
+		GetRgtSiteData(e, &s2, &t2);
+		if (s1 < 2 || s1 > last_valid_pnt_ix
+				|| s2 < 2 || s2 > last_valid_pnt_ix) {
+			if (!printed) cout << "skipping this edge: s1 = " << s1 << ", s2 = " << s2 << endl;
+			continue;
+		}
+
 		coord c; double r;
 		GetNodeData(GetStartNode(e), &c, &r);
+		if (!printed) {
+			cout << s1 << ", " << t1 << "\t";
+			printCoord(c);
+		}
 		p.x = UnscaleX(c.x);
 		p.y = UnscaleY(c.y);
 		prepared_marker.points.push_back(p);
 		GetNodeData(GetEndNode(e), &c, &r);
+		if (!printed) {
+			cout << s2 << ", " << t2 << "\t";
+			printCoord(c);
+			cout << endl;
+		}
 		p.x = UnscaleX(c.x);
 		p.y = UnscaleY(c.y);
 		prepared_marker.points.push_back(p);
-
-		// output
-		// if (IsWmatEdge(e)) cout << 'w';
-		// else cout << '-';
 	}
 
+	printed = true;
+
 	marker_pub.publish(prepared_marker);
-	// cout << endl;
-	cout << "edges: " << getWmatEdgeCount() << " wmat, "
-			<< GetNumberOfEdges() << " in total" << endl;
 }
 
 /* Sends single message with input and output data */
@@ -262,10 +281,13 @@ int main ( int argc, char *argv[] )
 	p2vd.prepareNewInput(argv[1]);
 	p2vd.convert();
 
-	cout << "edges size: " << edges.size() << endl;
+	cout << "total edges size: " << edges.size() << ", wmat edges: " << getWmatEdgeCount() << endl;
 	cout << "WMAT edges count: " << getWmatEdgeCount() << endl;
+	cout << "node count: " << GetNumberOfNodes() << endl;
+	cout << "pnts count: " << num_pnts << endl;
+	cout << "segs count: " << num_segs << endl;
 
-	publish_result();
+	publish_result(argc, argv);
 
 	return EXIT_SUCCESS;
 }				/* ----------  end of function main  ---------- */
