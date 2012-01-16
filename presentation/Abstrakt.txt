@@ -1,0 +1,13 @@
+Segmentace polygonální mapy
+
+Abstrakt
+
+Práce se zaměřuje na oblast multirobotické explorace prostředí, konkrétněji na segmentaci
+polygonální mapy, získané zpracováním dat z laserového dálkoměru, za účelem rozdělení mapy na
+oblasti, vhodné pro průzkum jednotlivými roboty ze skupiny robotů. Pro systém ROS se podařilo
+implementovat algoritmus pro filtraci polygonů ze senzorických měření a jejich začleňování do
+celkové polygonální mapy. Dalším cílem práce bylo upravit a využít existující kód pro vytváření
+Voroného diagramů. Knihovna VRONI slouží k převodu polygonální mapy na graf topologické kostry
+polygonální mapy. Následuje segmentace tohoto grafu. Některé uzly grafu pak mohou být využity jako
+cíle pro jednotlivé roboty. 
+
