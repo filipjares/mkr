@@ -207,14 +207,11 @@ void publish_wmat(ros::Publisher & marker_pub, visualization_msgs::Marker & prep
 			<< GetNumberOfEdges() << " in total" << endl;
 }
 
-static int arg_c;
-static char ** arg_v;
-
 /* Sends single message with input and output data */
-void publish_result()
+void publish_result( int argc, char *argv[] )
 {
 	// init ros
-	ros::init(arg_c, arg_v, "poly2vd");
+	ros::init(argc, argv, "poly2vd");
 	ros::NodeHandle n;
 	ros::Publisher marker_pub = n.advertise<visualization_msgs::Marker>("visualization_marker", 10);
 
@@ -252,27 +249,6 @@ void publish_result()
  */
 int main ( int argc, char *argv[] )
 {
-	arg_c = argc;
-	arg_v = argv;
-//	// Prepare the polygon
-//	ClipperLib::Polygons poly(1);
-//	poly[0].push_back(ClipperLib::IntPoint(180,200));
-//	poly[0].push_back(ClipperLib::IntPoint(260,200));
-//	poly[0].push_back(ClipperLib::IntPoint(260,150));
-//	poly[0].push_back(ClipperLib::IntPoint(180,150));
-//	
-//	// Count its size
-//	unsigned int size = 0;
-//	for(unsigned int i = 0; i < poly.size(); i++)
-//		size += poly[i].size();
-//
-//	// Convert the polygon to array of segments
-//	in_segs segs[size];
-//	convertPoly2Segs(poly, segs, size);
-
-
-	/* ************************************ */
-
 	using namespace std;
 
 	if (argc != 2) {
