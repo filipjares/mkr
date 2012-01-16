@@ -345,16 +345,16 @@ int main(int argc, char **argv) {
 		l.checkMap(solution);
 
 		// computation of VD by VRONI 
-		unsigned int size = 0;
-		for(unsigned int i = 0; i < solution.size(); i++)
-			size += solution[i].size();
-		
-		in_segs segs[size];
-		in_segs VD[1000];
-		int s = 0;
-		convertPoly2Segs(solution, segs, size);
-		if(size > 3)
-		s = poly2VD(segs, VD, size);
+//		unsigned int size = 0;
+//		for(unsigned int i = 0; i < solution.size(); i++)
+//			size += solution[i].size();
+//		
+//		in_segs segs[size];
+//		in_segs VD[1000];
+//		int s = 0;
+//		convertPoly2Segs(solution, segs, size);
+//		if(size > 3)
+//		s = poly2VD(segs, VD, size);
 
 		/*
 		ROS_INFO("Polygon structure after conversion");
@@ -366,7 +366,7 @@ int main(int argc, char **argv) {
 			ROS_INFO("-----------"); 
 		}
 		*/
-		visualizeVD(marker_pub,VD,s);
+//		visualizeVD(marker_pub,VD,s);
 		// END of VRONI
 		ROS_INFO("loop");
 		// cant be done so
