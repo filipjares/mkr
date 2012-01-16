@@ -20,6 +20,26 @@
 #include <assert.h>
 #include "poly2vd.hpp"
 
+
+// These macros are defined in Vroni's basic.h; but I had problems including it
+
+#define ScaleX(xc)  (scale_factor * ((xc) - shift.x))
+
+#define ScaleY(yc)  (scale_factor * ((yc) - shift.y))
+
+#define ScaleV(value)  ((value) * scale_factor)
+
+#define UnscaleX(xc)  (assert(scale_factor > 0.0), (xc) / scale_factor + shift.x)
+
+#define UnscaleY(yc)  (assert(scale_factor > 0.0), (yc) / scale_factor + shift.y)
+
+#define UnscaleV(value)  (assert(scale_factor > 0.0), (value) / scale_factor)
+
+/* ********************** Experimental includes ********************** */
+
+#include <ros/ros.h>
+#include <visualization_msgs/Marker.h>
+
 /* ********************** Constructor and destructor ***************** */
 
 Poly2VdConverter::Poly2VdConverter()
@@ -123,7 +143,7 @@ void Poly2VdConverter::convert()
 	input_prepared = false;
 }
 
-/* ********************** Private methods **************************** */
+/* ********************** Private methods - experimental ************* */
 
 int getWmatEdgeCount(void)
 {
@@ -134,11 +154,79 @@ int getWmatEdgeCount(void)
 	return k;
 }
 
+void printCoord(const coord & coord)
+{
+	using namespace std;
+
+	std::cout << UnscaleX(coord.x) << ", " << UnscaleY(coord.y) << std::endl;
+}
+
+void publish_input_data(ros::Publisher & marker_pub, visualization_msgs::Marker & prepared_marker)
+{
+	using namespace std;
+
+//	cout << "Number of input segments: " << num_segs << endl;
+
+	geometry_msgs::Point p;
+	for(int i = 0; i < num_segs; i++) { // num_segs is internal Vroni variable
+		p.x = UnscaleX(GetSegStartCoord(i).x);
+		p.y = UnscaleY(GetSegStartCoord(i).y);
+		prepared_marker.points.push_back(p);
+		p.x = UnscaleX(GetSegEndCoord(i).x);
+		p.y = UnscaleY(GetSegEndCoord(i).y);
+		prepared_marker.points.push_back(p);
+	}
+
+	marker_pub.publish(prepared_marker);
+}
+
+static int arg_c;
+static char ** arg_v;
+
+/* Sends single message with input and output data */
+void publish_result()
+{
+	// init ros
+	ros::init(arg_c, arg_v, "poly2vd");
+	ros::NodeHandle n;
+	ros::Publisher marker_pub = n.advertise<visualization_msgs::Marker>("visualization_marker", 10);
+
+	ros::Rate r(1);
+
+	while (ros::ok())
+	{
+		// prepare markers
+		visualization_msgs::Marker input_segments, wmat;
+		wmat.header.frame_id = input_segments.header.frame_id = "/odom";
+		wmat.header.stamp = input_segments.header.stamp = ros::Time::now();
+		wmat.ns = "wmat";
+		input_segments.ns = "input";
+		wmat.action = input_segments.action = visualization_msgs::Marker::ADD;
+		wmat.pose.orientation.w = input_segments.pose.orientation.w = 1.0;
+		wmat.id = 0;
+		input_segments.id = 1;
+		wmat.lifetime = input_segments.lifetime = ros::Duration(5);
+		wmat.type = input_segments.type = visualization_msgs::Marker::LINE_LIST;
+		wmat.scale.x = input_segments.scale.x = 2;
+		wmat.color.g = 1.0f;
+		input_segments.color.g = input_segments.color.b = 1.0f;
+		wmat.color.a = input_segments.color.a = 1.0;
+
+		// publish both input segments and output wmat data
+		publish_input_data(marker_pub, input_segments);
+		// publish_wmat(marker_pub, wmat);
+
+		r.sleep();
+ 	}
+}
+
 /**
  * The main() function serves my experimental purposes
  */
 int main ( int argc, char *argv[] )
 {
+	arg_c = argc;
+	arg_v = argv;
 //	// Prepare the polygon
 //	ClipperLib::Polygons poly(1);
 //	poly[0].push_back(ClipperLib::IntPoint(180,200));
@@ -173,6 +261,8 @@ int main ( int argc, char *argv[] )
 
 	cout << "edges size: " << edges.size() << endl;
 	cout << "WMAT edges count: " << getWmatEdgeCount() << endl;
+
+	publish_result();
 
 	return EXIT_SUCCESS;
 }				/* ----------  end of function main  ---------- */

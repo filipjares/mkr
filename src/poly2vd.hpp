@@ -30,6 +30,7 @@
 // ext_appl_inout.h has to be included after "defs.h" (which includes coord.h)
 #include "ext_appl_inout.h"
 
+#undef ZERO // both src/consts.h and VRONI_6.0/src/consts.H define ZERO (differently)
 
 class Poly2VdConverter
 {
