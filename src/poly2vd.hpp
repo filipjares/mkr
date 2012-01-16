@@ -14,6 +14,9 @@
  *
  * ===========================================================================
  */
+#ifndef  POLY2VD_H_INC
+#define  POLY2VD_H_INC
+
 #define HAVE_BOOL	// boolean defined in types.h, included by dvi_graphics_header.h
 #define MAT		// API_ComputeWMAT in ext_appl_inout.h
 
@@ -45,3 +48,4 @@ public:
 
 };
 
+#endif   /* ----- #ifndef POLY2VD_H_INC  ----- */

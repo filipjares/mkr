@@ -18,7 +18,6 @@
 #include <stdlib.h>
 #include <vector>
 #include <assert.h>
-#include "clipper.hpp"
 #include "poly2vd.hpp"
 
 /* ********************** Constructor and destructor ***************** */
