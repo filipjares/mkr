@@ -180,6 +180,33 @@ void publish_input_data(ros::Publisher & marker_pub, visualization_msgs::Marker 
 	marker_pub.publish(prepared_marker);
 }
 
+void publish_wmat(ros::Publisher & marker_pub, visualization_msgs::Marker & prepared_marker)
+{
+	using namespace std;
+
+	geometry_msgs::Point p;
+	for (int e = 0;  e < GetNumberOfEdges(); e++) {
+		coord c; double r;
+		GetNodeData(GetStartNode(e), &c, &r);
+		p.x = UnscaleX(c.x);
+		p.y = UnscaleY(c.y);
+		prepared_marker.points.push_back(p);
+		GetNodeData(GetEndNode(e), &c, &r);
+		p.x = UnscaleX(c.x);
+		p.y = UnscaleY(c.y);
+		prepared_marker.points.push_back(p);
+
+		// output
+		// if (IsWmatEdge(e)) cout << 'w';
+		// else cout << '-';
+	}
+
+	marker_pub.publish(prepared_marker);
+	// cout << endl;
+	cout << "edges: " << getWmatEdgeCount() << " wmat, "
+			<< GetNumberOfEdges() << " in total" << endl;
+}
+
 static int arg_c;
 static char ** arg_v;
 
@@ -214,7 +241,7 @@ void publish_result()
 
 		// publish both input segments and output wmat data
 		publish_input_data(marker_pub, input_segments);
-		// publish_wmat(marker_pub, wmat);
+		publish_wmat(marker_pub, wmat);
 
 		r.sleep();
  	}
