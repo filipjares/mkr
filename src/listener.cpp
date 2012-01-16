@@ -4,6 +4,7 @@
 * Author:    Tomas Juchelka
 */
 
+#include "poly2vd.hpp" // has to be included first because of the ZERO macro
 #include "listener.h"
 
 class Listener
@@ -295,64 +296,6 @@ void visualizeMap(ros::Publisher & marker_pub, ClipperLib::Polygons & obj, const
 	marker_pub.publish(line_strip);
 	marker_pub.publish(line_list);
 }
-
-int poly2VD(in_segs * segs, in_segs * vd, unsigned int size) {
-	boolean new_input = true;
-	API_InitializeProgram();
-	API_ArrayInput(0,NULL, size, segs,0,NULL, &new_input);
-
-	char ofile[]="";
-	API_ComputeVD(
-		false,    /* save input data to file?     */
-		true,     /* first call for this data?    */
-		false,    /* don't measure time           */
-		3,        /* scale factor for bounding box; default: 1 */
-		0,        /* sampling factor              */
-		0,        /* approximation factor for circular arcs */
-		ofile,    /* name of the output file;     */
-		false,    /* check for duplicate segs prior to the computation?     */
-		false,    /* compute an approximate VD for circular arcs and        */
-				  /*  use it for subsequent operations (such as offsetting) */
-		0.0,      /* approximation threshold for  */
-				  /* circular arcs; see           */
-				  /* see ApproxArcsBounded() in   */
-				  /* in approx.cc; default = 0.0  */
-		0.0,      /* approximation threshold for  */
-				  /* circular arcs; see           */
-				  /* see ApproxArcsBounded() in   */
-				  /* in approx.cc; default = 0.0  */
-		false,    /* shall we use my heuristic    */
-				  /* approximation threshold?     */
-		false,    /* compute VD/DT of points only */
-		false,    /* output point VD/DT           */
-		ofile,    /* output file for point VD/DT  */
-		false);   /* shall we clean up the data prior to the VD computation? */
-
-	API_ComputeWMAT(
-		false,    /* shall we use my heuristic    */
-				  /* for finding nice WMAT        */
-				  /* thresholds?                  */
-		0.0,      /* angle threshold for WMAT     */
-				  /* computation;in radians, out  */
-				  /* of the interval [0, pi]      */
-		0.0,      /* distance threshold for WMAT  */
-				  /* computation                  */
-        false,    /* do you want to time the      */
-				  /* computation?                 */
-        false,    /* true if WMAT is to be        */
-				  /* computed only on the left    */
-				  /* side of input segments       */
-        false);   /* true if WMAT is to be        */
-				  /* computed only on the right   */
-				  /* side of input segments       */
-
-	int num = API_getVD();
-	ROS_INFO("Number of edges: %d", num);
-	API_getVDedges(vd);
-	API_ResetAll();
-	API_TerminateProgram();
-	return num;
-}				/* ----------  end of function poly2VD -------- */
 
 void convertPoly2Segs(ClipperLib::Polygons & poly, in_segs * s, unsigned int size) {
 	in_segs init;
