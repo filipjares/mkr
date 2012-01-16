@@ -182,6 +182,8 @@ void publish_input_data(ros::Publisher & marker_pub, visualization_msgs::Marker 
 
 static bool printed = false;
 
+static std::string site_type_names[] = {"SEG", "ARC", "PNT", "VDN", "VDE", "DTE", "CCW", "CW", "UNKNOWN" };
+
 void publish_wmat(ros::Publisher & marker_pub, visualization_msgs::Marker & prepared_marker)
 {
 	using namespace std;
@@ -195,9 +197,11 @@ void publish_wmat(ros::Publisher & marker_pub, visualization_msgs::Marker & prep
 		t_site t1, t2;
 		GetLftSiteData(e, &s1, &t1);
 		GetRgtSiteData(e, &s2, &t2);
-		if (s1 < 2 || s1 > last_valid_pnt_ix
-				|| s2 < 2 || s2 > last_valid_pnt_ix) {
-			if (!printed) cout << "skipping this edge: s1 = " << s1 << ", s2 = " << s2 << endl;
+		if (s1 == 0 || s1 == 1 || s1 > last_valid_pnt_ix
+				|| s2 == 0 || s2 == 1 || s2 > last_valid_pnt_ix) {
+			if (!printed) cout << "skipping this edge: s1 = " << s1
+				<< " [" << site_type_names[t1] << "], s2 = " << s2
+				<< " [" << site_type_names[t2] << "]" << endl;
 			continue;
 		}
 
