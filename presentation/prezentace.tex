@@ -116,18 +116,18 @@
 
 	\begin{columns}[T]
 		\begin{column}{0.5\textwidth}
-			\vskip 3ex
+			\vskip 2ex
 			\emph{Vstupem} je polygonální mapa $\mathcal S$
 
-			\vskip 3ex
+			\vskip 2ex
 
 			\pause
 
-			\emph{Vzdálenost} bodu $p$ vzhledem k $\mathcal S$ je
-			vzdálenost k nejbližšímu bodu množiny
-			$\mathcal S \qquad\qquad \mathsf{d}(p,\mathcal{S}). $
+			\emph{Clearance radius} bodu $p$ vzhledem k $\mathcal S$ je
+			vzdálenost k nejbližšímu bodu množiny $\mathcal S$
+			$$\mathsf{d}(p,\mathcal{S}).$$
 
-			\vskip 3ex
+			\vskip 1ex
 
 			\pause
 
@@ -135,8 +135,8 @@
 			$\mathsf{d}(p,\mathcal{S})$ a středem $p$.
 				$$ \mathsf{cd}(p,\mathcal{S}) $$
 
-			\vskip 3ex
-			
+			\vskip 1ex
+
 			\pause \pause \pause \pause \pause
 
 			\emph{Voroného diagram} množiny bodů
@@ -175,9 +175,25 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Název sekce %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{Využití topologické kostry (medial axis)}
+\section{Využití skeletonu}
 \begin{frame}
-	\frametitle{Využití topologické kostry}
+	\frametitle{Využití topologické kostry - segmentace mapy}
+
+	\begin{itemize}
+		\item s topologickou kostrou pracujeme jako s grafem tvořeným
+			uzly Voroného diagramu a jeho hranami
+		\item v grafu hledáme \emph{kritické uzly}, které tvoří rozhraní
+			mezi hledanými segmenty mapy
+	\end{itemize}
+	\begin{block}{Vlastnosti kritického uzlu $n_c$ podle \cite{Wurm2008Coordinated}}
+		\begin{itemize}
+			\item stupeň kritického uzlu $\mathsf{deg}(n_c) = 2$
+			\item $\exists$ soused $n_i$ kritického uzlu $n_c$ takový, že $\mathsf{deg}(n_i) = 3$
+			\item clearance radius kritického uzlu $\mathsf{d}(n_c,\mathcal{S})$ tvoří minimum,
+				sousední uzly mají clearance radius větší
+			\item kritické uzly spojují už prozkoumané oblasti s neprozkoumanými
+		\end{itemize}
+	\end{block}
 
 \end{frame}
 
@@ -185,24 +201,21 @@
 
 \section{Závěr}
 \begin{frame}
-	% tohle byl pokus zahrnout odkaz na video, ale byly s tím spíš problémy
-	% \frametitle{\movie[externalviewer]{Závěr}{robojizda.avi}}
 	\frametitle{Závěr}
 
-	\begin{columns}[T]
-		\begin{column}{0.5\textwidth}
-			%\includegraphics[width=1\textwidth]{pics/robot-vyrez.jpg} 
-		\end{column}
-		\begin{column}{0.5\textwidth}
-			\begin{itemize}
-				\item body k tomu, co by šlo udělat lépe\pause
-				\item Citace, která se zobrazí v referencích: 
-				\item Clipper, The polygon clipping library: \cite{ClipperLib}
-			\end{itemize}
-			\pause
-			\vspace{13ex}\hspace*{\fill}Děkujeme za pozornost
-		\end{column}
-	\end{columns}
+	\begin{block}{Zhodnocení:}
+		\begin{itemize}
+			\item body k tomu, co by šlo udělat lépe, ehm
+		\end{itemize}
+	\end{block}
+	\begin{block}{Další kroky:}
+		\begin{itemize}
+			\item upravit Vroni tak, aby umožnilo přenést ze vstupní mapy
+				do výsledného grafu informaci o \emph{frontierech}
+			\item vyřešit problém s \uv{vnitřkem a nějškem} (jak to formulovat?)
+			\item realizovat hledání kritických uzlů
+		\end{itemize}
+	\end{block}
 
 \end{frame}
 
