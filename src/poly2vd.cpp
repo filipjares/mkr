@@ -207,6 +207,21 @@ void Poly2VdConverter::publish_wmat(ros::Publisher & marker_pub, std::string fra
 	wmat_marker.color.g = 1.0f;
 	wmat_marker.color.a = 1.0;
 
+	visualization_msgs::Marker node_marker;
+	node_marker.header.frame_id = frame_id;
+	node_marker.header.stamp = ros::Time::now();
+	node_marker.ns = "nodes";
+	node_marker.action = visualization_msgs::Marker::ADD;
+	node_marker.pose.orientation.w = 1.0;
+	node_marker.id = 2;
+	node_marker.lifetime = ros::Duration(duration);
+	node_marker.type = visualization_msgs::Marker::SPHERE_LIST;
+	node_marker.scale.x = 0.5;
+	node_marker.scale.y = 0.5;
+	node_marker.scale.z = 0.5;
+	node_marker.color.b = 1.0;
+	node_marker.color.a = 1.0;
+	
 	using namespace std;
 	using namespace imr::dijkstra;
 	unsigned int size = GetNumberOfEdges(); 
@@ -251,18 +266,24 @@ void Poly2VdConverter::publish_wmat(ros::Publisher & marker_pub, std::string fra
 			p.x = UnscaleX(c.x);
 			p.y = UnscaleY(c.y);
 			wmat_marker.points.push_back(p);
+			if(IsDeg2Node(start)) {
+				node_marker.points.push_back(p);
+			}
 			
 			GetNodeData(end, &c, &r);
 			p.x = UnscaleX(c.x);
 			p.y = UnscaleY(c.y);
 			wmat_marker.points.push_back(p);
+			if(IsDeg2Node(end)) {
+				node_marker.points.push_back(p);
+			}
 		}
 	
 		if(t == 0.0) {	//terminate on the boundary
 			u = heap.getFirst();
 			continue;
-		}
-	
+		}	
+
 		e1 = GetCWEdge(u,start);
 		cout << "CWedge: " << e1 << " new: " << GetEdgeFlagNew(e1) << " isWmat: " << IsWmatEdge(e1) << endl;
 		if(GetEdgeFlagNew(e1) && IsWmatEdge(e1)) {
@@ -290,6 +311,7 @@ void Poly2VdConverter::publish_wmat(ros::Publisher & marker_pub, std::string fra
 		u = heap.getFirst();
 	}
 	marker_pub.publish(wmat_marker);
+	marker_pub.publish(node_marker);
 }
 
 /* Sends single message with input and output data */
