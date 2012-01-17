@@ -104,63 +104,60 @@
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Název sekce %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\def\newblock{\hskip .11em plus .33em minus .07em}
 
 \section{Voroného diagram}
 \begin{frame}
-	\frametitle{Voroného diagram, topologická kostra polygonální mapy}
+	\frametitle{Voroného diagram z polygonální mapy}
 
 	\begin{columns}[T]
 		\begin{column}{0.5\textwidth}
-			\begin{itemize}
-				\item VD(S)
-			\end{itemize}
-		\end{column}
-		\begin{column}{0.5\textwidth}
-			\includegraphics[width=1\textwidth,clip=true,trim=147pt 165pt 289pt 502pt]{images/vd_01.pdf} 
-		\end{column}
-	\end{columns}
-\end{frame}
-\begin{frame}
-	\frametitle{Voroného diagram, topologická kostra polygonální mapy}
+			\vskip 3ex
+			\emph{Vstupem} je polygonální mapa $\mathcal S$
 
-	\begin{columns}[T]
-		\begin{column}{0.5\textwidth}
-			\begin{itemize}
-				\item VD(S)
-			\end{itemize}
-		\end{column}
-		\begin{column}{0.5\textwidth}
-			\includegraphics[width=1\textwidth,clip=true,trim=147pt 165pt 289pt 502pt]{images/vd_02.pdf} 
-		\end{column}
-	\end{columns}
-\end{frame}
-\begin{frame}
-	\frametitle{Voroného diagram, topologická kostra polygonální mapy}
+			\vskip 3ex
 
-	\begin{columns}[T]
-		\begin{column}{0.5\textwidth}
-			\begin{itemize}
-				\item VD(S)
-			\end{itemize}
-		\end{column}
-		\begin{column}{0.5\textwidth}
-			\includegraphics[width=1\textwidth,clip=true,trim=147pt 165pt 289pt 502pt]{images/vd_03.pdf} 
-		\end{column}
-	\end{columns}
-\end{frame}
-\begin{frame}
-	\frametitle{Voroného diagram, topologická kostra polygonální mapy}
+			\pause
 
-	\begin{columns}[T]
-		\begin{column}{0.5\textwidth}
-			\begin{itemize}
-				\item VD(S)
-			\end{itemize}
+			\emph{Vzdálenost} bodu $p$ vzhledem k $\mathcal S$ je
+			vzdálenost k nejbližšímu bodu množiny
+			$\mathcal S \qquad\qquad \mathsf{d}(p,\mathcal{S}). $
+
+			\vskip 3ex
+
+			\pause
+
+			\emph{Clearance disc} bodu $p$ je kruh s poloměrem
+			$\mathsf{d}(p,\mathcal{S})$ a středem $p$.
+				$$ \mathsf{cd}(p,\mathcal{S}) $$
+
+			\vskip 3ex
+			
+			\pause \pause \pause \pause \pause
+
+			\emph{Voroného diagram} množiny bodů
+
 		\end{column}
 		\begin{column}{0.5\textwidth}
-			\includegraphics[width=1\textwidth,clip=true,trim=147pt 165pt 289pt 502pt]{images/vd_04.pdf} 
+			\includegraphics<1>[width=1\textwidth,clip=true,trim=147pt 165pt 289pt 502pt]{images/01-vd-empty.pdf}
+			\includegraphics<2>[width=1\textwidth,clip=true,trim=147pt 165pt 289pt 502pt]{images/02-vd-point.pdf}
+			\includegraphics<3>[width=1\textwidth,clip=true,trim=147pt 165pt 289pt 502pt]{images/03-vd-point_with_disk.pdf}
+			\includegraphics<4>[width=1\textwidth,clip=true,trim=147pt 165pt 289pt 502pt]{images/04-point_2.pdf}
+			\includegraphics<5>[width=1\textwidth,clip=true,trim=147pt 165pt 289pt 502pt]{images/05-point_3.pdf}
+			\includegraphics<6>[width=1\textwidth,clip=true,trim=147pt 165pt 289pt 502pt]{images/06-point_4.pdf}
+			\includegraphics<7>[width=1\textwidth,clip=true,trim=147pt 165pt 289pt 502pt]{images/07-point_5.pdf}
+			\hyperlink{VDdetail}{\includegraphics<8>[width=1\textwidth,clip=true,trim=147pt 165pt 289pt 502pt]{images/08-vd.pdf}}
+			\includegraphics<9>[width=1\textwidth,clip=true,trim=147pt 165pt 289pt 502pt]{images/09-wmat.pdf}
 		\end{column}
 	\end{columns}
+
+	\color{blue}{
+	$$ \mathcal{VD}(\mathcal{S}) =
+		\left\{ p \in \mathbb{E}^2 \ | \ 
+		\mathsf{cd}(p) \text{ se dotýká alespoň dvou různých}\ s \in \mathcal{S} \right\}
+	$$}
+
+	\pause
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Název sekce %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -245,18 +242,6 @@
 
 \end{frame}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Automat mechanismu %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\begin{frame}[label=diagram]
-	\frametitle{Stavový automat mechanismů}
-
-	%\includegraphics[width=1\textwidth]{pics/fsmact.pdf} 
-	\vspace{3ex}
-	\centering
-	\hyperlink{code}{\beamerreturnbutton{definice wait\_for\_command}}
-	
-\end{frame}
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Závěr %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Závěr}
@@ -294,6 +279,17 @@
 	\bibliographystyle{ieeetr}
 	\bibliography{bibliography}
 	
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Dodatek %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}[label=VDdetail]
+	\frametitle{Reprezentace úsečky při konstrukci VD}
+	\includegraphics[height=1\textheight,clip=true,trim=150pt 167pt 409pt 642pt]{images/line_segment-01-endpoint_and_rest_of_line.pdf} 
+\end{frame}
+\begin{frame}[label=VDdetail]
+	\frametitle{Reprezentace úsečky při konstrukci VD}
+	\includegraphics[height=1\textheight,clip=true,trim=150pt 167pt 409pt 642pt]{images/line_segment-02-corner_detail.pdf} 
 \end{frame}
 
 
