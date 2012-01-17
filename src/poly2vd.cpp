@@ -20,7 +20,6 @@
 #include <assert.h>
 #include "poly2vd.hpp"
 
-
 // These macros are defined in Vroni's basic.h; but I had problems including it
 
 #define ScaleX(xc)  (scale_factor * ((xc) - shift.x))
@@ -34,11 +33,6 @@
 #define UnscaleY(yc)  (assert(scale_factor > 0.0), (yc) / scale_factor + shift.y)
 
 #define UnscaleV(value)  (assert(scale_factor > 0.0), (value) / scale_factor)
-
-/* ********************** Experimental includes ********************** */
-
-#include <ros/ros.h>
-#include <visualization_msgs/Marker.h>
 
 /* ********************** Constructor and destructor ***************** */
 
@@ -161,8 +155,22 @@ void printCoord(const coord & coord)
 	std::cout << UnscaleX(coord.x) << ", " << UnscaleY(coord.y) << std::endl;
 }
 
-void publish_input_data(ros::Publisher & marker_pub, visualization_msgs::Marker & prepared_marker)
+static void publish_input_data(ros::Publisher & marker_pub, std::string frame_id, double duration)
 {
+	// prepare the Marker
+	visualization_msgs::Marker input_marker;
+	input_marker.header.frame_id = frame_id;
+	input_marker.header.stamp = ros::Time::now();
+	input_marker.ns = "input";
+	input_marker.action = visualization_msgs::Marker::ADD;
+	input_marker.pose.orientation.w = 1.0;
+	input_marker.id = 1;
+	input_marker.lifetime = ros::Duration(duration);
+	input_marker.type = visualization_msgs::Marker::LINE_LIST;
+	input_marker.scale.x = 2;
+	input_marker.color.g = 1.0f;
+	input_marker.color.a = 1.0;
+
 	using namespace std;
 
 //	cout << "Number of input segments: " << num_segs << endl;
@@ -171,20 +179,34 @@ void publish_input_data(ros::Publisher & marker_pub, visualization_msgs::Marker 
 	for(int i = 0; i < num_segs; i++) { // num_segs is internal Vroni variable
 		p.x = UnscaleX(GetSegStartCoord(i).x);
 		p.y = UnscaleY(GetSegStartCoord(i).y);
-		prepared_marker.points.push_back(p);
+		input_marker.points.push_back(p);
 		p.x = UnscaleX(GetSegEndCoord(i).x);
 		p.y = UnscaleY(GetSegEndCoord(i).y);
-		prepared_marker.points.push_back(p);
+		input_marker.points.push_back(p);
 	}
 
-	marker_pub.publish(prepared_marker);
+	marker_pub.publish(input_marker);
 }
 
 
 static std::string site_type_names[] = {"SEG", "ARC", "PNT", "VDN", "VDE", "DTE", "CCW", "CW", "UNKNOWN" };
 
-void publish_wmat(ros::Publisher & marker_pub, visualization_msgs::Marker & prepared_marker)
+void Poly2VdConverter::publish_wmat(ros::Publisher & marker_pub, std::string frame_id, double duration)
 {
+	// prepare the Marker
+	visualization_msgs::Marker wmat_marker;
+	wmat_marker.header.frame_id = frame_id;
+	wmat_marker.header.stamp = ros::Time::now();
+	wmat_marker.ns = "wmat";
+	wmat_marker.action = visualization_msgs::Marker::ADD;
+	wmat_marker.pose.orientation.w = 1.0;
+	wmat_marker.id = 0;
+	wmat_marker.lifetime = ros::Duration(duration);
+	wmat_marker.type = visualization_msgs::Marker::LINE_LIST;
+	wmat_marker.scale.x = 2;
+	wmat_marker.color.g = 1.0f;
+	wmat_marker.color.a = 1.0;
+
 	using namespace std;
 	using namespace imr::dijkstra;
 	unsigned int size = GetNumberOfEdges(); 
@@ -227,12 +249,12 @@ void publish_wmat(ros::Publisher & marker_pub, visualization_msgs::Marker & prep
 			GetNodeData(start, &c, &r);
 			p.x = UnscaleX(c.x);
 			p.y = UnscaleY(c.y);
-			prepared_marker.points.push_back(p);
+			wmat_marker.points.push_back(p);
 			
 			GetNodeData(end, &c, &r);
 			p.x = UnscaleX(c.x);
 			p.y = UnscaleY(c.y);
-			prepared_marker.points.push_back(p);
+			wmat_marker.points.push_back(p);
 		}
 	
 		if(t == 0.0) {	//terminate on the boundary
@@ -266,11 +288,11 @@ void publish_wmat(ros::Publisher & marker_pub, visualization_msgs::Marker & prep
 		}
 		u = heap.getFirst();
 	}
-	marker_pub.publish(prepared_marker);
+	marker_pub.publish(wmat_marker);
 }
 
 /* Sends single message with input and output data */
-void publish_result( int argc, char *argv[] )
+void publish_result( int argc, char *argv[], Poly2VdConverter & p2vd )
 {
 	// init ros
 	ros::init(argc, argv, "poly2vd");
@@ -281,30 +303,16 @@ void publish_result( int argc, char *argv[] )
 
 	while (ros::ok())
 	{
-		// prepare markers
-		visualization_msgs::Marker input_segments, wmat;
-		wmat.header.frame_id = input_segments.header.frame_id = "/odom";
-		wmat.header.stamp = input_segments.header.stamp = ros::Time::now();
-		wmat.ns = "wmat";
-		input_segments.ns = "input";
-		wmat.action = input_segments.action = visualization_msgs::Marker::ADD;
-		wmat.pose.orientation.w = input_segments.pose.orientation.w = 1.0;
-		wmat.id = 0;
-		input_segments.id = 1;
-		wmat.lifetime = input_segments.lifetime = ros::Duration(5);
-		wmat.type = input_segments.type = visualization_msgs::Marker::LINE_LIST;
-		wmat.scale.x = input_segments.scale.x = 2;
-		wmat.color.g = 1.0f;
-		input_segments.color.g = input_segments.color.b = 1.0f;
-		wmat.color.a = input_segments.color.a = 1.0;
-
 		// publish both input segments and output wmat data
-		publish_input_data(marker_pub, input_segments);
-		publish_wmat(marker_pub, wmat);
+		publish_input_data(marker_pub, "/odom", 5.0);
+		p2vd.publish_wmat(marker_pub, "/odom", 5.0);
+
 		ros::spinOnce();
 		r.sleep();
  	}
 }
+
+#ifdef POLY2VD_STANDALONE
 
 /**
  * The main() function serves my experimental purposes
@@ -330,9 +338,11 @@ int main ( int argc, char *argv[] )
 	cout << "pnts count: " << num_pnts << endl;
 	cout << "segs count: " << num_segs << endl;
 
-	publish_result(argc, argv);
+	publish_result(argc, argv, p2vd);
 
 	return EXIT_SUCCESS;
 }				/* ----------  end of function main  ---------- */
+
+#endif 			/* ----- #ifndef POLY2VD_STANDALONE ----------- */
 
 // vi:ai:sw=4 ts=4 sts=0

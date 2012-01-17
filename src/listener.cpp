@@ -328,6 +328,8 @@ int main(int argc, char **argv) {
 	ros::NodeHandle n;
 	ros::Publisher marker_pub = n.advertise<visualization_msgs::Marker>("visualization_marker", 1);
 	Listener l(n);
+
+	Poly2VdConverter poly2vd;	// Vroni based polygons -> VD converter
 	
 	ros::Rate r(0.5); // hz
 	while (ros::ok()) {
@@ -344,31 +346,22 @@ int main(int argc, char **argv) {
 		clip[0].clear();
 		l.checkMap(solution);
 
-		// computation of VD by VRONI 
-//		unsigned int size = 0;
-//		for(unsigned int i = 0; i < solution.size(); i++)
-//			size += solution[i].size();
-//		
-//		in_segs segs[size];
-//		in_segs VD[1000];
-//		int s = 0;
-//		convertPoly2Segs(solution, segs, size);
-//		if(size > 3)
-//		s = poly2VD(segs, VD, size);
-
-		/*
-		ROS_INFO("Polygon structure after conversion");
-		for(unsigned int i = 0; i < size; i++) {
-			ROS_INFO("x1: %f",segs[i].x1); 
-			ROS_INFO("y1: %f",segs[i].y1); 
-			ROS_INFO("x2: %f",segs[i].x2); 
-			ROS_INFO("y2: %f",segs[i].y2); 
-			ROS_INFO("-----------"); 
+		// Compute and publish VD / WMAT
+		unsigned int size = 0; // polygonal segments count
+		for(unsigned int i = 0; i < solution.size(); i++)
+			size += solution[i].size();
+		if (size > 3) {
+			// convert polygons to segments
+			in_segs segs[size];
+			convertPoly2Segs(solution, segs, size);
+			// pass segments to Vroni
+			poly2vd.prepareNewInput(segs, size);
+			// let the Vroni compute the VD
+			poly2vd.convert();
+			// publish results
+			poly2vd.publish_wmat(marker_pub, "/odom", 5.0);
 		}
-		*/
-//		visualizeVD(marker_pub,VD,s);
-		// END of VRONI
-		ROS_INFO("loop");
+
 		// cant be done so
 		//	l.simplifyMap(solution);
 			subj = solution;
