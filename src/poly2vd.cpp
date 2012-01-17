@@ -220,9 +220,10 @@ void Poly2VdConverter::publish_wmat(ros::Publisher & marker_pub, std::string fra
 	coord c; double r;
 	geometry_msgs::Point p;
 	CHeap<double> heap(size);
-	
 	int start_edge = 0;
-	for (unsigned int e = 0;  e < size;  ++e) {
+	for (unsigned int e = size/2;  e < size;  ++e) {
+		if(!IsWmatEdge(e))
+			continue;
 		start = GetStartNode(e);
 		end = GetEndNode(e);
 		t = GetNodeParam(end);
