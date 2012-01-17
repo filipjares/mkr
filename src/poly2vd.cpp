@@ -218,53 +218,53 @@ void publish_wmat(ros::Publisher & marker_pub, visualization_msgs::Marker & prep
 	SetEdgeFlagNew(u, false);
 	cout << "NEW RUN -----------------" << endl;
 	while(u != -1)	{	//while HEAP is not EMPTY 
-	start = GetStartNode(u);
-	end = GetEndNode(u);
-	t = GetNodeParam(end);
-	cout << "Processing edge: " << u << "radius: " << t << endl;
-
-	if(IsWmatEdge(u)) {
-	GetNodeData(start, &c, &r);
-	p.x = UnscaleX(c.x);
-	p.y = UnscaleY(c.y);
-	prepared_marker.points.push_back(p);
+		start = GetStartNode(u);
+		end = GetEndNode(u);
+		t = GetNodeParam(end);
+		cout << "Processing edge: " << u << "radius: " << t << endl;
 	
-	GetNodeData(end, &c, &r);
-	p.x = UnscaleX(c.x);
-	p.y = UnscaleY(c.y);
-	prepared_marker.points.push_back(p);
-	}
-
-	if(t == 0.0) {	//terminate on the boundary
+		if(IsWmatEdge(u)) {
+			GetNodeData(start, &c, &r);
+			p.x = UnscaleX(c.x);
+			p.y = UnscaleY(c.y);
+			prepared_marker.points.push_back(p);
+			
+			GetNodeData(end, &c, &r);
+			p.x = UnscaleX(c.x);
+			p.y = UnscaleY(c.y);
+			prepared_marker.points.push_back(p);
+		}
+	
+		if(t == 0.0) {	//terminate on the boundary
+			u = heap.getFirst();
+			continue;
+		}
+	
+		e1 = GetCWEdge(u,start);
+		cout << "CWedge: " << e1 << " new: " << GetEdgeFlagNew(e1) << " isWmat: " << IsWmatEdge(e1) << endl;
+		if(GetEdgeFlagNew(e1) && IsWmatEdge(e1)) {
+			heap.add(e1,e1);	
+			SetEdgeFlagNew(e1, false);
+		}
+		e1 = GetCCWEdge(u,start);
+		cout << "CCWedge: " << e1 << " new: " << GetEdgeFlagNew(e1) << " isWmat: " << IsWmatEdge(e1) << endl;
+		if(GetEdgeFlagNew(e1) && IsWmatEdge(e1)) {
+			heap.add(e1,e1);	
+			SetEdgeFlagNew(e1, false);
+		}
+		e1 = GetCWEdge(u,end);
+		cout << "CWedge: " << e1 << " new: " << GetEdgeFlagNew(e1) << " isWmat: " << IsWmatEdge(e1) << endl;
+		if(GetEdgeFlagNew(e1) && IsWmatEdge(e1)) {
+			heap.add(e1,e1);	
+			SetEdgeFlagNew(e1, false);
+		}
+		e1 = GetCCWEdge(u,end);
+		cout << "CCWedge: " << e1 << " new: " << GetEdgeFlagNew(e1) << " isWmat: " << IsWmatEdge(e1) << endl;
+		if(GetEdgeFlagNew(e1) && IsWmatEdge(e1)) {
+			heap.add(e1,e1);	
+			SetEdgeFlagNew(e1, false);
+		}
 		u = heap.getFirst();
-		continue;
-	}
-
-	e1 = GetCWEdge(u,start);
-	cout << "CWedge: " << e1 << " new: " << GetEdgeFlagNew(e1) << " isWmat: " << IsWmatEdge(e1) << endl;
-	if(GetEdgeFlagNew(e1)) {
-		heap.add(e1,e1);	
-		SetEdgeFlagNew(e1, false);
-	}
-	e1 = GetCCWEdge(u,start);
-	cout << "CCWedge: " << e1 << " new: " << GetEdgeFlagNew(e1) << " isWmat: " << IsWmatEdge(e1) << endl;
-	if(GetEdgeFlagNew(e1)) {
-		heap.add(e1,e1);	
-		SetEdgeFlagNew(e1, false);
-	}
-	e1 = GetCWEdge(u,end);
-	cout << "CWedge: " << e1 << " new: " << GetEdgeFlagNew(e1) << " isWmat: " << IsWmatEdge(e1) << endl;
-	if(GetEdgeFlagNew(e1)) {
-		heap.add(e1,e1);	
-		SetEdgeFlagNew(e1, false);
-	}
-	e1 = GetCCWEdge(u,end);
-	cout << "CCWedge: " << e1 << " new: " << GetEdgeFlagNew(e1) << " isWmat: " << IsWmatEdge(e1) << endl;
-	if(GetEdgeFlagNew(e1)) {
-		heap.add(e1,e1);	
-		SetEdgeFlagNew(e1, false);
-	}
-	u = heap.getFirst();
 	}
 	marker_pub.publish(prepared_marker);
 }
