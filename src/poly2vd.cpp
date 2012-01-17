@@ -16,6 +16,9 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <iostream>
+#include <sstream>
+#include <string>
 #include <vector>
 #include <assert.h>
 #include "poly2vd.hpp"
@@ -148,11 +151,13 @@ int getWmatEdgeCount(void)
 	return k;
 }
 
-void printCoord(const coord & coord)
+std::string coordToString(const coord & coord)
 {
 	using namespace std;
 
-	std::cout << UnscaleX(coord.x) << ", " << UnscaleY(coord.y) << std::endl;
+	stringstream ss;
+	ss << "(" << UnscaleX(coord.x) << ", " << UnscaleY(coord.y) << ")";
+	return ss.str();
 }
 
 static void publish_input_data(ros::Publisher & marker_pub, std::string frame_id, double duration)
@@ -188,9 +193,39 @@ static void publish_input_data(ros::Publisher & marker_pub, std::string frame_id
 	marker_pub.publish(input_marker);
 }
 
-static bool printed = false;
+/* None of defining sites is dummy point; e */
+static bool isEdgeDefinedByDummyPoint(int e)
+{
+	// num_pts is Vroni's internal variable
+	int last_valid_pnt_ix = num_pnts - 3;
+
+	int s1, s2; t_site t1, t2;
+	GetLftSiteData(e, &s1, &t1);
+	GetRgtSiteData(e, &s2, &t2);
+
+	return s1 == 0 || s1 == 1 || s1 > last_valid_pnt_ix
+		|| s2 == 0 || s2 == 1 || s2 > last_valid_pnt_ix;
+}
 
 static std::string site_type_names[] = {"SEG", "ARC", "PNT", "VDN", "VDE", "DTE", "CCW", "CW", "UNKNOWN" };
+
+static std::string edgeDefiningSitesToString(int e)
+{
+	int s1, s2; t_site t1, t2;
+	GetLftSiteData(e, &s1, &t1);
+	GetRgtSiteData(e, &s2, &t2);
+
+	using namespace std;
+
+	stringstream ss;
+
+	ss << "s1 = " << s1
+		<< "\t[" << site_type_names[t1] << "],\ts2 = " << s2
+		<< "\t[" << site_type_names[t2] << "]";
+	return ss.str();
+}
+
+static bool printed = false;
 
 void Poly2VdConverter::publish_wmat(ros::Publisher & marker_pub, std::string frame_id, double duration)
 {
@@ -210,44 +245,42 @@ void Poly2VdConverter::publish_wmat(ros::Publisher & marker_pub, std::string fra
 
 	using namespace std;
 
-	int last_valid_pnt_ix = num_pnts - 3; // num_pts is Vroni's internal variable
-	if (!printed) cout << "count: " << num_pnts << endl;
+	stringstream ossX;
+//	if (!printed) cout << "count: " << num_pnts << endl;
+	ossX << "W D\nm u\na m\nt m\n  y" << endl << endl;
 
 	geometry_msgs::Point p;
 	for (int e = 0;  e < GetNumberOfEdges(); e++) {
-		int s1, s2;
-		t_site t1, t2;
-		GetLftSiteData(e, &s1, &t1);
-		GetRgtSiteData(e, &s2, &t2);
-		if (s1 == 0 || s1 == 1 || s1 > last_valid_pnt_ix
-				|| s2 == 0 || s2 == 1 || s2 > last_valid_pnt_ix) {
-			if (!printed) cout << "skipping this edge: s1 = " << s1
-				<< " [" << site_type_names[t1] << "], s2 = " << s2
-				<< " [" << site_type_names[t2] << "]" << endl;
-			continue;
-		}
+		ossX << (IsWmatEdge(e)?'w':'-') << " ";
+//		either
+//		if (isEdgeDefinedByDummyPoint)
+//			continue;
+//		}
+//		or
+//		if (!IsWmatEdge(e)) {
+//			continue;
+//		}
+
+		ossX << (isEdgeDefinedByDummyPoint(e)?'-':'x') << "\t";
+		ossX << edgeDefiningSitesToString(e) << "\t";
 
 		coord c; double r;
 		GetNodeData(GetStartNode(e), &c, &r);
-		if (!printed) {
-			cout << s1 << ", " << t1 << "\t";
-			printCoord(c);
-		}
+		ossX << coordToString(c) << ",\t";
 		p.x = UnscaleX(c.x);
 		p.y = UnscaleY(c.y);
-		wmat_marker.points.push_back(p);
+//		wmat_marker.points.push_back(p);
 		GetNodeData(GetEndNode(e), &c, &r);
-		if (!printed) {
-			cout << s2 << ", " << t2 << "\t";
-			printCoord(c);
-			cout << endl;
-		}
+		ossX << coordToString(c) << endl;
 		p.x = UnscaleX(c.x);
 		p.y = UnscaleY(c.y);
-		wmat_marker.points.push_back(p);
+//		wmat_marker.points.push_back(p);
 	}
 
-	printed = true;
+	if (!printed) {
+		cout << ossX.str();
+		printed = true;
+	}
 
 	marker_pub.publish(wmat_marker);
 }
