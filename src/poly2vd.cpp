@@ -203,7 +203,7 @@ void Poly2VdConverter::publish_wmat(ros::Publisher & marker_pub, std::string fra
 	wmat_marker.id = 0;
 	wmat_marker.lifetime = ros::Duration(duration);
 	wmat_marker.type = visualization_msgs::Marker::LINE_LIST;
-	wmat_marker.scale.x = 2;
+	wmat_marker.scale.x = 0.25;
 	wmat_marker.color.g = 1.0f;
 	wmat_marker.color.a = 1.0;
 
