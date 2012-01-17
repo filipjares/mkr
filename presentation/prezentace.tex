@@ -18,17 +18,17 @@
 \usetheme{umbc2}
 %\useoutertheme{umbcfootline} 
 
-\author{Jména autorů} 
-\title{Téma\\možná na víc řádků} 
+\author{Filip Jareš, Tomáš Juchelka} 
+\title{Segmentace polygonální mapy pro multirobotickou exploraci} 
 \institute[FEL ČVUT] {
   Katedra kybernetiky\\[2ex]
   Elektrotechnická fakulta\\[2ex]
   České vysoké učení technické\\[2ex]
   \vspace{1ex}
-  \texttt{email@subdomena.domena}
+  \texttt{jaresfil@fel.cvut.cz, juchetom@fel.cvut.cz}
   \vspace{1ex}
 }
-\date{3. února 2010\hspace{15ex}Vedoucí práce: XXX}
+\date{Mobilní a kolektivní robotika (A3M33MKR)\hspace{7ex}18. 1. 2012}
 
 %\setbeamertemplate{items}[ball] 
 %\setbeamertemplate{navigation symbols}{} 
@@ -42,183 +42,143 @@
   \titlepage
 \end{frame}
 
-\section*{Obsah}
-\begin{frame}
-	\frametitle{Obsah prezentace}
-	\tableofcontents
-\end{frame}
+% \section*{Obsah}
+% \begin{frame}
+% 	\frametitle{Obsah prezentace}
+% 	\tableofcontents
+% \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Přehled %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{Nazev sekce (zobrazuje se v obsahu)}
+\section*{Úvod}
 \begin{frame}
-	\frametitle{Nadpis slidu}
+	\frametitle{Úvod}
 
-\note{
-	poznámky, které se vygenerují zvlášť:
-	\begin{itemize}
-		\item pomocné "knihovny"
-		\item ORTE
-		\item ruzné verze fsmact
-		\item případně zmiňovaný "okolní software" zmínit pouze velmi stručně, nezabíhat do detailů
-	\end{itemize}
-}
-
+	Využití segmentace \footnote{inspirováni jsme byli článkem \cite{Wurm2008Coordinated}}
 
 	\begin{itemize}
-		\item udělat to
-			\begin{itemize}
-				\item něco
-				\item něco dalšího
-				\item a ještě něco
-			\end{itemize}
-		\item implementovat ...
+		\item multirobotická explorace prostředí
+		\item efektivní přidělování cílů jednotlivým robotům
+		\item \uv{rovnoměrné} rozptýlení robotů v prostředí
 	\end{itemize}
+
+	\includegraphics[width=1\textwidth]{images/TRACLabs_scan-clipped.jpg} 
+
+	%{
+	%\renewcommand{\thefootnote}{\fnsymbol{footnote}} 
+	%\footnotetext{poznámka pod čarou}
+	%}
+
 \end{frame}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Název sekce %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Tvorba polygonu %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{Název sekce (do obsahu)}
+\section{Tvorba polygonu}
 {
-% Tenhle slide je zvláštní tím, že má na pozadí jenom tenhle obrázek:
-%\setbeamertemplate{background canvas}{\includegraphics[width=\paperwidth,height=\paperheight]{}} 
+\begin{frame}% [plain] % plain znamena, bez standardniho pozadi, ktere maji ostanti slidy
+	\frametitle{Tvorba polygonu}
 
-%\setbeamercolor{structure}{fg=white!30}
-%\setbeamercolor{normal text}{fg=white!30}
-\begin{frame}[plain] % plain znamena, bez standardniho pozadi, ktere maji ostanti slidy
-	\frametitle{Nadpis slidu bez standardniho pozadi}
-
-\note{
-	U takoveho slidu se muze dat na pozadi obrazek pres celou stranku.
 	\begin{itemize}
-		\item vlastnost 1
-		\item vlastnost 2
-		\item vlastnost 3
-		\item vlastnost 4
+		\item data ze senzoru ve formě vektoru vzdáleností
+		\item výsledný scan $\longrightarrow$ množina bodů vs. polygon
 	\end{itemize}
-}
-
-	{
-	\renewcommand{\thefootnote}{\fnsymbol{footnote}} 
-	\footnotetext{poznámka pod čarou}
-	}
 
 \end{frame}
 }
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Název sekce %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Tvorba mapy %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{Název sekce}
+\section{Tvorba mapy}
 \begin{frame}
-	\frametitle{Nadpis}
-
-\note{
-	Text poznámek...
-
-	\begin{itemize}
-		\item body poznámek
-		\item body poznámek
-			\begin{itemize}
-				\item třeba ve více úrovních
-				\item třeba ve více úrovních
-			\end{itemize}
-	\end{itemize}
-}
-
-\end{frame}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Název sekce %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% Tahle stránka obsahuje odkaz (\hyperlink{diagram}) na jinou stránku, která má
-% přiřazený label "diagram"
-\begin{frame}[fragile,label=code]
-	\frametitle{Příklad s kódem, který se postupně odkrývá}
-\note{
-	\begin{itemize}
-		\item definice stavové funkce stavu \texttt{wait\_for\_command}
-		\item komentář ...
-	\end{itemize}
-}
-
-	\small{
-	\begin{semiverbatim}
-	\uncover<1->{FSM_STATE(wait_for_command) \{ }
-	\uncover<1->{  switch (FSM_EVENT) \{ }
-	\uncover<2->{  case EV_ENTRY: // zde zajistime uvedeni mechanismu }
-	\uncover<2->{  	  break;      // do transportni polohy }
-	\uncover<3->{  case EV_LOAD_THE_PUCK: FSM_TRANSITION(load_the_puck); }
-	\uncover<3->{  	  break; }
-	\uncover<4->{  case EV_PREPARE_THE_UNLOAD: }
-	\uncover<4->{  	  if (robot.pucks_inside == 0) \{ }
-	\uncover<4->{  	  	  FSM_SIGNAL(MAIN, EV_ACTION_ERROR, NULL); }
-	\uncover<4->{  	  \} }\uncover<5->{ else \{ }
-	\uncover<5->{  	  	  floor_to_unload = FSM_EVENT_INT; }
-	\uncover<5->{  	  	  FSM_TRANSITION(unload_pucks); }
-	\uncover<5->{  	  \} }
-	\uncover<5->{  	  break; }
-	\uncover<6->{  case EV_EXIT: break; }
-	\uncover<6->{  \} }
-	\uncover<6->{\} } \hspace{\fill} \hyperlink{diagram}{\beamerskipbutton{odkaz na jinou stránku}}
-	\end{semiverbatim}
-	}
-
-\end{frame}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Hlavni FSM %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\section{Stavový automat pro řízení herní strategie}
-\begin{frame}
-	\frametitle{Stavový automat pro řízení herní strategie}
-
-\note{
-	\begin{itemize}
-		\item kombinaci puků získává od programu \emph{rozpuk}
-	\end{itemize}
-}
-	%\includegraphics[width=1\textwidth]{pics/competition.pdf} 
-
-	
-\end{frame}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Mechanismy robotu %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\section{Stavový automat mechanismů}
-\begin{frame}
-	\frametitle{Mechanismy robotu pro manipulaci s puky}
-\note{
-	\begin{itemize}
-		\item zmínit zde senzor -- koncový spínač
-	\end{itemize}
-
-}
+	\frametitle{Tvorba polygonu}
 
 	\begin{columns}[T]
-		\begin{column}{0.75\textwidth}
-			%\includegraphics[width=1\textwidth]{images/ilustrace/mechanismy.pdf} 
-		\end{column}
-		\begin{column}{0.25\textwidth}
+		\begin{column}{0.6\textwidth}
 			\begin{itemize}
-				\item[1.] čelisti
-				\item[2.] pásy
-				\item[3.] výtah
-				\item[4.] dvířka
-				\item[5.] vytlačovač
+				\item k dispozici polygon ze senzorického měření \\
+				\item booleovské operace nad polygony \\
+				\item využití knihovny pro práci s~polygony:
+					Clipper 4.6.3 -- an~open source polygon clipping library
+					\cite{ClipperLib}
 			\end{itemize}
+		\end{column}
+		\begin{column}{0.4\textwidth}
+			\includegraphics[width=1\textwidth]{images/clipper.png} 
 		\end{column}
 	\end{columns}
 
 \end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Voroného diagram %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Automat mechanismu %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Voroného diagram}
+\begin{frame}
+	\frametitle{Voroného diagram z polygonální mapy}
 
-\begin{frame}[label=diagram]
-	\frametitle{Stavový automat mechanismů}
+	\begin{columns}[T]
+		\begin{column}{0.5\textwidth}
+			\vskip 3ex
+			\emph{Vstupem} je polygonální mapa $\mathcal S$
 
-	%\includegraphics[width=1\textwidth]{pics/fsmact.pdf} 
-	\vspace{3ex}
-	\centering
-	\hyperlink{code}{\beamerreturnbutton{definice wait\_for\_command}}
-	
+			\vskip 3ex
+
+			\pause
+
+			\emph{Vzdálenost} bodu $p$ vzhledem k $\mathcal S$ je
+			vzdálenost k nejbližšímu bodu množiny
+			$\mathcal S \qquad\qquad \mathsf{d}(p,\mathcal{S}). $
+
+			\vskip 3ex
+
+			\pause
+
+			\emph{Clearance disc} bodu $p$ je kruh s poloměrem
+			$\mathsf{d}(p,\mathcal{S})$ a středem $p$.
+				$$ \mathsf{cd}(p,\mathcal{S}) $$
+
+			\vskip 3ex
+			
+			\pause \pause \pause \pause \pause
+
+			\emph{Voroného diagram} množiny bodů
+
+		\end{column}
+		\begin{column}{0.5\textwidth}
+			\includegraphics<1>[width=1\textwidth,clip=true,trim=147pt 165pt 289pt 502pt]{images/01-vd-empty.pdf}
+			\includegraphics<2>[width=1\textwidth,clip=true,trim=147pt 165pt 289pt 502pt]{images/02-vd-point.pdf}
+			\includegraphics<3>[width=1\textwidth,clip=true,trim=147pt 165pt 289pt 502pt]{images/03-vd-point_with_disk.pdf}
+			\includegraphics<4>[width=1\textwidth,clip=true,trim=147pt 165pt 289pt 502pt]{images/04-point_2.pdf}
+			\includegraphics<5>[width=1\textwidth,clip=true,trim=147pt 165pt 289pt 502pt]{images/05-point_3.pdf}
+			\includegraphics<6>[width=1\textwidth,clip=true,trim=147pt 165pt 289pt 502pt]{images/06-point_4.pdf}
+			\includegraphics<7>[width=1\textwidth,clip=true,trim=147pt 165pt 289pt 502pt]{images/07-point_5.pdf}
+			\hyperlink{VDdetail}{\includegraphics<8>[width=1\textwidth,clip=true,trim=147pt 165pt 289pt 502pt]{images/08-vd.pdf}}
+			\includegraphics<9>[width=1\textwidth,clip=true,trim=147pt 165pt 289pt 502pt]{images/09-wmat.pdf}
+		\end{column}
+	\end{columns}
+
+	\color{blue}{
+	$$ \mathcal{VD}(\mathcal{S}) =
+		\left\{ p \in \mathbb{E}^2 \ | \ 
+		\mathsf{cd}(p) \text{ se dotýká alespoň dvou různých}\ s \in \mathcal{S} \right\}
+	$$}
+
+	\pause
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Název sekce %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}
+	\frametitle{Vroni}
+
+	Pro konstrukci Voroného diagramů jsme použili kód Vroni \cite{VroniCode}, \cite{Held200195}.
+
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Název sekce %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Využití topologické kostry (medial axis)}
+\begin{frame}
+	\frametitle{Využití topologické kostry}
+
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Závěr %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -236,8 +196,8 @@
 		\begin{column}{0.5\textwidth}
 			\begin{itemize}
 				\item body k tomu, co by šlo udělat lépe\pause
-				\item Citace, která se zobrazí v referencích: \cite{Wurm2008Coordinated}
-				\item ...
+				\item Citace, která se zobrazí v referencích: 
+				\item Clipper, The polygon clipping library: \cite{ClipperLib}
 			\end{itemize}
 			\pause
 			\vspace{13ex}\hspace*{\fill}Děkujeme za pozornost
@@ -253,10 +213,22 @@
 	\frametitle{Závěr}
 
 	% The Bibliography
-	\bibliographystyle{plain_cz}
+	%\bibliographystyle{plain_cz}
 	%\bibliographystyle{czechiso}
+	\bibliographystyle{ieeetr}
 	\bibliography{bibliography}
 	
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Dodatek %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}[label=VDdetail]
+	\frametitle{Reprezentace úsečky při konstrukci VD}
+	\includegraphics[height=1\textheight,clip=true,trim=150pt 167pt 409pt 642pt]{images/line_segment-01-endpoint_and_rest_of_line.pdf} 
+\end{frame}
+\begin{frame}[label=VDdetail]
+	\frametitle{Reprezentace úsečky při konstrukci VD}
+	\includegraphics[height=1\textheight,clip=true,trim=150pt 167pt 409pt 642pt]{images/line_segment-02-corner_detail.pdf} 
 \end{frame}
 
 
