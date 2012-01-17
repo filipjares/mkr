@@ -17,6 +17,8 @@
 #ifndef  POLY2VD_H_INC
 #define  POLY2VD_H_INC
 
+/* ********************** VRONI includes ***************************** */
+
 #define HAVE_BOOL	// boolean defined in types.h, included by dvi_graphics_header.h
 #define MAT		// API_ComputeWMAT in ext_appl_inout.h
 
@@ -31,6 +33,13 @@
 #include "ext_appl_inout.h"
 
 #undef ZERO // both src/consts.h and VRONI_6.0/src/consts.H define ZERO (differently)
+
+/* ********************** ROS includes ******************************* */
+
+#include <ros/ros.h>
+#include <visualization_msgs/Marker.h>
+
+/* ********************** Poly2VdConverter class ********************* */
 
 class Poly2VdConverter
 {
@@ -47,6 +56,7 @@ public:
 
 	void convert();
 
+	void publish_wmat(ros::Publisher & marker_pub, std::string frame_id, double duration);
 };
 
 #endif   /* ----- #ifndef POLY2VD_H_INC  ----- */
