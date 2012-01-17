@@ -215,31 +215,6 @@ private:
 	}
 };
 
-void visualizeVD(ros::Publisher & marker_pub, in_segs * segs, unsigned int size) {
-	visualization_msgs::Marker line_list;
-	line_list.header.frame_id = "/odom";
-	line_list.ns = "VD";
-	line_list.lifetime = ros::Duration(3);
-	line_list.action = visualization_msgs::Marker::ADD;
-	line_list.pose.orientation.w = 1.0;
-	line_list.id = 0;
-	line_list.type = visualization_msgs::Marker::LINE_LIST;
-	line_list.scale.x = 0.1;
-	line_list.color.g = 1.0f;
-	line_list.color.a = 1.0;
-	//adding point only for vizualization
-	geometry_msgs::Point p;
-	for(unsigned int i = 0; i<size;i++){
-		p.x = segs[i].x1/CM;
-		p.y = segs[i].y1/CM;
-		line_list.points.push_back(p);
-		p.x = segs[i].x2/CM;
-		p.y = segs[i].y2/CM;
-		line_list.points.push_back(p);
-	}
-	marker_pub.publish(line_list);
-}
-
 void visualizeMap(ros::Publisher & marker_pub, ClipperLib::Polygons & obj, const int id) {
 	visualization_msgs::Marker line_strip, line_list, text;
 	line_strip.header.frame_id = "/odom";
@@ -297,7 +272,7 @@ void visualizeMap(ros::Publisher & marker_pub, ClipperLib::Polygons & obj, const
 	marker_pub.publish(line_list);
 }
 
-void convertPoly2Segs(ClipperLib::Polygons & poly, in_segs * s, unsigned int size) {
+void convertPolyInCentimeters2SegsInMeters(ClipperLib::Polygons & poly, in_segs * s, unsigned int size) {
 	in_segs init;
 	init.x1 = 0.0;
 	init.x2 = 0.0;
@@ -309,16 +284,16 @@ void convertPoly2Segs(ClipperLib::Polygons & poly, in_segs * s, unsigned int siz
 	for(unsigned int n = 0; n < poly.size(); n++)	{
 		unsigned int sz = poly[n].size();
 		for(unsigned int i = 0; i < sz - 1; i++)	{
-			s[k].x1 = (double)poly[n][i].X;
-			s[k].y1 = (double)poly[n][i].Y;
-			s[k].x2 = (double)poly[n][i+1].X;
-			s[k].y2 = (double)poly[n][i+1].Y;
+			s[k].x1 = (double)poly[n][i].X/CM;
+			s[k].y1 = (double)poly[n][i].Y/CM;
+			s[k].x2 = (double)poly[n][i+1].X/CM;
+			s[k].y2 = (double)poly[n][i+1].Y/CM;
 			k++;
 		}
-		s[k].x1 = (double)poly[n][sz-1].X;
-		s[k].y1 = (double)poly[n][sz-1].Y;
-		s[k].x2 = (double)poly[n][0].X;
-		s[k].y2 = (double)poly[n][0].Y;
+		s[k].x1 = (double)poly[n][sz-1].X/CM;
+		s[k].y1 = (double)poly[n][sz-1].Y/CM;
+		s[k].x2 = (double)poly[n][0].X/CM;
+		s[k].y2 = (double)poly[n][0].Y/CM;
 		k++;
 	}	
 }
@@ -353,7 +328,7 @@ int main(int argc, char **argv) {
 		if (size > 3) {
 			// convert polygons to segments
 			in_segs segs[size];
-			convertPoly2Segs(solution, segs, size);
+			convertPolyInCentimeters2SegsInMeters(solution, segs, size);
 			// pass segments to Vroni
 			poly2vd.prepareNewInput(segs, size);
 			// let the Vroni compute the VD
