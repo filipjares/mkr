@@ -175,9 +175,25 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Název sekce %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{Využití topologické kostry (medial axis)}
+\section{Využití skeletonu}
 \begin{frame}
-	\frametitle{Využití topologické kostry}
+	\frametitle{Využití topologické kostry - segmentace mapy}
+
+	\begin{itemize}
+		\item s topologickou kostrou pracujeme jako s grafem tvořeným
+			uzly Voroného diagramu a jeho hranami
+		\item v grafu hledáme \emph{kritické uzly}, které tvoří rozhraní
+			mezi hledanými segmenty mapy
+	\end{itemize}
+	\begin{block}{Vlastnosti kritického uzlu $n_c$ podle \cite{Wurm2008Coordinated}}
+		\begin{itemize}
+			\item stupeň kritického uzlu $\mathsf{deg}(n_c) = 2$
+			\item $\exists$ soused $n_i$ kritického uzlu $n_c$ takový, že $\mathsf{deg}(n_i) = 3$
+			\item clearance radius kritického uzlu $\mathsf{d}(n_c,\mathcal{S})$ tvoří minimum,
+				sousední uzly mají clearance radius větší
+			\item kritické uzly spojují už prozkoumané oblasti s neprozkoumanými
+		\end{itemize}
+	\end{block}
 
 \end{frame}
 
