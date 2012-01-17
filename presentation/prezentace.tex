@@ -162,83 +162,16 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Název sekce %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Tahle stránka obsahuje odkaz (\hyperlink{diagram}) na jinou stránku, která má
-% přiřazený label "diagram"
-\begin{frame}[fragile,label=code]
-	\frametitle{Příklad s kódem, který se postupně odkrývá}
-\note{
-	\begin{itemize}
-		\item definice stavové funkce stavu \texttt{wait\_for\_command}
-		\item komentář ...
-	\end{itemize}
-}
-
-	\small{
-	\begin{semiverbatim}
-	\uncover<1->{FSM_STATE(wait_for_command) \{ }
-	\uncover<1->{  switch (FSM_EVENT) \{ }
-	\uncover<2->{  case EV_ENTRY: // zde zajistime uvedeni mechanismu }
-	\uncover<2->{  	  break;      // do transportni polohy }
-	\uncover<3->{  case EV_LOAD_THE_PUCK: FSM_TRANSITION(load_the_puck); }
-	\uncover<3->{  	  break; }
-	\uncover<4->{  case EV_PREPARE_THE_UNLOAD: }
-	\uncover<4->{  	  if (robot.pucks_inside == 0) \{ }
-	\uncover<4->{  	  	  FSM_SIGNAL(MAIN, EV_ACTION_ERROR, NULL); }
-	\uncover<4->{  	  \} }\uncover<5->{ else \{ }
-	\uncover<5->{  	  	  floor_to_unload = FSM_EVENT_INT; }
-	\uncover<5->{  	  	  FSM_TRANSITION(unload_pucks); }
-	\uncover<5->{  	  \} }
-	\uncover<5->{  	  break; }
-	\uncover<6->{  case EV_EXIT: break; }
-	\uncover<6->{  \} }
-	\uncover<6->{\} } \hspace{\fill} \hyperlink{diagram}{\beamerskipbutton{odkaz na jinou stránku}}
-	\end{semiverbatim}
-	}
+\begin{frame}
+	\frametitle{Vroni}
 
 \end{frame}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Hlavni FSM %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Název sekce %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{Stavový automat pro řízení herní strategie}
+\section{Využití topologické kostry (medial axis)}
 \begin{frame}
-	\frametitle{Stavový automat pro řízení herní strategie}
-
-\note{
-	\begin{itemize}
-		\item kombinaci puků získává od programu \emph{rozpuk}
-	\end{itemize}
-}
-	%\includegraphics[width=1\textwidth]{pics/competition.pdf} 
-
-	
-\end{frame}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Mechanismy robotu %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\section{Stavový automat mechanismů}
-\begin{frame}
-	\frametitle{Mechanismy robotu pro manipulaci s puky}
-\note{
-	\begin{itemize}
-		\item zmínit zde senzor -- koncový spínač
-	\end{itemize}
-
-}
-
-	\begin{columns}[T]
-		\begin{column}{0.75\textwidth}
-			%\includegraphics[width=1\textwidth]{images/ilustrace/mechanismy.pdf} 
-		\end{column}
-		\begin{column}{0.25\textwidth}
-			\begin{itemize}
-				\item[1.] čelisti
-				\item[2.] pásy
-				\item[3.] výtah
-				\item[4.] dvířka
-				\item[5.] vytlačovač
-			\end{itemize}
-		\end{column}
-	\end{columns}
+	\frametitle{Využití topologické kostry}
 
 \end{frame}
 
