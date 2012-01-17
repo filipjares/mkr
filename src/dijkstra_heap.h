@@ -13,7 +13,7 @@ namespace imr {
 #define HEAPNODE(i) heap[i].node
 #define HEAPIDX(i) heap[i].IDX
 
-      template<class Nodes, class Weight>
+      template<class Weight>
          class CHeap {
 
             struct SHeap {
@@ -47,7 +47,7 @@ namespace imr {
             }
 
             public:
-            CHeap(long int size, Nodes & nodes) : size(size), nodes(nodes) {
+            CHeap(long int size) : size(size){
                heap = 0;
                heapNumber = 0;
                heap = new SHeap[size];
@@ -167,7 +167,6 @@ namespace imr {
             long int size;
             SHeap * heap;
             long int heapNumber;
-            Nodes & nodes;
          };
 
    } //end namespace dijkstra
