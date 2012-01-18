@@ -262,15 +262,104 @@ bool contains(std::list<int> & lst, const int & element)
 }
 
 /* n - node_id */
-static void publishMarkerIfCandidate(int n, std::list<int> & usedNodes, ros::Publisher & marker_pub, std::string frame_id, double duration)
+static void publishCriticalNodeCandidateIfAppropriate(int e, std::list<int> & usedNodes, ros::Publisher & marker_pub, std::string frame_id, double duration)
 {
-		if (IsDeg2Node(n) && !contains(usedNodes, n)) {
-			coord c; double r;
-			GetNodeData(n, &c, &r);
-			visualization_msgs::Marker marker = prepareSphereMarker(n, UnscaleV(r), frame_id, duration);
-			marker.pose.position.x = UnscaleX(c.x);
-			marker.pose.position.y = UnscaleY(c.y);
-			usedNodes.push_back(n);
+		int n1 = GetStartNode(e);
+		int n2 = GetEndNode(e);
+
+		bool isN1Deg2 = IsDeg2Node(n1);
+		bool isN2Deg2 = IsDeg2Node(n2);
+
+		// only degree 2 nodes are critical point candidates
+		if (!isN1Deg2 && !isN2Deg2) {
+			return;
+		}
+
+		coord c1, c2; double r1, r2;
+		GetNodeData(n1, &c1, &r1);
+		GetNodeData(n2, &c2, &r2);
+
+		// FIXME: there are only points of degree 3, more incident point
+		// representing single point ... don't forget
+
+		// critical point candidate has to be local minimum
+		if (r1 == r2) {
+			return;
+		}
+
+		bool hasNeighbourOfDeg3 = false; // TODO
+		int candidate;
+		coord c_candidate;
+		double r_candidate;
+
+		// the one with smaller clearance radius is the candidate
+		if (r1 < r2) {
+			// the candidate is degree 3 -> not a critical point
+			if (!isN1Deg2) {
+				return;
+			}
+			// clearance radius has to be positive
+			if (r1 == 0) {
+				return;
+			}
+			if (!isN2Deg2) {
+				hasNeighbourOfDeg3 = true;
+			}
+			candidate = n1;
+			r_candidate = r1;
+			c_candidate = c1;
+		} else {
+			// the candidate is degree 3 -> not a critical point
+			if (!isN2Deg2) {
+				return;
+			}
+			// clearance radius has to be positive
+			if (r2 == 0) {
+				return;
+			}
+			if (!isN1Deg2) {
+				hasNeighbourOfDeg3 = true;
+			}
+			candidate = n2;
+			r_candidate = r2;
+			c_candidate = c2;
+		}
+
+		coord c_ccw, c_cw; double r_ccw, r_cw;
+
+		int e_ccw = GetCCWEdge(e,candidate);
+		int n_ccw = GetOtherNode(e_ccw, candidate);
+		GetNodeData(n_ccw, &c_ccw, &r_ccw);
+		// clearance radii of all neighbour have to be greater than ours
+		if (r_candidate >= r_ccw) {
+			return;
+		}
+		if (!IsDeg2Node(n_ccw)) {
+			hasNeighbourOfDeg3 = true;
+		}
+		int e_cw = GetCWEdge(e,candidate);
+		int n_cw = GetOtherNode(e_cw, candidate);
+		GetNodeData(n_cw, &c_cw, &r_cw);
+		// clearance radii of all neighbour have to be greater than ours
+		if (r_candidate >= r_cw) {
+			return;
+		}
+		if (!IsDeg2Node(n_cw)) {
+			hasNeighbourOfDeg3 = true;
+		}
+
+		// candidate node has to have neighbour of degree 3
+		if (!hasNeighbourOfDeg3) {
+			return;
+		}
+
+		// All right. Our candidate node is a true critical node!
+
+		if (!contains(usedNodes, candidate)) {
+			visualization_msgs::Marker marker = prepareSphereMarker(candidate, UnscaleV(r_candidate), frame_id, duration);
+			marker.pose.position.x = UnscaleX(c_candidate.x);
+			marker.pose.position.y = UnscaleY(c_candidate.y);
+			usedNodes.push_back(candidate);
 			marker_pub.publish(marker);
 		}
 }
@@ -289,10 +378,7 @@ void Poly2VdConverter::publish_wmat_deg2_nodes(ros::Publisher & marker_pub, std:
 			continue;
 		}
 
-		int n = GetStartNode(e);
-		publishMarkerIfCandidate(n, usedNodes, marker_pub, frame_id, duration);
-		n = GetEndNode(e);
-		publishMarkerIfCandidate(n, usedNodes, marker_pub, frame_id, duration);
+		publishCriticalNodeCandidateIfAppropriate(e, usedNodes, marker_pub, frame_id, duration);
 	}
 
 	if (!printed) {
