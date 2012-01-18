@@ -19,9 +19,15 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <vector>
+#include <list>
+#include <algorithm>
 #include <assert.h>
 #include "poly2vd.hpp"
+
+/* ************ ROS includes (other than in poly2vd.hpp) ************* */
+
+#include <visualization_msgs/Marker.h>
+#include <visualization_msgs/MarkerArray.h>
 
 // These macros are defined in Vroni's basic.h; but I had problems including it
 
@@ -225,7 +231,81 @@ static std::string edgeDefiningSitesToString(int e)
 	return ss.str();
 }
 
+visualization_msgs::Marker prepareSphereMarker(int id, double radius, std::string frame_id, double duration) {
+	// prepare the Marker
+	visualization_msgs::Marker new_marker;
+	new_marker.header.frame_id = frame_id;
+	new_marker.header.stamp = ros::Time::now();
+	new_marker.ns = "deg2Nodes";
+	new_marker.action = visualization_msgs::Marker::ADD;
+	new_marker.pose.orientation.w = 1.0;
+	new_marker.id = id;
+	new_marker.lifetime = ros::Duration(duration);
+	new_marker.type = visualization_msgs::Marker::SPHERE;
+	new_marker.scale.x = new_marker.scale.y = new_marker.scale.z = radius;
+	new_marker.color.b = 1.0f;
+	new_marker.color.a = 0.5;
+
+	return new_marker;
+}
+
+//tempate <class T>
+//boolean contains(list<T> & lst, const T &element)
+//{
+//	list<T>::iterator it =  find(lst.begin(), lst.end(), element);
+//	return it != lst.end();
+//}
+bool contains(std::list<int> & lst, const int & element)
+{
+	std::list<int>::iterator it = find(lst.begin(), lst.end(), element);
+	return it != lst.end();
+}
+
+/* n - node_id */
+static void publishMarkerIfCandidate(int n, std::list<int> & usedNodes, ros::Publisher & marker_pub, std::string frame_id, double duration)
+{
+		if (IsDeg2Node(n) && !contains(usedNodes, n)) {
+			coord c; double r;
+			GetNodeData(n, &c, &r);
+			visualization_msgs::Marker marker = prepareSphereMarker(n, UnscaleV(r), frame_id, duration);
+			marker.pose.position.x = UnscaleX(c.x);
+			marker.pose.position.y = UnscaleY(c.y);
+			usedNodes.push_back(n);
+			marker_pub.publish(marker);
+		}
+}
+
 static bool printed = false;
+
+void Poly2VdConverter::publish_wmat_deg2_nodes(ros::Publisher & marker_pub, std::string frame_id, double duration)
+{
+	using namespace std;
+	using namespace visualization_msgs;
+
+	list<int> usedNodes;
+
+	for (int e = 0;  e < GetNumberOfEdges(); e++) {
+		if (!IsWmatEdge(e)) {
+			continue;
+		}
+
+		int n = GetStartNode(e);
+		publishMarkerIfCandidate(n, usedNodes, marker_pub, frame_id, duration);
+		n = GetEndNode(e);
+		publishMarkerIfCandidate(n, usedNodes, marker_pub, frame_id, duration);
+	}
+
+	if (!printed) {
+		cout << "have count " << usedNodes.size() << endl;
+		cout << "publishing ids: ";
+		list<int>::iterator it;
+		for (it = usedNodes.begin(); it != usedNodes.end(); it++) {
+			cout << *it << ", ";
+		}
+		cout << endl;
+		printed = true;
+	}
+}
 
 void Poly2VdConverter::publish_wmat(ros::Publisher & marker_pub, std::string frame_id, double duration)
 {
@@ -245,42 +325,44 @@ void Poly2VdConverter::publish_wmat(ros::Publisher & marker_pub, std::string fra
 
 	using namespace std;
 
-	stringstream ossX;
 //	if (!printed) cout << "count: " << num_pnts << endl;
-	ossX << "W D\nm u\na m\nt m\n  y" << endl << endl;
+
+//	stringstream ossX;
+//	ossX << "W D\nm u\na m\nt m\n  y" << endl << endl;
 
 	geometry_msgs::Point p;
 	for (int e = 0;  e < GetNumberOfEdges(); e++) {
-		ossX << (IsWmatEdge(e)?'w':'-') << " ";
+//		ossX << (IsWmatEdge(e)?'w':'-') << " ";
+
 //		either
 //		if (isEdgeDefinedByDummyPoint)
 //			continue;
 //		}
 //		or
-//		if (!IsWmatEdge(e)) {
-//			continue;
-//		}
+		if (!IsWmatEdge(e)) {
+			continue;
+		}
 
-		ossX << (isEdgeDefinedByDummyPoint(e)?'-':'x') << "\t";
-		ossX << edgeDefiningSitesToString(e) << "\t";
+//		ossX << (isEdgeDefinedByDummyPoint(e)?'-':'x') << "\t";
+//		ossX << edgeDefiningSitesToString(e) << "\t";
 
 		coord c; double r;
 		GetNodeData(GetStartNode(e), &c, &r);
-		ossX << coordToString(c) << ",\t";
+//		ossX << coordToString(c) << ",\t";
 		p.x = UnscaleX(c.x);
 		p.y = UnscaleY(c.y);
-//		wmat_marker.points.push_back(p);
+		wmat_marker.points.push_back(p);
 		GetNodeData(GetEndNode(e), &c, &r);
-		ossX << coordToString(c) << endl;
+//		ossX << coordToString(c) << endl;
 		p.x = UnscaleX(c.x);
 		p.y = UnscaleY(c.y);
-//		wmat_marker.points.push_back(p);
+		wmat_marker.points.push_back(p);
 	}
 
-	if (!printed) {
-		cout << ossX.str();
-		printed = true;
-	}
+//	if (!printed) {
+//		cout << ossX.str();
+//		printed = true;
+//	}
 
 	marker_pub.publish(wmat_marker);
 }

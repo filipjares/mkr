@@ -301,7 +301,7 @@ void convertPolyInCentimeters2SegsInMeters(ClipperLib::Polygons & poly, in_segs 
 int main(int argc, char **argv) {
 	ros::init(argc, argv, "listener");
 	ros::NodeHandle n;
-	ros::Publisher marker_pub = n.advertise<visualization_msgs::Marker>("visualization_marker", 1);
+	ros::Publisher marker_pub = n.advertise<visualization_msgs::Marker>("visualization_marker", 10);
 	Listener l(n);
 
 	Poly2VdConverter poly2vd;	// Vroni based polygons -> VD converter
@@ -335,6 +335,7 @@ int main(int argc, char **argv) {
 			poly2vd.convert();
 			// publish results
 			poly2vd.publish_wmat(marker_pub, "/odom", 5.0);
+			poly2vd.publish_wmat_deg2_nodes(marker_pub, "/odom", 5.0);
 		}
 
 		// cant be done so

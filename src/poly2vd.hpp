@@ -37,7 +37,6 @@
 /* ********************** ROS includes ******************************* */
 
 #include <ros/ros.h>
-#include <visualization_msgs/Marker.h>
 
 /* ********************** Poly2VdConverter class ********************* */
 
@@ -57,6 +56,8 @@ public:
 	void convert();
 
 	void publish_wmat(ros::Publisher & marker_pub, std::string frame_id, double duration);
+
+	void publish_wmat_deg2_nodes(ros::Publisher & marker_pub, std::string frame_id, double duration);
 };
 
 #endif   /* ----- #ifndef POLY2VD_H_INC  ----- */
