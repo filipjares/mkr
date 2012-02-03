@@ -261,14 +261,30 @@ bool contains(std::list<int> & lst, const int & element)
 	return it != lst.end();
 }
 
+static bool isDeg2WmatNode(int e, int n)
+{
+	assert(IsWmatEdge(e));
+
+	int e_ccw = GetCCWEdge(e, n);
+	int e_cw  = GetCWEdge(e, n);
+
+	if (e_ccw == e_cw) {
+		return IsWmatEdge(e_ccw);
+	} else {
+		return ( IsWmatEdge(e_ccw) && !IsWmatEdge(e_cw) )
+		    || (!IsWmatEdge(e_ccw) &&  IsWmatEdge(e_cw) );
+	}
+}
+
 /* n - node_id */
 static void publishCriticalNodeCandidateIfAppropriate(int e, std::list<int> & usedNodes, ros::Publisher & marker_pub, std::string frame_id, double duration)
 {
 		int n1 = GetStartNode(e);
 		int n2 = GetEndNode(e);
 
-		bool isN1Deg2 = IsDeg2Node(n1);
-		bool isN2Deg2 = IsDeg2Node(n2);
+		// are the end-nodes connecting this WMAT Edge (e) with just one other WMAT Edge?
+		bool isN1Deg2 = isDeg2WmatNode(e, n1); // IsDeg2Node(n1);
+		bool isN2Deg2 = isDeg2WmatNode(e, n2); // IsDeg2Node(n2);
 
 		// only degree 2 nodes are critical point candidates
 		if (!isN1Deg2 && !isN2Deg2) {
@@ -279,15 +295,18 @@ static void publishCriticalNodeCandidateIfAppropriate(int e, std::list<int> & us
 		GetNodeData(n1, &c1, &r1);
 		GetNodeData(n2, &c2, &r2);
 
-		// FIXME: there are only points of degree 3, more incident point
-		// representing single point ... don't forget
+		// FIXME: VRONI does not have VD nodes with degree higher than 3. Nodes
+		// of higher degree are represented by multiple nodes of maximum
+		// degree 3 located at the same position and iterconnected together.
+		// Have to cope with that... For now, I am pretending there are no such
+		// connected nodes.
 
 		// critical point candidate has to be local minimum
 		if (r1 == r2) {
 			return;
 		}
 
-		bool hasNeighbourOfDeg3 = false; // TODO
+		bool hasNeighbourOfDeg3 = false;
 		int candidate;
 		coord c_candidate;
 		double r_candidate;
@@ -327,25 +346,33 @@ static void publishCriticalNodeCandidateIfAppropriate(int e, std::list<int> & us
 
 		coord c_ccw, c_cw; double r_ccw, r_cw;
 
+		// Note: e_ccw and e_cw are not neccessarily equal now.  Even though the
+		// candidate node is has WMAT degree of 2, its VD degree may be higher.
+
 		int e_ccw = GetCCWEdge(e,candidate);
-		int n_ccw = GetOtherNode(e_ccw, candidate);
-		GetNodeData(n_ccw, &c_ccw, &r_ccw);
-		// clearance radii of all neighbour have to be greater than ours
-		if (r_candidate >= r_ccw) {
-			return;
+		if (IsWmatEdge(e_ccw)) {
+			int n_ccw = GetOtherNode(e_ccw, candidate);
+			GetNodeData(n_ccw, &c_ccw, &r_ccw);
+			// clearance radii of all the neighbours have to be greater than ours
+			if (r_candidate >= r_ccw) {
+				return;
+			}
+			if (!IsDeg2Node(n_ccw)) {
+				hasNeighbourOfDeg3 = true;
+			}
 		}
-		if (!IsDeg2Node(n_ccw)) {
-			hasNeighbourOfDeg3 = true;
-		}
+
 		int e_cw = GetCWEdge(e,candidate);
-		int n_cw = GetOtherNode(e_cw, candidate);
-		GetNodeData(n_cw, &c_cw, &r_cw);
-		// clearance radii of all neighbour have to be greater than ours
-		if (r_candidate >= r_cw) {
-			return;
-		}
-		if (!IsDeg2Node(n_cw)) {
-			hasNeighbourOfDeg3 = true;
+		if (IsWmatEdge(e_cw)) {
+			int n_cw = GetOtherNode(e_cw, candidate);
+			GetNodeData(n_cw, &c_cw, &r_cw);
+			// clearance radii of all neighbours have to be greater than ours
+			if (r_candidate >= r_cw) {
+				return;
+			}
+			if (!IsDeg2Node(n_cw)) {
+				hasNeighbourOfDeg3 = true;
+			}
 		}
 
 		// candidate node has to have neighbour of degree 3
