@@ -557,4 +557,4 @@ int main ( int argc, char *argv[] )
 
 #endif 			/* ----- #ifndef POLY2VD_STANDALONE ----------- */
 
-// vi:ai:sw=4 ts=4 sts=0
+// vi:ai:sw=4 ts=4 sts=0 tw=120
