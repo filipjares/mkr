@@ -519,6 +519,7 @@ void publish_result( int argc, char *argv[], Poly2VdConverter & p2vd )
 		// publish both input segments and output wmat data
 		publish_input_data(marker_pub, "/odom", 5.0);
 		p2vd.publish_wmat(marker_pub, "/odom", 5.0);
+		p2vd.publish_wmat_deg2_nodes(marker_pub, "/odom", 5.0);
 
 		r.sleep();
  	}
