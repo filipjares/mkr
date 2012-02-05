@@ -279,6 +279,11 @@ static bool isDeg2WmatNode(int e, int n)
 	}
 }
 
+static bool areCoordsEqual(const coord &c1, const coord &c2)
+{
+	return c1.x == c2.x && c1.y == c2.y;
+}
+
 /* n - node_id */
 static void publishCriticalNodeCandidateIfAppropriate(int e, std::list<int> & usedNodes, ros::Publisher & marker_pub, std::string frame_id, double duration)
 {
