@@ -162,7 +162,10 @@ std::string coordToString(const coord & coord)
 	using namespace std;
 
 	stringstream ss;
-	ss << "(" << UnscaleX(coord.x) << ", " << UnscaleY(coord.y) << ")";
+	// FIXME: align, padding
+	ss << fixed << setprecision(2) << right;
+	ss << "(" << setw(6) << right << UnscaleX(coord.x) << ", "
+			  << setw(6) << right << UnscaleY(coord.y) << ")";
 	return ss.str();
 }
 
