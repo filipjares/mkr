@@ -234,22 +234,41 @@ static std::string edgeDefiningSitesToString(int e)
 	return ss.str();
 }
 
-visualization_msgs::Marker prepareSphereMarker(int id, double radius, std::string frame_id, double duration) {
-	// prepare the Marker
-	visualization_msgs::Marker new_marker;
-	new_marker.header.frame_id = frame_id;
-	new_marker.header.stamp = ros::Time::now();
-	new_marker.ns = "deg2Nodes";
-	new_marker.action = visualization_msgs::Marker::ADD;
-	new_marker.pose.orientation.w = 1.0;
-	new_marker.id = id;
-	new_marker.lifetime = ros::Duration(duration);
-	new_marker.type = visualization_msgs::Marker::SPHERE;
-	new_marker.scale.x = new_marker.scale.y = new_marker.scale.z = radius;
-	new_marker.color.b = 1.0f;
-	new_marker.color.a = 0.5;
+struct Color {
+	float r, g, b, a;
+	Color();
+	Color(float _r, float _g, float _b): r(_r), g(_g), b(_b), a(1.0f) {};
+	Color(float _r, float _g, float _b, float _a): r(_r), g(_g), b(_b), a(_a) {};
 
-	return new_marker;
+	static const Color BLUE;
+	static const Color RED;
+};
+
+const Color Color::BLUE(0.0f, 0.0f, 1.0f, 0.5f);
+const Color Color::RED (1.0f, 0.0f, 0.0f, 0.5f);
+
+void publishSphere(ros::Publisher & marker_pub, int id, coord location, double radius, Color color, std::string frame_id, double duration)
+{
+	// prepare the Marker
+	visualization_msgs::Marker marker;
+	marker.header.frame_id = frame_id;
+	marker.header.stamp = ros::Time::now();
+	marker.ns = "deg2Nodes";
+	marker.action = visualization_msgs::Marker::ADD;
+	marker.pose.orientation.w = 1.0;
+	marker.id = id;
+	marker.lifetime = ros::Duration(duration);
+	marker.type = visualization_msgs::Marker::SPHERE;
+
+	// set its position, radius and color
+	marker.pose.position.x = UnscaleX(location.x);
+	marker.pose.position.y = UnscaleY(location.y);
+	marker.scale.x = marker.scale.y = marker.scale.z = UnscaleV(radius);
+	marker.color.r = color.r; marker.color.g = color.g; marker.color.b = color.b;
+	marker.color.a = color.a;
+
+	// publish it using given publisher
+	marker_pub.publish(marker);
 }
 
 //tempate <class T>
@@ -391,11 +410,8 @@ static void publishCriticalNodeCandidateIfAppropriate(int e, std::list<int> & us
 		// All right. Our candidate node is a true critical node!
 
 		if (!contains(usedNodes, candidate)) {
-			visualization_msgs::Marker marker = prepareSphereMarker(candidate, UnscaleV(r_candidate), frame_id, duration);
-			marker.pose.position.x = UnscaleX(c_candidate.x);
-			marker.pose.position.y = UnscaleY(c_candidate.y);
+			publishSphere(marker_pub, candidate, c_candidate, r_candidate, Color::BLUE, frame_id, duration);
 			usedNodes.push_back(candidate);
-			marker_pub.publish(marker);
 		}
 }
 
