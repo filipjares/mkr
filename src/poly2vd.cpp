@@ -162,10 +162,36 @@ std::string coordToString(const coord & coord)
 	using namespace std;
 
 	stringstream ss;
-	// FIXME: align, padding
 	ss << fixed << setprecision(2) << right;
 	ss << "(" << setw(6) << right << UnscaleX(coord.x) << ", "
 			  << setw(6) << right << UnscaleY(coord.y) << ")";
+	return ss.str();
+}
+
+std::string nodeToString(int n)
+{
+	coord c; double r;
+	GetNodeData(n, &c, &r);
+
+	using namespace std;
+	stringstream ss;
+	ss << fixed << setprecision(2) << right;
+	ss << "[n=" << n << ", r =" << setw(6) << UnscaleV(r) << ", coord = " << coordToString(c) << "]";
+
+	return ss.str();
+}
+
+std::string edgeToString(int e)
+{
+	int n1 = GetStartNode(e);
+	int n2 = GetEndNode(e);
+
+	using namespace std;
+	stringstream ss;
+	ss << fixed << setprecision(2) << right;
+	ss << "{e = " << e << ", " << (IsWmatEdge(e)?"WMAT":"nowm") << ": "
+		<< nodeToString(n1) << ", " << nodeToString(n2) << "}";
+
 	return ss.str();
 }
 
