@@ -606,25 +606,20 @@ void publish_result( int argc, char *argv[], Poly2VdConverter & p2vd )
 
 /* ************ Export of VD to Dot file for Graphviz **************** */
 
-void outputNodeForDot(std::ofstream &fout, int n, double range, coord c)
-{
-	using namespace std;
-
-	string otherparams = "fontsize=6,fixedsize=true,width=0.2,height=0.15";
-
-	fout << "\t" << setw(2) << right << n << " [ pos=\"" << setw(15) << (coordToString(c, false) + "\",")
-		<< otherparams << " ];" << endl;
-}
-
 void outputNodeForDot(std::ofstream &fout, int n, double range)
 {
 	coord c; double r;
 	GetNodeData(n, &c, &r);
-	double dx = 0.02*range*cos(M_PI*random_double());
-	double dy = 0.02*range*sin(M_PI*random_double());
-	c.x = 6*c.x + dx; c.y = 6*c.y + dy;
+	double alpha = M_PI*random_double();
+	double dx = 0.00005*range*cos(alpha);
+	double dy = 0.00005*range*sin(alpha);
+	c.x = c.x + dx; c.y = c.y + dy;
 
-	outputNodeForDot(fout, n, range, c);
+	// output
+	using namespace std;
+	string otherparams = "fontsize=3,fixedsize=true,width=0.1,height=0.075,penwidth=0.5";
+	fout << "\t" << setw(2) << right << n << " [ pos=\"" << setw(18) << left << (coordToString(c, false) + "\",")
+		<< otherparams << " ];" << endl;
 }
 
 void outputEdgeForDot(std::ofstream &fout, int e)
@@ -638,7 +633,7 @@ void outputEdgeForDot(std::ofstream &fout, int e)
 
 	// output
 	fout << "\t" << setw(2) << right << GetStartNode(e) << " -- " << setw(2) << right<< GetEndNode(e)
-		<< "\t[ color=" << setw(6) << left << color << "]" << ";";
+		<< "\t[ color=" << setw(6) << left << (color + ",") << "penwidth=0.5 ]" << ";";
 	if (isEdgeDefinedByDummyPoint(e)) {
 		fout << "   /* " << edgeDefiningSitesToString(e) << " */";
 	}
@@ -655,7 +650,7 @@ void exportVDToDot()
 	double minX, minY, maxX, maxY;
 	minX = minY = std::numeric_limits<double>::max();
 	maxX = maxY = std::numeric_limits<double>::min();
-	// first four points are dummy points
+	// first four nodes are dummy-point-related
 	for (int n = 4; n < GetNumberOfNodes(); n++) {
 		coord c; double r;
 		GetNodeData(n, &c, &r);
@@ -664,20 +659,21 @@ void exportVDToDot()
 		if (c.y < minY) minY = c.y;
 		if (c.y > maxY) maxY = c.y;
 	}
+	minX = UnscaleX(minX); maxX = UnscaleX(maxX);
+	minY = UnscaleY(minY); maxY = UnscaleY(maxY);
 	double range = max(maxX - minX, maxY - minY);
-	srand(1); // initialize random number generator
+	srand(0); // initialize random number generator
 
-	// first four points are dummy points
-	for (int n = 0;  n < 4; n++) {
-		coord c; c.x = c.y = 0.0;
-		outputNodeForDot(fout, n, range, c);
-	}
+	// first four nodes are dummy-point-related
 	for (int n = 4;  n < GetNumberOfNodes(); n++) {
 		outputNodeForDot(fout, n, range);
 	}
 	fout << endl;
 	for (int e = 0;  e < GetNumberOfEdges(); e++) {
-		outputEdgeForDot(fout, e);
+		// first four nodes are dummy-point-related
+		if (GetStartNode(e) > 3 && GetEndNode(e) > 3) {
+			outputEdgeForDot(fout, e);
+		}
 	}
 
 	fout << endl << "}" << endl;
