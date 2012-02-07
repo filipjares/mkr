@@ -344,7 +344,7 @@ static bool areCoordsEqual(const coord &c1, const coord &c2)
 }
 
 /* n - node_id */
-static void publishCriticalNodeCandidateIfAppropriate(int e, std::list<int> & usedNodes, ros::Publisher & marker_pub, std::string frame_id, double duration)
+static void publishCriticalNodeCandidateIfAppropriate(int e, std::list<int> & usedNodes, ros::Publisher & marker_pub, std::string frame_id, double duration, bool printIt)
 {
 		int n1 = GetStartNode(e);
 		int n2 = GetEndNode(e);
@@ -467,13 +467,24 @@ static void publishCriticalNodeCandidateIfAppropriate(int e, std::list<int> & us
 		if (!contains(usedNodes, candidate)) {
 			publishSphere(marker_pub, candidate, c_candidate, r_candidate, Color::BLUE, frame_id, duration);
 			usedNodes.push_back(candidate);
+
+			using namespace std;
+
+			if (printIt) {
+				cout << setw(4) << right << candidate << ": " << coordToString(c_candidate)
+					<< " (" << fixed << setprecision(3) << r_candidate << ")"
+					<< ":\t"
+					<< endl;
+				// TODO
+			}
 		}
 }
 
-static bool printed = false;
-
 void Poly2VdConverter::publish_wmat_deg2_nodes(ros::Publisher & marker_pub, std::string frame_id, double duration)
 {
+	static int printed = 0;
+	bool printIt = (printed % 20 == 0);
+
 	using namespace std;
 	using namespace visualization_msgs;
 
@@ -484,19 +495,18 @@ void Poly2VdConverter::publish_wmat_deg2_nodes(ros::Publisher & marker_pub, std:
 			continue;
 		}
 
-		publishCriticalNodeCandidateIfAppropriate(e, usedNodes, marker_pub, frame_id, duration);
+		publishCriticalNodeCandidateIfAppropriate(e, usedNodes, marker_pub, frame_id, duration, printIt);
 	}
 
-	if (!printed) {
-		cout << "have count " << usedNodes.size() << endl;
-		cout << "publishing ids: ";
+	if (printIt) {
+		cout << "publishing " << usedNodes.size() << " critical nodes: ";
 		list<int>::iterator it;
 		for (it = usedNodes.begin(); it != usedNodes.end(); it++) {
 			cout << *it << ", ";
 		}
 		cout << endl;
-		printed = true;
 	}
+	printed++;
 }
 
 void Poly2VdConverter::publish_wmat(ros::Publisher & marker_pub, std::string frame_id, double duration)
@@ -517,15 +527,8 @@ void Poly2VdConverter::publish_wmat(ros::Publisher & marker_pub, std::string fra
 
 	using namespace std;
 
-//	if (!printed) cout << "count: " << num_pnts << endl;
-
-//	stringstream ossX;
-//	ossX << "W D\nm u\na m\nt m\n  y" << endl << endl;
-
 	geometry_msgs::Point p;
 	for (int e = 0;  e < GetNumberOfEdges(); e++) {
-//		ossX << (IsWmatEdge(e)?'w':'-') << " ";
-
 //		either
 //		if (isEdgeDefinedByDummyPoint)
 //			continue;
@@ -535,26 +538,16 @@ void Poly2VdConverter::publish_wmat(ros::Publisher & marker_pub, std::string fra
 			continue;
 		}
 
-//		ossX << (isEdgeDefinedByDummyPoint(e)?'-':'x') << "\t";
-//		ossX << edgeDefiningSitesToString(e) << "\t";
-
 		coord c; double r;
 		GetNodeData(GetStartNode(e), &c, &r);
-//		ossX << coordToString(c) << ",\t";
 		p.x = UnscaleX(c.x);
 		p.y = UnscaleY(c.y);
 		wmat_marker.points.push_back(p);
 		GetNodeData(GetEndNode(e), &c, &r);
-//		ossX << coordToString(c) << endl;
 		p.x = UnscaleX(c.x);
 		p.y = UnscaleY(c.y);
 		wmat_marker.points.push_back(p);
 	}
-
-//	if (!printed) {
-//		cout << ossX.str();
-//		printed = true;
-//	}
 
 	marker_pub.publish(wmat_marker);
 }
