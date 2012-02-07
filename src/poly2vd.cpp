@@ -225,6 +225,39 @@ static bool areCoordsEqual(const coord &c1, const coord &c2)
 	return c1.x == c2.x && c1.y == c2.y;
 }
 
+static bool areNodesEqual(int n1, int n2)
+{
+	coord c1, c2; double r1, r2;
+	GetNodeData(n1, &c1, &r1);
+	GetNodeData(n2, &c2, &r2);
+
+	return areCoordsEqual(c1, c2);
+}
+
+static bool hasIncidentNeighbour(int n)
+{
+	int e1 = GetIncidentEdge(n);
+	int n1 = GetOtherNode(e1, n);
+
+	if (areNodesEqual(n, n1)) {
+		return true;
+	}
+
+	int e_ccw = GetCCWEdge(e1, n);
+	int n_ccw = GetOtherNode(e_ccw, n);
+	if (areNodesEqual(n, n_ccw)) {
+		return true;
+	}
+
+	int e_cw = GetCCWEdge(e1, n);
+	int n_cw = GetOtherNode(e_cw, n);
+	if (areNodesEqual(n, n_cw)) {
+		return true;
+	}
+
+	return false;
+}
+
 /* *************** Utility functions (other) ************************* */
 
 //tempate <class T>
