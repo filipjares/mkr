@@ -715,7 +715,9 @@ void exportVDToDot()
 
 	// first four nodes are dummy-point-related
 	for (int n = 4;  n < GetNumberOfNodes(); n++) {
-		outputNodeForDot(fout, n, range);
+		if (GetNodeStatus(n) != DELETED && GetNodeStatus(n) != MISC) {
+			outputNodeForDot(fout, n, range);
+		}
 	}
 	fout << endl;
 	for (int e = 0;  e < GetNumberOfEdges(); e++) {
