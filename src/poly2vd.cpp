@@ -706,7 +706,7 @@ void publish_result( int argc, char *argv[], Poly2VdConverter & p2vd )
 typedef std::map<coord, int, bool(*)(const coord &, const coord &)> coordIntMap;
 
 /*  shuffle: true means "shuffle (almost) incident nodes" */
-void outputNodeForDot(std::ofstream &fout, int n, double range, coordIntMap & adjNodesBinCouter, bool shuffle)
+void outputNodeForDot(std::ofstream &fout, int n, coordIntMap & adjNodesBinCouter, bool shuffle)
 {
 	coord c; double r, dx, dy;
 	GetNodeData(n, &c, &r);
@@ -721,9 +721,9 @@ void outputNodeForDot(std::ofstream &fout, int n, double range, coordIntMap & ad
 			count = adjNodesBinCouter[c_rounded];
 			adjNodesBinCouter[c_rounded] = count + 1;
 		}
-		double alpha = M_PI*((double)count)/2.0;
-		dx = 0.00005*range*cos(alpha);
-		dy = 0.00005*range*sin(alpha);
+		double alpha = M_PI*((double)count)/4.0;
+		dx = 0.08*cos(alpha);
+		dy = 0.08*sin(alpha);
 	} else {
 		dx = dy = 0.0;
 	}
@@ -763,22 +763,6 @@ void exportVDToDot(bool shuffle)
 	ofstream fout("/tmp/vd.dot");
 	fout << "graph vd {" << endl << endl;
 
-	double minX, minY, maxX, maxY;
-	minX = minY = std::numeric_limits<double>::max();
-	maxX = maxY = std::numeric_limits<double>::min();
-	// first four nodes are dummy-point-related
-	for (int n = 4; n < GetNumberOfNodes(); n++) {
-		coord c; double r;
-		GetNodeData(n, &c, &r);
-		if (c.x < minX) minX = c.x;
-		if (c.x > maxX) maxX = c.x;
-		if (c.y < minY) minY = c.y;
-		if (c.y > maxY) maxY = c.y;
-	}
-	minX = UnscaleX(minX); maxX = UnscaleX(maxX);
-	minY = UnscaleY(minY); maxY = UnscaleY(maxY);
-	double range = max(maxX - minX, maxY - minY);
-	srand(0); // initialize random number generator
 
 	// for every bin being occupied by multiple adjacent nodes, this holds count of the nodes
 	coordIntMap adjNodesBinCouter(coordCompare);
@@ -786,7 +770,7 @@ void exportVDToDot(bool shuffle)
 	// first four nodes are dummy-point-related
 	for (int n = 4;  n < GetNumberOfNodes(); n++) {
 		if (GetNodeStatus(n) != DELETED && GetNodeStatus(n) != MISC) {
-			outputNodeForDot(fout, n, range, adjNodesBinCouter, shuffle);
+			outputNodeForDot(fout, n, adjNodesBinCouter, shuffle);
 		}
 	}
 	fout << endl;
