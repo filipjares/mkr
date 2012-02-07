@@ -185,41 +185,6 @@ int getWmatEdgeCount(void)
 	return k;
 }
 
-/* Vroni adds four dummy points to defining sites of the input; dummy points are located at the corners
- * of the bounding box and their indices in the pnts vector are 0, 1, num_pnts-2 and num_pnts-1. */
-static bool isDummyPoint(const int & site_id, const t_site & site_type)
-{
-	// num_pts is Vroni's internal variable
-	int last_valid_pnt_ix = num_pnts - 3;
-	
-	return site_type == PNT && (site_id == 0 || site_id == 1 || site_id > last_valid_pnt_ix);
-}
-
-/** Returns true iff none of the defining sites of the edge e is dummy point. */
-static bool isEdgeDefinedByDummyPoint(int e)
-{
-	int s1, s2; t_site t1, t2;
-	GetLftSiteData(e, &s1, &t1);
-	GetRgtSiteData(e, &s2, &t2);
-
-	return isDummyPoint(s1, t1) || isDummyPoint(s2, t2);
-}
-
-static bool isDeg2WmatNode(int e, int n)
-{
-	assert(IsWmatEdge(e));
-
-	int e_ccw = GetCCWEdge(e, n);
-	int e_cw  = GetCWEdge(e, n);
-
-	if (e_ccw == e_cw) {
-		return IsWmatEdge(e_ccw);
-	} else {
-		return ( IsWmatEdge(e_ccw) && !IsWmatEdge(e_cw) )
-		    || (!IsWmatEdge(e_ccw) &&  IsWmatEdge(e_cw) );
-	}
-}
-
 static bool areCoordsEqual(const coord &c1, const coord &c2)
 {
 	return c1.x == c2.x && c1.y == c2.y;
@@ -256,6 +221,41 @@ static bool hasIncidentNeighbour(int n)
 	}
 
 	return false;
+}
+
+/* Vroni adds four dummy points to defining sites of the input; dummy points are located at the corners
+ * of the bounding box and their indices in the pnts vector are 0, 1, num_pnts-2 and num_pnts-1. */
+static bool isDummyPoint(const int & site_id, const t_site & site_type)
+{
+	// num_pts is Vroni's internal variable
+	int last_valid_pnt_ix = num_pnts - 3;
+	
+	return site_type == PNT && (site_id == 0 || site_id == 1 || site_id > last_valid_pnt_ix);
+}
+
+/** Returns true iff none of the defining sites of the edge e is dummy point. */
+static bool isEdgeDefinedByDummyPoint(int e)
+{
+	int s1, s2; t_site t1, t2;
+	GetLftSiteData(e, &s1, &t1);
+	GetRgtSiteData(e, &s2, &t2);
+
+	return isDummyPoint(s1, t1) || isDummyPoint(s2, t2);
+}
+
+static bool isDeg2WmatNode(int e, int n)
+{
+	assert(IsWmatEdge(e));
+
+	int e_ccw = GetCCWEdge(e, n);
+	int e_cw  = GetCWEdge(e, n);
+
+	if (e_ccw == e_cw) {
+		return IsWmatEdge(e_ccw);
+	} else {
+		return ( IsWmatEdge(e_ccw) && !IsWmatEdge(e_cw) )
+		    || (!IsWmatEdge(e_ccw) &&  IsWmatEdge(e_cw) );
+	}
 }
 
 /* *************** Utility functions (other) ************************* */
