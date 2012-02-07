@@ -185,18 +185,24 @@ int getWmatEdgeCount(void)
 	return k;
 }
 
-/** Returns true iff none of the defining sites of the edge e is dummy point. */
-static bool isEdgeDefinedByDummyPoint(int e)
+/* Vroni adds four dummy points to defining sites of the input; dummy points are located at the corners
+ * of the bounding box and their indices in the pnts vector are 0, 1, num_pnts-2 and num_pnts-1. */
+static bool isDummyPoint(const int & site_id, const t_site & site_type)
 {
 	// num_pts is Vroni's internal variable
 	int last_valid_pnt_ix = num_pnts - 3;
+	
+	return site_type == PNT && (site_id == 0 || site_id == 1 || site_id > last_valid_pnt_ix);
+}
 
+/** Returns true iff none of the defining sites of the edge e is dummy point. */
+static bool isEdgeDefinedByDummyPoint(int e)
+{
 	int s1, s2; t_site t1, t2;
 	GetLftSiteData(e, &s1, &t1);
 	GetRgtSiteData(e, &s2, &t2);
 
-	return s1 == 0 || s1 == 1 || s1 > last_valid_pnt_ix
-		|| s2 == 0 || s2 == 1 || s2 > last_valid_pnt_ix;
+	return isDummyPoint(s1, t1) || isDummyPoint(s2, t2);
 }
 
 static bool isDeg2WmatNode(int e, int n)
