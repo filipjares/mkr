@@ -2,7 +2,7 @@
 <node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="1 0 0 0 0 0 /map /odom 100" />
 <node pkg="stage" type="stageros" name="stage" args="$(find project)/world/willow-erratic.world" />
 <node pkg="project" type="odometry" name="odometry" />
-<node pkg="project" type="listener" name="listener" />
+<!-- <node pkg="project" type="listener" name="listener" /> will be run manually during development -->
 <node pkg="rviz" type="rviz" name="rviz" />
 <node pkg="map_server" type="map_server" args="$(find project)/world/map.yaml" name="map" />
 <param name="robot_description" textfile="$(find project)/world/robot_model.xml" />

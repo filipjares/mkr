@@ -829,7 +829,7 @@ int main ( int argc, char *argv[] )
 	cout << "segs count: " << num_segs << endl;
 
 	exportVDToDot();
-	publish_result(argc, argv, p2vd);
+	// publish_result(argc, argv, p2vd);
 
 	return EXIT_SUCCESS;
 }				/* ----------  end of function main  ---------- */
