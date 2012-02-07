@@ -705,12 +705,13 @@ void publish_result( int argc, char *argv[], Poly2VdConverter & p2vd )
 
 typedef std::map<coord, int, bool(*)(const coord &, const coord &)> coordIntMap;
 
-void outputNodeForDot(std::ofstream &fout, int n, double range, coordIntMap & adjNodesBinCouter)
+/*  shuffle: true means "shuffle (almost) incident nodes" */
+void outputNodeForDot(std::ofstream &fout, int n, double range, coordIntMap & adjNodesBinCouter, bool shuffle)
 {
 	coord c; double r, dx, dy;
 	GetNodeData(n, &c, &r);
 	coord c_rounded = roundCoord(c);
-	if (hasCloseNeighbour(n)) {
+	if (shuffle && hasCloseNeighbour(n)) {
 		int count; // count of nodes at the (rounded) position given by c_rounded already processed
 		coordIntMap::iterator it = adjNodesBinCouter.find(c_rounded);
 		if (it == adjNodesBinCouter.end()) {
@@ -755,7 +756,7 @@ void outputEdgeForDot(std::ofstream &fout, int e)
 	fout << endl;
 }
 
-void exportVDToDot()
+void exportVDToDot(bool shuffle)
 {
 	using namespace std;
 
@@ -785,7 +786,7 @@ void exportVDToDot()
 	// first four nodes are dummy-point-related
 	for (int n = 4;  n < GetNumberOfNodes(); n++) {
 		if (GetNodeStatus(n) != DELETED && GetNodeStatus(n) != MISC) {
-			outputNodeForDot(fout, n, range, adjNodesBinCouter);
+			outputNodeForDot(fout, n, range, adjNodesBinCouter, shuffle);
 		}
 	}
 	fout << endl;
@@ -828,7 +829,7 @@ int main ( int argc, char *argv[] )
 	cout << "pnts count: " << num_pnts << endl;
 	cout << "segs count: " << num_segs << endl;
 
-	exportVDToDot();
+	exportVDToDot(true);
 	// publish_result(argc, argv, p2vd);
 
 	return EXIT_SUCCESS;
