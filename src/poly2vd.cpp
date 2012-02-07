@@ -18,10 +18,13 @@
 #include <stdlib.h>
 #include <iostream>
 #include <sstream>
+#include <fstream>
 #include <string>
+#include <limits>
 #include <list>
 #include <algorithm>
 #include <assert.h>
+#include <cmath>
 #include "poly2vd.hpp"
 
 /* ************ ROS includes (other than in poly2vd.hpp) ************* */
@@ -573,6 +576,91 @@ void publish_result( int argc, char *argv[], Poly2VdConverter & p2vd )
  	}
 }
 
+/** random double in range [-1, 1] */
+double random_double()
+{
+ 	return 2*((double)rand()/(double)RAND_MAX) - 1;
+}
+
+void outputNodeForDot(std::ofstream &fout, int n, double range, coord c)
+{
+	using namespace std;
+
+	string otherparams = "fontsize=6,fixedsize=true,width=0.2,height=0.15";
+
+	fout << "\t" << setw(2) << right << n << " [ pos=\"" << setw(15) << (coordToString(c, false) + "\",")
+		<< otherparams << " ];" << endl;
+}
+
+void outputNodeForDot(std::ofstream &fout, int n, double range)
+{
+	coord c; double r;
+	GetNodeData(n, &c, &r);
+	double dx = 0.02*range*cos(M_PI*random_double());
+	double dy = 0.02*range*sin(M_PI*random_double());
+	c.x = 6*c.x + dx; c.y = 6*c.y + dy;
+
+	outputNodeForDot(fout, n, range, c);
+}
+
+void outputEdgeForDot(std::ofstream &fout, int e)
+{
+	using namespace std;
+
+	// color
+	string color = "black";
+	if (IsWmatEdge(e)) color = "blue";
+	if (isEdgeDefinedByDummyPoint(e)) color = "gold";
+
+	// output
+	fout << "\t" << setw(2) << right << GetStartNode(e) << " -- " << setw(2) << right<< GetEndNode(e)
+		<< "\t[ color=" << setw(6) << left << color << "]" << ";";
+	if (isEdgeDefinedByDummyPoint(e)) {
+		fout << "   /* " << edgeDefiningSitesToString(e) << " */";
+	}
+	fout << endl;
+}
+
+void exportVDToDot()
+{
+	using namespace std;
+
+	ofstream fout("/tmp/vd.dot");
+	fout << "graph vd {" << endl << endl;
+
+	double minX, minY, maxX, maxY;
+	minX = minY = std::numeric_limits<double>::max();
+	maxX = maxY = std::numeric_limits<double>::min();
+	// first four points are dummy points
+	for (int n = 4; n < GetNumberOfNodes(); n++) {
+		coord c; double r;
+		GetNodeData(n, &c, &r);
+		if (c.x < minX) minX = c.x;
+		if (c.x > maxX) maxX = c.x;
+		if (c.y < minY) minY = c.y;
+		if (c.y > maxY) maxY = c.y;
+	}
+	double range = max(maxX - minX, maxY - minY);
+	srand(1); // initialize random number generator
+
+	// first four points are dummy points
+	for (int n = 0;  n < 4; n++) {
+		coord c; c.x = c.y = 0.0;
+		outputNodeForDot(fout, n, range, c);
+	}
+	for (int n = 4;  n < GetNumberOfNodes(); n++) {
+		outputNodeForDot(fout, n, range);
+	}
+	fout << endl;
+	for (int e = 0;  e < GetNumberOfEdges(); e++) {
+		outputEdgeForDot(fout, e);
+	}
+
+	fout << endl << "}" << endl;
+	fout.close();
+}
+
+
 #ifdef POLY2VD_STANDALONE
 
 /**
@@ -599,6 +687,7 @@ int main ( int argc, char *argv[] )
 	cout << "pnts count: " << num_pnts << endl;
 	cout << "segs count: " << num_segs << endl;
 
+	exportVDToDot();
 	publish_result(argc, argv, p2vd);
 
 	return EXIT_SUCCESS;
