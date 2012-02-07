@@ -245,6 +245,14 @@ double random_double()
  	return 2*((double)rand()/(double)RAND_MAX) - 1;
 }
 
+template <class T>
+inline std::string to_string (const T& t)
+{
+	std::stringstream ss;
+	ss << t;
+	return ss.str();
+}
+
 /* ********************** toString() functions *********************** */
 
 std::string coordToString(const coord & coord, bool addParentheses)
@@ -633,7 +641,8 @@ void outputEdgeForDot(std::ofstream &fout, int e)
 
 	// output
 	fout << "\t" << setw(2) << right << GetStartNode(e) << " -- " << setw(2) << right<< GetEndNode(e)
-		<< "\t[ color=" << setw(6) << left << (color + ",") << "penwidth=0.5 ]" << ";";
+		<< "\t[ color=" << setw(6) << left << (color + ",") << "penwidth=0.5,fontsize=2,"
+		<< "label=\"" << setw(4) << left << (to_string(e) + "\"") << " ]" << ";";
 	if (isEdgeDefinedByDummyPoint(e)) {
 		fout << "   /* " << edgeDefiningSitesToString(e) << " */";
 	}
