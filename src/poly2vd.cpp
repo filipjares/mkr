@@ -649,12 +649,19 @@ void publish_result( int argc, char *argv[], Poly2VdConverter & p2vd )
 
 void outputNodeForDot(std::ofstream &fout, int n, double range)
 {
-	coord c; double r;
+	coord c; double r, dx, dy;
 	GetNodeData(n, &c, &r);
-	double alpha = M_PI*random_double();
-	double dx = 0.00005*range*cos(alpha);
-	double dy = 0.00005*range*sin(alpha);
-	c.x = c.x + dx; c.y = c.y + dy;
+	if (hasIncidentNeighbour(n)) {
+		std::cout << n << " has one" << std::endl;
+		double alpha = M_PI*random_double();
+		dx = 0.00005*range*cos(alpha);
+		dy = 0.00005*range*sin(alpha);
+	} else {
+		std::cout << n << " does not have an incident neighbour" << std::endl;
+		dx = dy = 0.0;
+	}
+	c.x = c.x + dx;
+	c.y = c.y + dy;
 
 	// output
 	using namespace std;
