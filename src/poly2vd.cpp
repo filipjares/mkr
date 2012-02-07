@@ -46,7 +46,9 @@
 
 #define UnscaleV(value)  (assert(scale_factor > 0.0), (value) / scale_factor)
 
+/* ******************************************************************* */
 /* ********************** Constructor and destructor ***************** */
+/* ******************************************************************* */
 
 Poly2VdConverter::Poly2VdConverter()
 {
@@ -59,7 +61,9 @@ Poly2VdConverter::~Poly2VdConverter()
 	API_TerminateProgram();
 }
 
+/* ******************************************************************* */
 /* ********************** Public methods ***************************** */
+/* ******************************************************************* */
 
 void Poly2VdConverter::prepareNewInput(in_segs * segs, unsigned int size)
 {
@@ -149,7 +153,28 @@ void Poly2VdConverter::convert()
 	input_prepared = false;
 }
 
-/* ********************** Private methods - experimental ************* */
+/* ******************************************************************* */
+/* ********************** Private methods follow ********************* */
+/* ******************************************************************* */
+
+/* ******************* Structures and constants ********************** */
+
+struct Color {
+	float r, g, b, a;
+	Color();
+	Color(float _r, float _g, float _b): r(_r), g(_g), b(_b), a(1.0f) {};
+	Color(float _r, float _g, float _b, float _a): r(_r), g(_g), b(_b), a(_a) {};
+
+	static const Color BLUE;
+	static const Color RED;
+};
+
+const Color Color::BLUE(0.0f, 0.0f, 1.0f, 0.5f);
+const Color Color::RED (1.0f, 0.0f, 0.0f, 0.75f);
+
+static std::string site_type_names[] = {"SEG", "ARC", "PNT", "VDN", "VDE", "DTE", "CCW", "CW", "UNKNOWN" };
+
+/* *************** Utility functions (VRONI-related) ***************** */
 
 int getWmatEdgeCount(void)
 {
@@ -159,6 +184,62 @@ int getWmatEdgeCount(void)
 	}
 	return k;
 }
+
+/** Returns true iff none of the defining sites of the edge e is dummy point. */
+static bool isEdgeDefinedByDummyPoint(int e)
+{
+	// num_pts is Vroni's internal variable
+	int last_valid_pnt_ix = num_pnts - 3;
+
+	int s1, s2; t_site t1, t2;
+	GetLftSiteData(e, &s1, &t1);
+	GetRgtSiteData(e, &s2, &t2);
+
+	return s1 == 0 || s1 == 1 || s1 > last_valid_pnt_ix
+		|| s2 == 0 || s2 == 1 || s2 > last_valid_pnt_ix;
+}
+
+static bool isDeg2WmatNode(int e, int n)
+{
+	assert(IsWmatEdge(e));
+
+	int e_ccw = GetCCWEdge(e, n);
+	int e_cw  = GetCWEdge(e, n);
+
+	if (e_ccw == e_cw) {
+		return IsWmatEdge(e_ccw);
+	} else {
+		return ( IsWmatEdge(e_ccw) && !IsWmatEdge(e_cw) )
+		    || (!IsWmatEdge(e_ccw) &&  IsWmatEdge(e_cw) );
+	}
+}
+
+static bool areCoordsEqual(const coord &c1, const coord &c2)
+{
+	return c1.x == c2.x && c1.y == c2.y;
+}
+
+/* *************** Utility functions (other) ************************* */
+
+//tempate <class T>
+//boolean contains(list<T> & lst, const T &element)
+//{
+//	list<T>::iterator it =  find(lst.begin(), lst.end(), element);
+//	return it != lst.end();
+//}
+bool contains(std::list<int> & lst, const int & element)
+{
+	std::list<int>::iterator it = find(lst.begin(), lst.end(), element);
+	return it != lst.end();
+}
+
+/** random double in range [-1, 1] */
+double random_double()
+{
+ 	return 2*((double)rand()/(double)RAND_MAX) - 1;
+}
+
+/* ********************** toString() functions *********************** */
 
 std::string coordToString(const coord & coord, bool addParentheses)
 {
@@ -211,6 +292,25 @@ std::string edgeToString(int e)
 	return ss.str();
 }
 
+static std::string edgeDefiningSitesToString(int e)
+{
+	int s1, s2; t_site t1, t2;
+	GetLftSiteData(e, &s1, &t1);
+	GetRgtSiteData(e, &s2, &t2);
+
+	using namespace std;
+
+	stringstream ss;
+
+	ss << "s1 = " << setw(2) << right << s1
+		<< " [" << site_type_names[t1] << "],  s2 = "
+		<< setw(2) << right << s2
+		<< " [" << site_type_names[t2] << "]";
+	return ss.str();
+}
+
+/* ********************** "Publisher" functions ********************** */
+
 static void publish_input_data(ros::Publisher & marker_pub, std::string frame_id, double duration)
 {
 	// prepare the Marker
@@ -244,52 +344,6 @@ static void publish_input_data(ros::Publisher & marker_pub, std::string frame_id
 	marker_pub.publish(input_marker);
 }
 
-/* None of defining sites is dummy point; e */
-static bool isEdgeDefinedByDummyPoint(int e)
-{
-	// num_pts is Vroni's internal variable
-	int last_valid_pnt_ix = num_pnts - 3;
-
-	int s1, s2; t_site t1, t2;
-	GetLftSiteData(e, &s1, &t1);
-	GetRgtSiteData(e, &s2, &t2);
-
-	return s1 == 0 || s1 == 1 || s1 > last_valid_pnt_ix
-		|| s2 == 0 || s2 == 1 || s2 > last_valid_pnt_ix;
-}
-
-static std::string site_type_names[] = {"SEG", "ARC", "PNT", "VDN", "VDE", "DTE", "CCW", "CW", "UNKNOWN" };
-
-static std::string edgeDefiningSitesToString(int e)
-{
-	int s1, s2; t_site t1, t2;
-	GetLftSiteData(e, &s1, &t1);
-	GetRgtSiteData(e, &s2, &t2);
-
-	using namespace std;
-
-	stringstream ss;
-
-	ss << "s1 = " << setw(2) << right << s1
-		<< " [" << site_type_names[t1] << "],  s2 = "
-		<< setw(2) << right << s2
-		<< " [" << site_type_names[t2] << "]";
-	return ss.str();
-}
-
-struct Color {
-	float r, g, b, a;
-	Color();
-	Color(float _r, float _g, float _b): r(_r), g(_g), b(_b), a(1.0f) {};
-	Color(float _r, float _g, float _b, float _a): r(_r), g(_g), b(_b), a(_a) {};
-
-	static const Color BLUE;
-	static const Color RED;
-};
-
-const Color Color::BLUE(0.0f, 0.0f, 1.0f, 0.5f);
-const Color Color::RED (1.0f, 0.0f, 0.0f, 0.5f);
-
 void publishSphere(ros::Publisher & marker_pub, int id, coord location, double radius, Color color, std::string frame_id, double duration)
 {
 	// prepare the Marker
@@ -312,38 +366,6 @@ void publishSphere(ros::Publisher & marker_pub, int id, coord location, double r
 
 	// publish it using given publisher
 	marker_pub.publish(marker);
-}
-
-//tempate <class T>
-//boolean contains(list<T> & lst, const T &element)
-//{
-//	list<T>::iterator it =  find(lst.begin(), lst.end(), element);
-//	return it != lst.end();
-//}
-bool contains(std::list<int> & lst, const int & element)
-{
-	std::list<int>::iterator it = find(lst.begin(), lst.end(), element);
-	return it != lst.end();
-}
-
-static bool isDeg2WmatNode(int e, int n)
-{
-	assert(IsWmatEdge(e));
-
-	int e_ccw = GetCCWEdge(e, n);
-	int e_cw  = GetCWEdge(e, n);
-
-	if (e_ccw == e_cw) {
-		return IsWmatEdge(e_ccw);
-	} else {
-		return ( IsWmatEdge(e_ccw) && !IsWmatEdge(e_cw) )
-		    || (!IsWmatEdge(e_ccw) &&  IsWmatEdge(e_cw) );
-	}
-}
-
-static bool areCoordsEqual(const coord &c1, const coord &c2)
-{
-	return c1.x == c2.x && c1.y == c2.y;
 }
 
 /* n - node_id */
@@ -576,11 +598,7 @@ void publish_result( int argc, char *argv[], Poly2VdConverter & p2vd )
  	}
 }
 
-/** random double in range [-1, 1] */
-double random_double()
-{
- 	return 2*((double)rand()/(double)RAND_MAX) - 1;
-}
+/* ************ Export of VD to Dot file for Graphviz **************** */
 
 void outputNodeForDot(std::ofstream &fout, int n, double range, coord c)
 {
@@ -660,6 +678,7 @@ void exportVDToDot()
 	fout.close();
 }
 
+/* **************************** main() ******************************* */
 
 #ifdef POLY2VD_STANDALONE
 
