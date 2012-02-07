@@ -157,15 +157,28 @@ int getWmatEdgeCount(void)
 	return k;
 }
 
-std::string coordToString(const coord & coord)
+std::string coordToString(const coord & coord, bool addParentheses)
 {
 	using namespace std;
 
+	string lp, rp;
+	if (addParentheses) {
+		lp = "(";
+		rp = ")";
+	} else {
+		lp = rp = "";
+	}
+
 	stringstream ss;
 	ss << fixed << setprecision(2) << right;
-	ss << "(" << setw(6) << right << UnscaleX(coord.x) << ", "
-			  << setw(6) << right << UnscaleY(coord.y) << ")";
+	ss << lp << setw(6) << right << UnscaleX(coord.x) << ", " // FIXME
+			 << setw(6) << right << UnscaleY(coord.y) << rp;
 	return ss.str();
+}
+
+std::string coordToString(const coord & coord)
+{
+	return coordToString(coord, true);
 }
 
 std::string nodeToString(int n)
@@ -254,9 +267,10 @@ static std::string edgeDefiningSitesToString(int e)
 
 	stringstream ss;
 
-	ss << "s1 = " << s1
-		<< "\t[" << site_type_names[t1] << "],\ts2 = " << s2
-		<< "\t[" << site_type_names[t2] << "]";
+	ss << "s1 = " << setw(2) << right << s1
+		<< " [" << site_type_names[t1] << "],  s2 = "
+		<< setw(2) << right << s2
+		<< " [" << site_type_names[t2] << "]";
 	return ss.str();
 }
 
