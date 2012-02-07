@@ -176,13 +176,35 @@ static std::string site_type_names[] = {"SEG", "ARC", "PNT", "VDN", "VDE", "DTE"
 
 /* *************** Utility functions (VRONI-related) ***************** */
 
-int getWmatEdgeCount(void)
+static int getWmatEdgeCount(void)
 {
 	int k = 0;
 	for (int e = 0;  e < GetNumberOfEdges(); e++) {
 		if (IsWmatEdge(e)) k++;
 	}
 	return k;
+}
+
+static coord roundCoord(const coord &c)
+{
+	double N = 10.0; coord r;
+
+	r.x = round(N*c.x)/N;
+	r.y = round(N*c.y)/N;
+	
+	return r;
+}
+
+static bool coordCompare(const coord & c1, const coord & c2)
+{
+	coord r1 = roundCoord(c1);
+	coord r2 = roundCoord(c2);
+
+	if (r1.x < r2.x) {
+		return true;
+	} else {
+		return r1.y < r2.y;
+	}
 }
 
 static bool areCoordsEqual(const coord &c1, const coord &c2)
@@ -197,6 +219,15 @@ static bool areNodesEqual(int n1, int n2)
 	GetNodeData(n2, &c2, &r2);
 
 	return areCoordsEqual(c1, c2);
+}
+
+static bool areNodesInSingleBin(int n1, int n2)
+{
+	// are rounded coords equal?
+	coord r1 = roundCoord(GetNodeCoord(n1));
+	coord r2 = roundCoord(GetNodeCoord(n2));
+
+	return areCoordsEqual(r1, r2);
 }
 
 static bool hasIncidentNeighbour(int n)
@@ -217,6 +248,30 @@ static bool hasIncidentNeighbour(int n)
 	int e_cw = GetCCWEdge(e1, n);
 	int n_cw = GetOtherNode(e_cw, n);
 	if (areNodesEqual(n, n_cw)) {
+		return true;
+	}
+
+	return false;
+}
+
+static bool hasCloseNeighbour(int n)
+{
+	int e1 = GetIncidentEdge(n);
+	int n1 = GetOtherNode(e1, n);
+
+	if (areNodesInSingleBin(n, n1)) {
+		return true;
+	}
+
+	int e_ccw = GetCCWEdge(e1, n);
+	int n_ccw = GetOtherNode(e_ccw, n);
+	if (areNodesInSingleBin(n, n_ccw)) {
+		return true;
+	}
+
+	int e_cw = GetCCWEdge(e1, n);
+	int n_cw = GetOtherNode(e_cw, n);
+	if (areNodesInSingleBin(n, n_cw)) {
 		return true;
 	}
 
