@@ -417,7 +417,11 @@ static void publishCriticalNodeCandidateIfAppropriate(int e, std::list<int> & us
 		// candidate node is has WMAT degree of 2, its VD degree may be higher.
 
 		int e_ccw = GetCCWEdge(e,candidate);
+		int e_cw = GetCWEdge(e,candidate);
+
 		if (IsWmatEdge(e_ccw)) {
+			assert(e_ccw == e_cw || !IsWmatEdge(e_cw));
+
 			int n_ccw = GetOtherNode(e_ccw, candidate);
 			GetNodeData(n_ccw, &c_ccw, &r_ccw);
 			// clearance radii of all the neighbours have to be greater than ours
@@ -427,10 +431,16 @@ static void publishCriticalNodeCandidateIfAppropriate(int e, std::list<int> & us
 			if (!IsDeg2Node(n_ccw)) {
 				hasNeighbourOfDeg3 = true;
 			}
+			if (areCoordsEqual(c_candidate, c_ccw)) {
+				using namespace std;
+				cout << "The candidate (" << candidate << ") and node related to it through"
+					<< "e_ccw have the same coords: " << coordToString(c_candidate) << endl;
+			}
 		}
 
-		int e_cw = GetCWEdge(e,candidate);
 		if (IsWmatEdge(e_cw)) {
+			assert(e_ccw == e_cw || !IsWmatEdge(e_ccw));
+
 			int n_cw = GetOtherNode(e_cw, candidate);
 			GetNodeData(n_cw, &c_cw, &r_cw);
 			// clearance radii of all neighbours have to be greater than ours
@@ -439,6 +449,11 @@ static void publishCriticalNodeCandidateIfAppropriate(int e, std::list<int> & us
 			}
 			if (!IsDeg2Node(n_cw)) {
 				hasNeighbourOfDeg3 = true;
+			}
+			if (areCoordsEqual(c_candidate, c_cw)) {
+				using namespace std;
+				cout << "The candidate (" << candidate << ") and node related to it through"
+					<< "e_cw have the same coords: " << coordToString(c_candidate) << endl;
 			}
 		}
 
