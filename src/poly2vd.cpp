@@ -22,6 +22,7 @@
 #include <string>
 #include <limits>
 #include <list>
+#include <map>
 #include <algorithm>
 #include <assert.h>
 #include <cmath>
@@ -702,21 +703,31 @@ void publish_result( int argc, char *argv[], Poly2VdConverter & p2vd )
 
 /* ************ Export of VD to Dot file for Graphviz **************** */
 
-void outputNodeForDot(std::ofstream &fout, int n, double range)
+typedef std::map<coord, int, bool(*)(const coord &, const coord &)> coordIntMap;
+
+void outputNodeForDot(std::ofstream &fout, int n, double range, coordIntMap & adjNodesBinCouter)
 {
 	coord c; double r, dx, dy;
 	GetNodeData(n, &c, &r);
-	if (hasIncidentNeighbour(n)) {
-		std::cout << n << " has one" << std::endl;
-		double alpha = M_PI*random_double();
+	coord c_rounded = roundCoord(c);
+	if (hasCloseNeighbour(n)) {
+		int count; // count of nodes at the (rounded) position given by c_rounded already processed
+		coordIntMap::iterator it = adjNodesBinCouter.find(c_rounded);
+		if (it == adjNodesBinCouter.end()) {
+			adjNodesBinCouter[c_rounded] = 1;
+			count = 0;
+		} else {
+			count = adjNodesBinCouter[c_rounded];
+			adjNodesBinCouter[c_rounded] = count + 1;
+		}
+		double alpha = M_PI*((double)count)/2.0;
 		dx = 0.00005*range*cos(alpha);
 		dy = 0.00005*range*sin(alpha);
 	} else {
-		std::cout << n << " does not have an incident neighbour" << std::endl;
 		dx = dy = 0.0;
 	}
-	c.x = c.x + dx;
-	c.y = c.y + dy;
+	c.x = c_rounded.x + dx;
+	c.y = c_rounded.y + dy;
 
 	// output
 	using namespace std;
@@ -768,10 +779,13 @@ void exportVDToDot()
 	double range = max(maxX - minX, maxY - minY);
 	srand(0); // initialize random number generator
 
+	// for every bin being occupied by multiple adjacent nodes, this holds count of the nodes
+	coordIntMap adjNodesBinCouter(coordCompare);
+
 	// first four nodes are dummy-point-related
 	for (int n = 4;  n < GetNumberOfNodes(); n++) {
 		if (GetNodeStatus(n) != DELETED && GetNodeStatus(n) != MISC) {
-			outputNodeForDot(fout, n, range);
+			outputNodeForDot(fout, n, range, adjNodesBinCouter);
 		}
 	}
 	fout << endl;
