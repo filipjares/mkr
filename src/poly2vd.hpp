@@ -36,7 +36,11 @@
 
 /* ********************** ROS includes ******************************* */
 
+#ifndef POLY2VD_STANDALONE
+
 #include <ros/ros.h>
+
+#endif
 
 /* ********************** Poly2VdConverter class ********************* */
 
@@ -55,9 +59,11 @@ public:
 
 	void convert();
 
+#ifndef POLY2VD_STANDALONE
 	void publish_wmat(ros::Publisher & marker_pub, std::string frame_id, double duration);
 
 	void publish_wmat_deg2_nodes(ros::Publisher & marker_pub, std::string frame_id, double duration);
+#endif
 };
 
 #endif   /* ----- #ifndef POLY2VD_H_INC  ----- */

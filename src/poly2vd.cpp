@@ -19,6 +19,7 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <iomanip>
 #include <string>
 #include <limits>
 #include <list>
@@ -30,8 +31,12 @@
 
 /* ************ ROS includes (other than in poly2vd.hpp) ************* */
 
+#ifndef POLY2VD_STANDALONE
+
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
+
+#endif
 
 // These macros are defined in Vroni's basic.h; but I had problems including it
 
@@ -175,6 +180,11 @@ const Color Color::RED (1.0f, 0.0f, 0.0f, 0.75f);
 
 static std::string site_type_names[] = {"SEG", "ARC", "PNT", "VDN", "VDE", "DTE", "CCW", "CW", "UNKNOWN" };
 
+const bool SHRINK = false;
+const bool SHUFFLE = true;
+const bool EXPORT2DOT = true;
+const bool PUBLISH_ROS = false;
+
 /* *************** Utility functions (VRONI-related) ***************** */
 
 static int getWmatEdgeCount(void)
@@ -256,7 +266,7 @@ static coord determineNodeDisplacement(int n)
 	coord c1 = GetNodeCoord(n1);
 
 	int e2   = GetCCWEdge(e1, n);
-	int e3    = GetCCWEdge(e1, n);
+	int e3   = GetCWEdge(e1, n);
 
 	int n2   = GetOtherNode(e2, n);
 	coord c2 = GetNodeCoord(n2);
@@ -280,18 +290,11 @@ static coord determineNodeDisplacement(int n)
 		d.x = 0.0;
 		d.y = 0.0;
 	} else {
-//		std::cout << std::endl << "XXX" << std::endl
-//			<< "\tc: " << c.x << ", " << c.y << "; " << std::endl
-//			<< "\tcentre: " << centre.x << ", " << centre.y << "; " << std::endl;
 		d.x = centre.x - c.x;
 		d.y = centre.y - c.y;
-//		std::cout
-//			<< "\td: " << d.x << ", " << d.y << "; " << std::endl;
 		// FIXME: use reasonable constants
-		d.x *= 0.03 / l;				// normalize
-		d.y *= 0.03 / l;
-//		std::cout
-//			<< "\td: " << d.x << ", " << d.y << "; " << std::endl;
+		d.x *= 0.05 / l;				// normalize
+		d.y *= 0.05 / l;
 	}
 
 	return d;
@@ -326,23 +329,27 @@ static bool hasCloseNeighbour(int n)
 	int e1 = GetIncidentEdge(n);
 	int n1 = GetOtherNode(e1, n);
 
-	if (areNodesInSingleBin(n, n1)) {
-		return true;
+	bool result = false;
+//	if (areNodesInSingleBin(n, n1)) {
+	if (areNodesNear(n, n1)) {
+		result = true;
 	}
 
 	int e_ccw = GetCCWEdge(e1, n);
 	int n_ccw = GetOtherNode(e_ccw, n);
-	if (areNodesInSingleBin(n, n_ccw)) {
-		return true;
+//	if (areNodesInSingleBin(n, n_ccw)) {
+	if (areNodesNear(n, n_ccw)) {
+		result = true;
 	}
 
 	int e_cw = GetCCWEdge(e1, n);
 	int n_cw = GetOtherNode(e_cw, n);
-	if (areNodesInSingleBin(n, n_cw)) {
-		return true;
+//	if (areNodesInSingleBin(n, n_cw)) {
+	if (areNodesNear(n, n_cw)) {
+		result = true;
 	}
 
-	return false;
+	return result;
 }
 
 /* Vroni adds four dummy points to defining sites of the input; dummy points are located at the corners
@@ -479,6 +486,8 @@ static std::string edgeDefiningSitesToString(int e)
 }
 
 /* ********************** "Publisher" functions ********************** */
+
+#ifndef POLY2VD_STANDALONE
 
 static void publish_input_data(ros::Publisher & marker_pub, std::string frame_id, double duration)
 {
@@ -767,40 +776,34 @@ void publish_result( int argc, char *argv[], Poly2VdConverter & p2vd )
  	}
 }
 
+#endif
+
 /* ************ Export of VD to Dot file for Graphviz **************** */
 
-typedef std::map<coord, int, bool(*)(const coord &, const coord &)> coordIntMap;
-
 /*  shuffle: true means "shuffle (almost) incident nodes" */
-void outputNodeForDot(std::ofstream &fout, int n, coordIntMap & adjNodesBinCouter, bool shuffle)
+void outputNodeForDot(std::ofstream &fout, int n, bool shuffle)
 {
-	coord c; double r, dx, dy;
+	// shuffle the node position if needed
+	coord c; double r;
 	GetNodeData(n, &c, &r);
-	coord c_rounded = roundCoord(c);
 	if (shuffle && hasCloseNeighbour(n)) {
-		int count; // count of nodes at the (rounded) position given by c_rounded already processed
-		coordIntMap::iterator it = adjNodesBinCouter.find(c_rounded);
-		if (it == adjNodesBinCouter.end()) {
-			adjNodesBinCouter[c_rounded] = 1;
-			count = 0;
-		} else {
-			count = adjNodesBinCouter[c_rounded];
-			adjNodesBinCouter[c_rounded] = count + 1;
-		}
-		double alpha = M_PI*((double)count)/4.0;
-		dx = 0.08*cos(alpha);
-		dy = 0.08*sin(alpha);
+		coord d = determineNodeDisplacement(n);
+		c.x += d.x;
+		c.y += d.y;
 	} else {
-		dx = dy = 0.0;
 	}
-	c.x = c_rounded.x + dx;
-	c.y = c_rounded.y + dy;
 
 	// output
 	using namespace std;
 	string otherparams = "fontsize=3,fixedsize=true,width=0.1,height=0.075,penwidth=0.5";
-	fout << "\t" << setw(2) << right << n << " [ pos=\"" << setw(18) << left << (coordToString(c, false) + "\",")
-		<< otherparams << " ];" << endl;
+	if (SHRINK) {
+		fout << "\t" << setw(2) << right << n << " [ pos=\"" << setw(18) << left << (coordToString(c, false) + "\"")
+			<< ("," + otherparams) << " ];" << endl;
+	} else {
+		fout << "\t" << setw(2) << right << n << " [ pos=\"" << setw(18) << left << (coordToString(c, false) + "\"")
+			<< ",label=\"" << setw(2) << n << " r=" << setprecision(3) << UnscaleV(r) << "\""
+			<< " ];" << endl;
+	}
 }
 
 void outputEdgeForDot(std::ofstream &fout, int e)
@@ -814,7 +817,7 @@ void outputEdgeForDot(std::ofstream &fout, int e)
 
 	// output
 	fout << "\t" << setw(2) << right << GetStartNode(e) << " -- " << setw(2) << right<< GetEndNode(e)
-		<< "\t[ color=" << setw(6) << left << (color + ",") << "penwidth=0.5,fontsize=2,"
+		<< "\t[ color=" << setw(6) << left << (color + ",") << (SHRINK?"penwidth=0.5,fontsize=2,":"")
 		<< "label=\"" << setw(4) << left << (to_string(e) + "\"") << " ]" << ";";
 	if (isEdgeDefinedByDummyPoint(e)) {
 		fout << "   /* " << edgeDefiningSitesToString(e) << " */";
@@ -829,14 +832,12 @@ void exportVDToDot(bool shuffle)
 	ofstream fout("/tmp/vd.dot");
 	fout << "graph vd {" << endl << endl;
 
-
-	// for every bin being occupied by multiple adjacent nodes, this holds count of the nodes
-	coordIntMap adjNodesBinCouter(coordCompare);
+	if (!SHRINK) fout << "\toverlap=\"false\"" << endl << endl;
 
 	// first four nodes are dummy-point-related
 	for (int n = 4;  n < GetNumberOfNodes(); n++) {
 		if (GetNodeStatus(n) != DELETED && GetNodeStatus(n) != MISC) {
-			outputNodeForDot(fout, n, adjNodesBinCouter, shuffle);
+			outputNodeForDot(fout, n, shuffle);
 		}
 	}
 	fout << endl;
@@ -879,8 +880,10 @@ int main ( int argc, char *argv[] )
 	cout << "pnts count: " << num_pnts << endl;
 	cout << "segs count: " << num_segs << endl;
 
-	exportVDToDot(true);
-	// publish_result(argc, argv, p2vd);
+	if (EXPORT2DOT) exportVDToDot(SHUFFLE);
+#ifndef POLY2VD_STANDALONE
+	if (PUBLISH_ROS) publish_result(argc, argv, p2vd);
+#endif
 
 	return EXIT_SUCCESS;
 }				/* ----------  end of function main  ---------- */
