@@ -19,6 +19,7 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <iomanip>
 #include <string>
 #include <limits>
 #include <list>
@@ -30,8 +31,12 @@
 
 /* ************ ROS includes (other than in poly2vd.hpp) ************* */
 
+#ifndef POLY2VD_STANDALONE
+
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
+
+#endif
 
 // These macros are defined in Vroni's basic.h; but I had problems including it
 
@@ -477,6 +482,8 @@ static std::string edgeDefiningSitesToString(int e)
 
 /* ********************** "Publisher" functions ********************** */
 
+#ifndef POLY2VD_STANDALONE
+
 static void publish_input_data(ros::Publisher & marker_pub, std::string frame_id, double duration)
 {
 	// prepare the Marker
@@ -862,7 +869,9 @@ int main ( int argc, char *argv[] )
 	cout << "segs count: " << num_segs << endl;
 
 	exportVDToDot(true);
+#ifndef POLY2VD_STANDALONE
 	// publish_result(argc, argv, p2vd);
+#endif
 
 	return EXIT_SUCCESS;
 }				/* ----------  end of function main  ---------- */
