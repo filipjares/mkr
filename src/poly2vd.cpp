@@ -188,7 +188,7 @@ static int getWmatEdgeCount(void)
 
 static coord roundCoord(const coord &c)
 {
-	double N = 10.0; coord r;
+	double N = 10.0; coord r;	// FIXME: use constant
 
 	r.x = round(N*c.x)/N;
 	r.y = round(N*c.y)/N;
@@ -206,6 +206,16 @@ static bool coordCompare(const coord & c1, const coord & c2)
 	} else {
 		return r1.y < r2.y;
 	}
+}
+
+static double coordDistance(const coord &c1, const coord &c2)
+{
+	return sqrt((c2.x - c1.x)*(c2.x - c1.x) + (c2.y - c1.y)*(c2.y - c1.y));
+}
+
+static double nodeDistance(int n1, int n2)
+{
+	return coordDistance(GetNodeCoord(n1), GetNodeCoord(n2));
 }
 
 static bool areCoordsEqual(const coord &c1, const coord &c2)
@@ -229,6 +239,62 @@ static bool areNodesInSingleBin(int n1, int n2)
 	coord r2 = roundCoord(GetNodeCoord(n2));
 
 	return areCoordsEqual(r1, r2);
+}
+
+static bool areNodesNear(int n1, int n2)
+{
+	double l = nodeDistance(n1, n2);
+
+	return l < 0.1;		// FIXME use constant
+}
+
+static coord determineNodeDisplacement(int n)
+{
+	// Compute centre of gravity of neighbours of n
+	int e1   = GetIncidentEdge(n);
+	int n1   = GetOtherNode(e1, n);
+	coord c1 = GetNodeCoord(n1);
+
+	int e2   = GetCCWEdge(e1, n);
+	int e3    = GetCCWEdge(e1, n);
+
+	int n2   = GetOtherNode(e2, n);
+	coord c2 = GetNodeCoord(n2);
+
+	coord centre;					// neighbours' centre of gravity
+	if (e2 == e3) {
+		centre.x = (c1.x + c2.x)/2;
+		centre.y = (c1.y + c2.y)/2;
+	} else {
+		int n3    = GetOtherNode(e3, n);
+		coord c3  = GetNodeCoord(n3);
+		centre.x = (c1.x + c2.x + c3.x)/3;
+		centre.y = (c1.y + c2.y + c3.y)/3;
+	}
+
+	coord c = GetNodeCoord(n);		// original node's coords
+
+	coord d;						// the displacement
+	double l = coordDistance(c, centre);
+	if (l == 0.0) {
+		d.x = 0.0;
+		d.y = 0.0;
+	} else {
+//		std::cout << std::endl << "XXX" << std::endl
+//			<< "\tc: " << c.x << ", " << c.y << "; " << std::endl
+//			<< "\tcentre: " << centre.x << ", " << centre.y << "; " << std::endl;
+		d.x = centre.x - c.x;
+		d.y = centre.y - c.y;
+//		std::cout
+//			<< "\td: " << d.x << ", " << d.y << "; " << std::endl;
+		// FIXME: use reasonable constants
+		d.x *= 0.03 / l;				// normalize
+		d.y *= 0.03 / l;
+//		std::cout
+//			<< "\td: " << d.x << ", " << d.y << "; " << std::endl;
+	}
+
+	return d;
 }
 
 static bool hasIncidentNeighbour(int n)
