@@ -180,6 +180,11 @@ const Color Color::RED (1.0f, 0.0f, 0.0f, 0.75f);
 
 static std::string site_type_names[] = {"SEG", "ARC", "PNT", "VDN", "VDE", "DTE", "CCW", "CW", "UNKNOWN" };
 
+const bool SHRINK = false;
+const bool SHUFFLE = true;
+const bool EXPORT2DOT = true;
+const bool PUBLISH_ROS = false;
+
 /* *************** Utility functions (VRONI-related) ***************** */
 
 static int getWmatEdgeCount(void)
@@ -791,8 +796,14 @@ void outputNodeForDot(std::ofstream &fout, int n, bool shuffle)
 	// output
 	using namespace std;
 	string otherparams = "fontsize=3,fixedsize=true,width=0.1,height=0.075,penwidth=0.5";
-	fout << "\t" << setw(2) << right << n << " [ pos=\"" << setw(18) << left << (coordToString(c, false) + "\",")
-		<< otherparams << " ];" << endl;
+	if (SHRINK) {
+		fout << "\t" << setw(2) << right << n << " [ pos=\"" << setw(18) << left << (coordToString(c, false) + "\"")
+			<< ("," + otherparams) << " ];" << endl;
+	} else {
+		fout << "\t" << setw(2) << right << n << " [ pos=\"" << setw(18) << left << (coordToString(c, false) + "\"")
+			<< ",label=\"" << setw(2) << n << " r=" << setprecision(3) << UnscaleV(r) << "\""
+			<< " ];" << endl;
+	}
 }
 
 void outputEdgeForDot(std::ofstream &fout, int e)
@@ -806,7 +817,7 @@ void outputEdgeForDot(std::ofstream &fout, int e)
 
 	// output
 	fout << "\t" << setw(2) << right << GetStartNode(e) << " -- " << setw(2) << right<< GetEndNode(e)
-		<< "\t[ color=" << setw(6) << left << (color + ",") << "penwidth=0.5,fontsize=2,"
+		<< "\t[ color=" << setw(6) << left << (color + ",") << (SHRINK?"penwidth=0.5,fontsize=2,":"")
 		<< "label=\"" << setw(4) << left << (to_string(e) + "\"") << " ]" << ";";
 	if (isEdgeDefinedByDummyPoint(e)) {
 		fout << "   /* " << edgeDefiningSitesToString(e) << " */";
@@ -821,6 +832,7 @@ void exportVDToDot(bool shuffle)
 	ofstream fout("/tmp/vd.dot");
 	fout << "graph vd {" << endl << endl;
 
+	if (!SHRINK) fout << "\toverlap=\"false\"" << endl << endl;
 
 	// first four nodes are dummy-point-related
 	for (int n = 4;  n < GetNumberOfNodes(); n++) {
@@ -868,9 +880,9 @@ int main ( int argc, char *argv[] )
 	cout << "pnts count: " << num_pnts << endl;
 	cout << "segs count: " << num_segs << endl;
 
-	exportVDToDot(true);
+	if (EXPORT2DOT) exportVDToDot(SHUFFLE);
 #ifndef POLY2VD_STANDALONE
-	// publish_result(argc, argv, p2vd);
+	if (PUBLISH_ROS) publish_result(argc, argv, p2vd);
 #endif
 
 	return EXIT_SUCCESS;
