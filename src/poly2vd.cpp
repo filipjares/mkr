@@ -319,23 +319,27 @@ static bool hasCloseNeighbour(int n)
 	int e1 = GetIncidentEdge(n);
 	int n1 = GetOtherNode(e1, n);
 
-	if (areNodesInSingleBin(n, n1)) {
-		return true;
+	bool result = false;
+//	if (areNodesInSingleBin(n, n1)) {
+	if (areNodesNear(n, n1)) {
+		result = true;
 	}
 
 	int e_ccw = GetCCWEdge(e1, n);
 	int n_ccw = GetOtherNode(e_ccw, n);
-	if (areNodesInSingleBin(n, n_ccw)) {
-		return true;
+//	if (areNodesInSingleBin(n, n_ccw)) {
+	if (areNodesNear(n, n_ccw)) {
+		result = true;
 	}
 
 	int e_cw = GetCCWEdge(e1, n);
 	int n_cw = GetOtherNode(e_cw, n);
-	if (areNodesInSingleBin(n, n_cw)) {
-		return true;
+//	if (areNodesInSingleBin(n, n_cw)) {
+	if (areNodesNear(n, n_cw)) {
+		result = true;
 	}
 
-	return false;
+	return result;
 }
 
 /* Vroni adds four dummy points to defining sites of the input; dummy points are located at the corners
@@ -760,34 +764,22 @@ void publish_result( int argc, char *argv[], Poly2VdConverter & p2vd )
  	}
 }
 
+#endif
+
 /* ************ Export of VD to Dot file for Graphviz **************** */
 
-typedef std::map<coord, int, bool(*)(const coord &, const coord &)> coordIntMap;
-
 /*  shuffle: true means "shuffle (almost) incident nodes" */
-void outputNodeForDot(std::ofstream &fout, int n, coordIntMap & adjNodesBinCouter, bool shuffle)
+void outputNodeForDot(std::ofstream &fout, int n, bool shuffle)
 {
-	coord c; double r, dx, dy;
+	// shuffle the node position if needed
+	coord c; double r;
 	GetNodeData(n, &c, &r);
-	coord c_rounded = roundCoord(c);
 	if (shuffle && hasCloseNeighbour(n)) {
-		int count; // count of nodes at the (rounded) position given by c_rounded already processed
-		coordIntMap::iterator it = adjNodesBinCouter.find(c_rounded);
-		if (it == adjNodesBinCouter.end()) {
-			adjNodesBinCouter[c_rounded] = 1;
-			count = 0;
-		} else {
-			count = adjNodesBinCouter[c_rounded];
-			adjNodesBinCouter[c_rounded] = count + 1;
-		}
-		double alpha = M_PI*((double)count)/4.0;
-		dx = 0.08*cos(alpha);
-		dy = 0.08*sin(alpha);
+		coord d = determineNodeDisplacement(n);
+		c.x += d.x;
+		c.y += d.y;
 	} else {
-		dx = dy = 0.0;
 	}
-	c.x = c_rounded.x + dx;
-	c.y = c_rounded.y + dy;
 
 	// output
 	using namespace std;
@@ -823,13 +815,10 @@ void exportVDToDot(bool shuffle)
 	fout << "graph vd {" << endl << endl;
 
 
-	// for every bin being occupied by multiple adjacent nodes, this holds count of the nodes
-	coordIntMap adjNodesBinCouter(coordCompare);
-
 	// first four nodes are dummy-point-related
 	for (int n = 4;  n < GetNumberOfNodes(); n++) {
 		if (GetNodeStatus(n) != DELETED && GetNodeStatus(n) != MISC) {
-			outputNodeForDot(fout, n, adjNodesBinCouter, shuffle);
+			outputNodeForDot(fout, n, shuffle);
 		}
 	}
 	fout << endl;
