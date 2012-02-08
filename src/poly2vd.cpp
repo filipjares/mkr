@@ -261,7 +261,7 @@ static coord determineNodeDisplacement(int n)
 	coord c1 = GetNodeCoord(n1);
 
 	int e2   = GetCCWEdge(e1, n);
-	int e3    = GetCCWEdge(e1, n);
+	int e3   = GetCWEdge(e1, n);
 
 	int n2   = GetOtherNode(e2, n);
 	coord c2 = GetNodeCoord(n2);
@@ -288,8 +288,8 @@ static coord determineNodeDisplacement(int n)
 		d.x = centre.x - c.x;
 		d.y = centre.y - c.y;
 		// FIXME: use reasonable constants
-		d.x *= 0.01 / l;				// normalize
-		d.y *= 0.01 / l;
+		d.x *= 0.05 / l;				// normalize
+		d.y *= 0.05 / l;
 	}
 
 	return d;
