@@ -22,6 +22,8 @@
 #define HAVE_BOOL	// boolean defined in types.h, included by dvi_graphics_header.h
 #define MAT		// API_ComputeWMAT in ext_appl_inout.h
 
+#define EXT_APPL_SITES	// Vroni input needs to hold additional data (frontiers)
+
 #include "dvi_graphics_header.h"	// beacause of API_InitializeProgram()
 
 // access to VRONI's internal data
