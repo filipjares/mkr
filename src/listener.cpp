@@ -121,7 +121,7 @@ private:
 			RDP(scan, epsilon, idx, endIdx);
 		}
 	}
-	
+		
 	void tfScanToPoints(const sensor_msgs::LaserScan msg, std::vector<ClipperLib::IntPoint> & scan, double angle_min, double angle_max, const double angle_offset)
 	{
 		if(msg.angle_min > angle_min)
@@ -131,20 +131,20 @@ private:
 		double angle = msg.angle_max;
 		double x,y;
 		for(int i = msg.ranges.size()-1; i>=0;i--){
-			if(angle < angle_min || angle > angle_max) {
+	/*  		if(angle < angle_min || angle > angle_max) {
 				angle -= msg.angle_increment;
 				continue;
-			}
+			}*/
 			// in centimeters	
 			double r = msg.ranges[i]*CM;
-			if(msg.ranges[i] == LASER_RANGE)
-				r-= MAX_RANGE_CORR;
+			if(abs(msg.ranges[i] - LASER_RANGE) < 0.1)
+				r -= MAX_RANGE_CORR;
 			y = r*sin(angle+angle_offset);
 			x = r*cos(angle+angle_offset);
 			bool frontierIn = false;
 			bool frontierOut = false;
 			if(scan.size() > 0) {
-				if(msg.ranges[i] == LASER_RANGE && msg.ranges[i+1] == LASER_RANGE) {
+				if(abs(msg.ranges[i] - LASER_RANGE) < 0.1 && abs(msg.ranges[i+1] - LASER_RANGE) < 0.1) {
 					frontierIn = true;
 					scan[scan.size()-1].outputEdge = true;
 				}
@@ -153,7 +153,7 @@ private:
 			angle -= msg.angle_increment;
 		}
 	}
-	
+
 	void processScan(std::vector<ClipperLib::IntPoint> & scan)
 	{
 		scan[0].intersectPt = true;
