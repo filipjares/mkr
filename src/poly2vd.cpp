@@ -185,6 +185,8 @@ const bool SHUFFLE = true;
 const bool EXPORT2DOT = true;
 const bool PUBLISH_ROS = false;
 
+const double COMPARISON_RATIO = 0.96;
+
 /* *************** Utility functions (VRONI-related) ***************** */
 
 static int getWmatEdgeCount(void)
@@ -256,6 +258,40 @@ static bool areNodesNear(int n1, int n2)
 	double l = nodeDistance(n1, n2);
 
 	return l < 0.1;		// FIXME use constant
+}
+
+/* Performs "contrast comparison" of non-negative arguments, it treats "close
+ * enough" numbers as being equal.  Checks for significant ratio between both
+ * arguments.  The COMPARISON_RATIO constant is used as a "threshold".
+ * COMPARISON_RATIO is lower than 1 and positive. We define x1 being
+ * "contrasty lower" than x2 (i.e. x1 << x2) if and only if it is
+ * x1 < COMPARISON_RATIO * x2.
+ *
+ * Returns:
+ * 			-1		iff		x1  <<  x2
+ * 			 0		iff		x1 "==" x2
+ * 			 1		iff		x1  >>  x2
+ *
+ * Suggested usage: contrastCompare(x1, x2) OP 0, where OP is one of usual
+ * comparison operators ('<', '==', '!=', '>').
+ */
+static char contrastCompare(double x1, double x2)
+{
+	assert(x1 >= 0 && x2 >= 0); // implemented for non-negative inputs only
+
+	if (x1 < x2) {
+		if (x1 < COMPARISON_RATIO * x2) {
+			return -1;
+		} else {
+			return 0;
+		}
+	} else {
+		if (x2 < COMPARISON_RATIO * x1) {
+			return 1;
+		} else {
+			return 0;
+		}
+	}
 }
 
 static coord determineNodeDisplacement(int n)
@@ -852,6 +888,34 @@ void exportVDToDot(bool shuffle)
 	fout.close();
 }
 
+/* ********************** performTests() ***************************** */
+
+void testContrastCompare()
+{
+	std::cout << "\tTesting contrastCompare()" << std::endl;
+	// contrastCompare supports only positive number copmarison for now
+	double x = 1;
+
+	assert(contrastCompare(0.999*COMPARISON_RATIO*x, x) < 0);
+	assert(contrastCompare(1.111*COMPARISON_RATIO*x, x) == 0);
+	assert(contrastCompare(x, 0.999*COMPARISON_RATIO*x) > 0);
+	assert(contrastCompare(x, 1.111*COMPARISON_RATIO*x) == 0);
+	assert(contrastCompare(x, x) == 0);
+
+	assert(contrastCompare(0.0, 0.00000000001) < 0);
+	assert(contrastCompare(0.00000000001, 0.0) > 0);
+}
+
+void performTests()
+{
+	std::cout << "Performing tests:" << std::endl;
+
+	testContrastCompare();
+
+	std::cout << "Tests passed." << std::endl;
+}
+
+
 /* **************************** main() ******************************* */
 
 #ifdef POLY2VD_STANDALONE
@@ -862,6 +926,8 @@ void exportVDToDot(bool shuffle)
 int main ( int argc, char *argv[] )
 {
 	using namespace std;
+
+	// performTests();
 
 	if (argc != 2) {
 		cout << "Usage: " << argv[0] << " filename" << endl <<
