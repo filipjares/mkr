@@ -608,7 +608,7 @@ static void publishCriticalNodeCandidateIfAppropriate(int e, std::list<int> & us
 		// connected nodes.
 
 		// critical point candidate has to be local minimum
-		if (r1 == r2) {
+		if (contrastCompare(r1, r2) == 0) {
 			return;
 		}
 
@@ -618,7 +618,7 @@ static void publishCriticalNodeCandidateIfAppropriate(int e, std::list<int> & us
 		double r_candidate;
 
 		// the one with smaller clearance radius is the candidate
-		if (r1 < r2) {
+		if (contrastCompare(r1, r2) < 0) {
 			// the candidate is degree 3 -> not a critical point
 			if (!isN1Deg2) {
 				return;
