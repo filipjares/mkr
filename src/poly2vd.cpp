@@ -817,7 +817,7 @@ void publish_result( int argc, char *argv[], Poly2VdConverter & p2vd )
 /* ************ Export of VD to Dot file for Graphviz **************** */
 
 /*  shuffle: true means "shuffle (almost) incident nodes" */
-void outputNodeForDot(std::ofstream &fout, int n, bool shuffle)
+void outputNodeForDot(std::ofstream &fout, int n, bool shuffle, bool shrink)
 {
 	// shuffle the node position if needed
 	coord c; double r;
@@ -832,7 +832,7 @@ void outputNodeForDot(std::ofstream &fout, int n, bool shuffle)
 	// output
 	using namespace std;
 	string otherparams = "fontsize=3,fixedsize=true,width=0.1,height=0.075,penwidth=0.5";
-	if (SHRINK) {
+	if (shrink) {
 		fout << "\t" << setw(2) << right << n << " [ pos=\"" << setw(18) << left << (coordToString(c, false) + "\"")
 			<< ("," + otherparams) << " ];" << endl;
 	} else {
@@ -842,7 +842,7 @@ void outputNodeForDot(std::ofstream &fout, int n, bool shuffle)
 	}
 }
 
-void outputEdgeForDot(std::ofstream &fout, int e)
+void outputEdgeForDot(std::ofstream &fout, int e, bool shrink)
 {
 	using namespace std;
 
@@ -853,7 +853,7 @@ void outputEdgeForDot(std::ofstream &fout, int e)
 
 	// output
 	fout << "\t" << setw(2) << right << GetStartNode(e) << " -- " << setw(2) << right<< GetEndNode(e)
-		<< "\t[ color=" << setw(6) << left << (color + ",") << (SHRINK?"penwidth=0.5,fontsize=2,":"")
+		<< "\t[ color=" << setw(6) << left << (color + ",") << (shrink?"penwidth=0.5,fontsize=2,":"")
 		<< "label=\"" << setw(4) << left << (to_string(e) + "\"") << " ]" << ";";
 	if (isEdgeDefinedByDummyPoint(e)) {
 		fout << "   /* " << edgeDefiningSitesToString(e) << " */";
@@ -861,26 +861,26 @@ void outputEdgeForDot(std::ofstream &fout, int e)
 	fout << endl;
 }
 
-void exportVDToDot(bool shuffle)
+void Poly2VdConverter::exportVdToDot(const std::string &fileName, bool shuffle, bool shrink)
 {
 	using namespace std;
 
-	ofstream fout("/tmp/vd.dot");
+	ofstream fout(fileName.c_str());
 	fout << "graph vd {" << endl << endl;
 
-	if (!SHRINK) fout << "\toverlap=\"false\"" << endl << endl;
+	if (!shrink) fout << "\toverlap=\"false\"" << endl << endl;
 
 	// first four nodes are dummy-point-related
 	for (int n = 4;  n < GetNumberOfNodes(); n++) {
 		if (GetNodeStatus(n) != DELETED && GetNodeStatus(n) != MISC) {
-			outputNodeForDot(fout, n, shuffle);
+			outputNodeForDot(fout, n, shuffle, shrink);
 		}
 	}
 	fout << endl;
 	for (int e = 0;  e < GetNumberOfEdges(); e++) {
 		// first four nodes are dummy-point-related
 		if (GetStartNode(e) > 3 && GetEndNode(e) > 3) {
-			outputEdgeForDot(fout, e);
+			outputEdgeForDot(fout, e, shrink);
 		}
 	}
 
@@ -946,7 +946,7 @@ int main ( int argc, char *argv[] )
 	cout << "pnts count: " << num_pnts << endl;
 	cout << "segs count: " << num_segs << endl;
 
-	if (EXPORT2DOT) exportVDToDot(SHUFFLE);
+	if (EXPORT2DOT) p2vd.exportVdToDot("/tmp/vd.dot", SHUFFLE, SHRINK);
 #ifndef POLY2VD_STANDALONE
 	if (PUBLISH_ROS) publish_result(argc, argv, p2vd);
 #endif

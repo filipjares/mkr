@@ -44,6 +44,8 @@
 
 /* ********************** Poly2VdConverter class ********************* */
 
+// FIXME: define some namespace?
+
 class Poly2VdConverter
 {
 private:
@@ -64,6 +66,7 @@ public:
 
 	void publish_wmat_deg2_nodes(ros::Publisher & marker_pub, std::string frame_id, double duration);
 #endif
+	void exportVdToDot(const std::string &fileName, bool shuffle, bool shrink);
 };
 
 #endif   /* ----- #ifndef POLY2VD_H_INC  ----- */
