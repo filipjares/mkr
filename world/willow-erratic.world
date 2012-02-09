@@ -65,7 +65,7 @@ window
 floorplan
 ( 
   name "willow"
-  bitmap "my_office2.pgm"
+  bitmap "arena1.pgm"
   size [100.0 100.0 0.5]
   pose [ 0.000 0.000 0 0.000 ]
 )

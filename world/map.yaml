@@ -1,4 +1,4 @@
-image: my_office2.pgm
+image: arena1.pgm
 resolution: 0.5
 origin: [-39.0, -47.0, 0.0]
 occupied_thresh: 0.65
