@@ -289,31 +289,43 @@ void convertPolyInCentimeters2SegsInMeters(ClipperLib::ExPolygons & poly, in_seg
 	for(unsigned int n = 0; n < poly.size(); n++)	{
 		unsigned int sz = poly[n].outer.size();
 		for(unsigned int i = 0; i < sz - 1; i++)	{
+			// endpoint coords
 			s[k].x1 = (double)poly[n].outer[i].X/CM;
 			s[k].y1 = (double)poly[n].outer[i].Y/CM;
 			s[k].x2 = (double)poly[n].outer[i+1].X/CM;
 			s[k].y2 = (double)poly[n].outer[i+1].Y/CM;
+			// is it a frontier
+			s[k].ext_appl = (poly[n].outer[i].outputEdge && poly[n].outer[i+1].inputEdge);
 			k++;
 		}
+		// endpoint coords
 		s[k].x1 = (double)poly[n].outer[sz-1].X/CM;
 		s[k].y1 = (double)poly[n].outer[sz-1].Y/CM;
 		s[k].x2 = (double)poly[n].outer[0].X/CM;
 		s[k].y2 = (double)poly[n].outer[0].Y/CM;
+		// is it a frontier
+		s[k].ext_appl = (poly[n].outer[sz-1].outputEdge && poly[n].outer[0].inputEdge);
 		k++;
 
 		for(unsigned int m = 0; m < poly[n].holes.size(); m++)	{	
 			unsigned int sz = poly[n].holes[m].size();
 			for(unsigned int i = 0; i < sz - 1; i++)	{
+				// endpoint coords
 				s[k].x1 = (double)poly[n].holes[m][i].X/CM;
 				s[k].y1 = (double)poly[n].holes[m][i].Y/CM;
 				s[k].x2 = (double)poly[n].holes[m][i+1].X/CM;
 				s[k].y2 = (double)poly[n].holes[m][i+1].Y/CM;
+				// is it a frontier
+				s[k].ext_appl = (poly[n].holes[m][i].outputEdge && poly[n].holes[m][i+1].inputEdge);
 				k++;
 			}
+			// endpoint coords
 			s[k].x1 = (double)poly[n].holes[m][sz-1].X/CM;
 			s[k].y1 = (double)poly[n].holes[m][sz-1].Y/CM;
 			s[k].x2 = (double)poly[n].holes[m][0].X/CM;
 			s[k].y2 = (double)poly[n].holes[m][0].Y/CM;
+			// is it a frontier
+			s[k].ext_appl = (poly[n].holes[m][sz-1].outputEdge && poly[n].holes[m][0].inputEdge);
 			k++;
 		}
 	}	

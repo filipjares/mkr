@@ -423,6 +423,15 @@ static bool isDeg2WmatNode(int e, int n)
 	}
 }
 
+static bool isFrontierBasedEdge(int e)
+{
+	int s1, s2; t_site t1, t2;
+	GetLftSiteData(e, &s1, &t1);
+	GetRgtSiteData(e, &s2, &t2);
+
+	return (t1 == SEG && segs[s1].ext_appl) || (t2 == SEG && segs[s2].ext_appl);
+}
+
 /* *************** Utility functions (other) ************************* */
 
 //tempate <class T>
@@ -431,7 +440,7 @@ static bool isDeg2WmatNode(int e, int n)
 //	list<T>::iterator it =  find(lst.begin(), lst.end(), element);
 //	return it != lst.end();
 //}
-bool contains(std::list<int> & lst, const int & element)
+bool contains(std::list<int> & lst, int element)
 {
 	std::list<int>::iterator it = find(lst.begin(), lst.end(), element);
 	return it != lst.end();
@@ -582,7 +591,7 @@ void publishSphere(ros::Publisher & marker_pub, int id, coord location, double d
 	marker_pub.publish(marker);
 }
 
-/* n - node_id */
+/* e - edge id */
 static void publishCriticalNodeCandidateIfAppropriate(int e, std::list<int> & usedNodes, ros::Publisher & marker_pub, std::string frame_id, double duration, bool printIt)
 {
 		int n1 = GetStartNode(e);
@@ -672,7 +681,7 @@ static void publishCriticalNodeCandidateIfAppropriate(int e, std::list<int> & us
 			}
 			if (areCoordsEqual(c_candidate, c_ccw)) {
 				using namespace std;
-				cout << "The candidate (" << candidate << ") and node related to it through"
+				cout << "The candidate (" << candidate << ") and node related to it through "
 					<< "e_ccw have the same coords: " << coordToString(c_candidate) << endl;
 			}
 		}
@@ -691,7 +700,7 @@ static void publishCriticalNodeCandidateIfAppropriate(int e, std::list<int> & us
 			}
 			if (areCoordsEqual(c_candidate, c_cw)) {
 				using namespace std;
-				cout << "The candidate (" << candidate << ") and node related to it through"
+				cout << "The candidate (" << candidate << ") and node related to it through "
 					<< "e_cw have the same coords: " << coordToString(c_candidate) << endl;
 			}
 		}
@@ -719,6 +728,101 @@ static void publishCriticalNodeCandidateIfAppropriate(int e, std::list<int> & us
 		}
 }
 
+// FIXME: use VRONI's definition
+#define  ZERO      1.0e-13   /* small number, greater than machine precision */
+
+int getMaNodeNotOnBoundary()
+{
+	bool at_boundary = true;
+	int n = 0, e;
+	double r;
+
+	// find a MA node that is not on the boundary
+	e = 0;
+	while (at_boundary  &&  (e < GetNumberOfEdges())) {
+		if (IsWmatEdge(e)) {
+			n = GetStartNode(e);
+			r = GetNodeParam(n);
+			if (r > ZERO) {
+				at_boundary = false;
+			}
+			else {
+				n = GetOtherNode(e, n);
+				r = GetNodeParam(n);
+				if (r > ZERO) {
+					at_boundary = false;
+				}
+				else {
+					++e;
+				}
+			}
+		}
+		else {
+			++e;
+		}
+	}
+
+	if (at_boundary) {
+		return -1;
+	} else {
+		return n;
+	}
+}
+
+void addTheOtherNodeIfAppropriate(int edge, int sourceNode, std::list<int> & open, bool *closed)
+{
+	if (IsWmatEdge(edge)) {
+		int otherNode = GetOtherNode(edge, sourceNode);
+		if (closed[otherNode] == false) {
+			closed[otherNode] = true;
+			open.push_back(otherNode);
+		}
+	} else {
+		// TODO: check incident nodes
+	}
+}
+
+void doTheSearch(ros::Publisher & marker_pub, const std::string & frame_id, double duration)
+{
+	using namespace std;
+
+	int root = getMaNodeNotOnBoundary();
+	
+	if (root == -1) {
+		std::cerr << "Medial axis not known or data is corrupted. Could not find any node not on the boundary";
+		return;
+	}
+
+	// publish the root node as red sphere
+	coord c; double r;
+	GetNodeData(root, &c, &r);
+	publishSphere(marker_pub, root, c, 2*r, Color::RED, frame_id, duration);
+
+	// prepare open and close "lists":
+	int nodeCount = GetNumberOfNodes();
+	std::list<int> open;
+	bool closed[nodeCount];
+	for (int i = 0; i < nodeCount; i++) closed[i] = false;
+
+	open.push_back(root);
+	closed[root] = true;
+
+	while (!open.empty()) {
+		int n = open.front();
+		open.pop_front();
+
+		// each Vroni's node has at most three incident edges
+		int e1 = GetIncidentEdge(n);				// get the first one
+		addTheOtherNodeIfAppropriate(e1, n, open, closed);
+
+		int e_ccw = GetCCWEdge(e1, n);				// get the second one
+		addTheOtherNodeIfAppropriate(e_ccw, n, open, closed);
+
+		int e_cw = GetCWEdge(e1, n);
+		if (e_cw != e_ccw) addTheOtherNodeIfAppropriate(e_cw, n, open, closed);
+	}
+}
+
 void Poly2VdConverter::publish_wmat_deg2_nodes(ros::Publisher & marker_pub, const std::string & frame_id, double duration)
 {
 	static int printed = 0;
@@ -726,6 +830,8 @@ void Poly2VdConverter::publish_wmat_deg2_nodes(ros::Publisher & marker_pub, cons
 
 	using namespace std;
 	using namespace visualization_msgs;
+
+	doTheSearch(marker_pub, frame_id, duration);
 
 	list<int> usedNodes;
 
@@ -750,7 +856,7 @@ void Poly2VdConverter::publish_wmat_deg2_nodes(ros::Publisher & marker_pub, cons
 
 void Poly2VdConverter::publish_wmat(ros::Publisher & marker_pub, const std::string & frame_id, double duration)
 {
-	// prepare the Marker
+	// prepare Markers for both "ordinary" (non-frontier based)...
 	visualization_msgs::Marker wmat_marker;
 	wmat_marker.header.frame_id = frame_id;
 	wmat_marker.header.stamp = ros::Time::now();
@@ -763,6 +869,20 @@ void Poly2VdConverter::publish_wmat(ros::Publisher & marker_pub, const std::stri
 	wmat_marker.scale.x = 0.25;
 	wmat_marker.color.g = 1.0f;
 	wmat_marker.color.a = 1.0;
+	// ... and frontier-based edges
+	visualization_msgs::Marker wmat_f_marker;
+	wmat_f_marker.header.frame_id = frame_id;
+	wmat_f_marker.header.stamp = ros::Time::now();
+	wmat_f_marker.ns = "wmatF";
+	wmat_f_marker.action = visualization_msgs::Marker::ADD;
+	wmat_f_marker.pose.orientation.w = 1.0;
+	wmat_f_marker.id = 0;
+	wmat_f_marker.lifetime = ros::Duration(duration);
+	wmat_f_marker.type = visualization_msgs::Marker::LINE_LIST;
+	wmat_f_marker.scale.x = 0.25;
+	wmat_f_marker.color.g = 0.5f;
+	wmat_f_marker.color.b = 1.0f;
+	wmat_f_marker.color.a = 1.0;
 
 	using namespace std;
 
@@ -781,14 +901,23 @@ void Poly2VdConverter::publish_wmat(ros::Publisher & marker_pub, const std::stri
 		GetNodeData(GetStartNode(e), &c, &r);
 		p.x = UnscaleX(c.x);
 		p.y = UnscaleY(c.y);
-		wmat_marker.points.push_back(p);
+		if (isFrontierBasedEdge(e)) {
+			wmat_f_marker.points.push_back(p);
+		} else {
+			wmat_marker.points.push_back(p);
+		}
 		GetNodeData(GetEndNode(e), &c, &r);
 		p.x = UnscaleX(c.x);
 		p.y = UnscaleY(c.y);
-		wmat_marker.points.push_back(p);
+		if (isFrontierBasedEdge(e)) {
+			wmat_f_marker.points.push_back(p);
+		} else {
+			wmat_marker.points.push_back(p);
+		}
 	}
 
 	marker_pub.publish(wmat_marker);
+	marker_pub.publish(wmat_f_marker);
 }
 
 /* Sends single message with input and output data */

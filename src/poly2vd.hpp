@@ -22,12 +22,15 @@
 #define HAVE_BOOL	// boolean defined in types.h, included by dvi_graphics_header.h
 #define MAT		// API_ComputeWMAT in ext_appl_inout.h
 
+#define EXT_APPL_SITES	// Vroni input needs to hold additional data (frontiers)
+
 #include "dvi_graphics_header.h"	// beacause of API_InitializeProgram()
 
 // access to VRONI's internal data
 #include "fpkernel.h"			// because of the double_arg macro
 #include "vronivector.h"
 #include "defs.h"
+#include "offset.h"
 
 // ext_appl_inout.h has to be included after "defs.h" (which includes coord.h)
 #include "ext_appl_inout.h"
@@ -50,6 +53,9 @@ class Poly2VdConverter
 {
 private:
 	bool input_prepared;
+
+	// TODO:
+	bool result_ready;
 public:
 	Poly2VdConverter();
 
