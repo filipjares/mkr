@@ -558,7 +558,7 @@ static void publish_input_data(ros::Publisher & marker_pub, std::string frame_id
 	marker_pub.publish(input_marker);
 }
 
-void publishSphere(ros::Publisher & marker_pub, int id, coord location, double radius, Color color, std::string frame_id, double duration)
+void publishSphere(ros::Publisher & marker_pub, int id, coord location, double diameter, Color color, std::string frame_id, double duration)
 {
 	// prepare the Marker
 	visualization_msgs::Marker marker;
@@ -571,10 +571,10 @@ void publishSphere(ros::Publisher & marker_pub, int id, coord location, double r
 	marker.lifetime = ros::Duration(duration);
 	marker.type = visualization_msgs::Marker::SPHERE;
 
-	// set its position, radius and color
+	// set its position, diameter and color
 	marker.pose.position.x = UnscaleX(location.x);
 	marker.pose.position.y = UnscaleY(location.y);
-	marker.scale.x = marker.scale.y = marker.scale.z = UnscaleV(radius);
+	marker.scale.x = marker.scale.y = marker.scale.z = UnscaleV(diameter);
 	marker.color.r = color.r; marker.color.g = color.g; marker.color.b = color.b;
 	marker.color.a = color.a;
 
@@ -719,7 +719,7 @@ static void publishCriticalNodeCandidateIfAppropriate(int e, std::list<int> & us
 		}
 }
 
-void Poly2VdConverter::publish_wmat_deg2_nodes(ros::Publisher & marker_pub, std::string frame_id, double duration)
+void Poly2VdConverter::publish_wmat_deg2_nodes(ros::Publisher & marker_pub, const std::string & frame_id, double duration)
 {
 	static int printed = 0;
 	bool printIt = (printed % 20 == 0);
@@ -748,7 +748,7 @@ void Poly2VdConverter::publish_wmat_deg2_nodes(ros::Publisher & marker_pub, std:
 	printed++;
 }
 
-void Poly2VdConverter::publish_wmat(ros::Publisher & marker_pub, std::string frame_id, double duration)
+void Poly2VdConverter::publish_wmat(ros::Publisher & marker_pub, const std::string & frame_id, double duration)
 {
 	// prepare the Marker
 	visualization_msgs::Marker wmat_marker;
