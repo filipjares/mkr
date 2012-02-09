@@ -220,7 +220,7 @@ private:
 	}
 };
 
-void visualizeMap(ros::Publisher & marker_pub, ClipperLib::Polygons & obj, const int id) {
+void visualizeMap(ros::Publisher & marker_pub, ClipperLib::Polygon & obj, const int id) {
 	visualization_msgs::Marker line_strip, line_list, text;
 	line_strip.header.frame_id = "/odom";
 //	line_strip.header.stamp = ros::Time::now();
@@ -235,12 +235,12 @@ void visualizeMap(ros::Publisher & marker_pub, ClipperLib::Polygons & obj, const
 	line_strip.color.a = 1.0;
 	geometry_msgs::Point p1;
 	geometry_msgs::Point p2;
-	for(unsigned int i = 0; i<obj[id].size()-1;i++) {
-		p1.x = obj[id][i].X/CM;
-		p1.y = obj[id][i].Y/CM;
-		p2.x = obj[id][i+1].X/CM;
-		p2.y = obj[id][i+1].Y/CM;
-		if(obj[id][i].outputEdge && obj[id][i+1].inputEdge) {
+	for(unsigned int i = 0; i<obj.size()-1;i++) {
+		p1.x = obj[i].X/CM;
+		p1.y = obj[i].Y/CM;
+		p2.x = obj[i+1].X/CM;
+		p2.y = obj[i+1].Y/CM;
+		if(obj[i].outputEdge && obj[i+1].inputEdge) {
 			line_list.points.push_back(p1);
 			line_list.points.push_back(p2);
 		}
@@ -250,11 +250,11 @@ void visualizeMap(ros::Publisher & marker_pub, ClipperLib::Polygons & obj, const
 		}
 	}
 	//adding point to join last point with robot pose
-	p1.x = obj[id][obj[id].size()-1].X/CM;
-	p1.y = obj[id][obj[id].size()-1].Y/CM;
-	p2.x = obj[id][0].X/CM;
-	p2.y = obj[id][0].Y/CM;
-	if(obj[id][obj[id].size()-1].outputEdge && obj[id][0].inputEdge) {
+	p1.x = obj[obj.size()-1].X/CM;
+	p1.y = obj[obj.size()-1].Y/CM;
+	p2.x = obj[0].X/CM;
+	p2.y = obj[0].Y/CM;
+	if(obj[obj.size()-1].outputEdge && obj[0].inputEdge) {
 		line_list.points.push_back(p1);
 		line_list.points.push_back(p2);
 	}
@@ -277,7 +277,7 @@ void visualizeMap(ros::Publisher & marker_pub, ClipperLib::Polygons & obj, const
 	marker_pub.publish(line_list);
 }
 
-void convertPolyInCentimeters2SegsInMeters(ClipperLib::Polygons & poly, in_segs * s, unsigned int size) {
+void convertPolyInCentimeters2SegsInMeters(ClipperLib::ExPolygons & poly, in_segs * s, unsigned int size) {
 	in_segs init;
 	init.x1 = 0.0;
 	init.x2 = 0.0;
@@ -287,19 +287,35 @@ void convertPolyInCentimeters2SegsInMeters(ClipperLib::Polygons & poly, in_segs 
 		s[i] = init;
 	unsigned int k = 0;
 	for(unsigned int n = 0; n < poly.size(); n++)	{
-		unsigned int sz = poly[n].size();
+		unsigned int sz = poly[n].outer.size();
 		for(unsigned int i = 0; i < sz - 1; i++)	{
-			s[k].x1 = (double)poly[n][i].X/CM;
-			s[k].y1 = (double)poly[n][i].Y/CM;
-			s[k].x2 = (double)poly[n][i+1].X/CM;
-			s[k].y2 = (double)poly[n][i+1].Y/CM;
+			s[k].x1 = (double)poly[n].outer[i].X/CM;
+			s[k].y1 = (double)poly[n].outer[i].Y/CM;
+			s[k].x2 = (double)poly[n].outer[i+1].X/CM;
+			s[k].y2 = (double)poly[n].outer[i+1].Y/CM;
 			k++;
 		}
-		s[k].x1 = (double)poly[n][sz-1].X/CM;
-		s[k].y1 = (double)poly[n][sz-1].Y/CM;
-		s[k].x2 = (double)poly[n][0].X/CM;
-		s[k].y2 = (double)poly[n][0].Y/CM;
+		s[k].x1 = (double)poly[n].outer[sz-1].X/CM;
+		s[k].y1 = (double)poly[n].outer[sz-1].Y/CM;
+		s[k].x2 = (double)poly[n].outer[0].X/CM;
+		s[k].y2 = (double)poly[n].outer[0].Y/CM;
 		k++;
+
+		for(unsigned int k = 0; k < poly[n].holes.size(); k++)	{	
+			unsigned int sz = poly[n].holes[k].size();
+			for(unsigned int i = 0; i < sz - 1; i++)	{
+				s[k].x1 = (double)poly[n].holes[k][i].X/CM;
+				s[k].y1 = (double)poly[n].holes[k][i].Y/CM;
+				s[k].x2 = (double)poly[n].holes[k][i+1].X/CM;
+				s[k].y2 = (double)poly[n].holes[k][i+1].Y/CM;
+				k++;
+			}
+			s[k].x1 = (double)poly[n].holes[k][sz-1].X/CM;
+			s[k].y1 = (double)poly[n].holes[k][sz-1].Y/CM;
+			s[k].x2 = (double)poly[n].holes[k][0].X/CM;
+			s[k].y2 = (double)poly[n].holes[k][0].Y/CM;
+			k++;
+		}
 	}	
 }
 
@@ -396,16 +412,25 @@ int main(int argc, char **argv) {
 		c.AddPolygons(subj, ClipperLib::ptSubject);
 		c.AddPolygons(clip, ClipperLib::ptClip);
 		c.Execute(ClipperLib::ctUnion, solution, ClipperLib::pftNonZero, ClipperLib::pftNonZero, ClipperLib::pftOn);
-		for(unsigned int i = 0;i<solution.size();i++){
-			visualizeMap(marker_pub,solution,i);
-		}
 		clip[0].clear();
-		l.checkMap(solution);
+
+		unsigned int idx = 0;
+		for(unsigned int i = 0;i<solution.size();i++){
+			visualizeMap(marker_pub,solution[i].outer,++idx);
+			for (unsigned int j = 0; j < solution[i].holes.size(); j++) {
+				visualizeMap(marker_pub,solution[i].holes[j],++idx);
+			}	
+		}
 
 		// Compute and publish VD / WMAT
 		unsigned int size = 0; // polygonal segments count
-		for(unsigned int i = 0; i < solution.size(); i++)
-			size += solution[i].size();
+		for(unsigned int i = 0; i < solution.size(); i++) {
+			size += solution[i].outer.size();
+			for (unsigned int j = 0; j < solution[i].holes.size(); j++) {
+				size += solution[i].holes[j].size();
+			}	
+		}
+
 		if (size > 3) {
 			// convert polygons to segments
 			in_segs segs[size];
@@ -424,7 +449,15 @@ int main(int argc, char **argv) {
 
 		// cant be done so
 		//	l.simplifyMap(solution);
-			subj = solution;
+		
+		subj.clear();
+		for (unsigned int i = 0; i < solution.size(); i++) {
+			subj.push_back(solution[i].outer);	
+			for (unsigned int j = 0; j < solution[i].holes.size(); j++) {
+				subj.push_back(solution[i].holes[j]);
+			}	
+		}
+		
 		ros::spinOnce();
 		r.sleep();
 	}

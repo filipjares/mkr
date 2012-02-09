@@ -1168,6 +1168,8 @@ bool Clipper::Execute(ClipType clipType, ExPolygons &solution,
   m_ClipType = clipType;
   bool succeeded = ExecuteInternal(true);
   if (succeeded) BuildResultEx(solution);
+  if (pf == pftOn)
+  ExecuteFrontiers(solution);
   m_ExecuteLocked = false;
   return succeeded;
 }
@@ -2797,6 +2799,24 @@ void Clipper::ExecuteFrontiers(Polygons &polys)
 	}
 	doFrontiers(polys[i][polys[i].size()-1], polys[i][0]); // do the last edge between end and start
   }
+}
+//------------------------------------------------------------------------------
+
+void Clipper::ExecuteFrontiers(ExPolygons &polys)
+{
+  for (PolyOutList::size_type i = 0; i < polys.size(); i++) {	//over all polygons
+	for (PolyOutList::size_type j = 1; j < polys[i].outer.size(); j++) {	//over all edges
+		doFrontiers(polys[i].outer[j-1], polys[i].outer[j]);
+	}
+	doFrontiers(polys[i].outer[polys[i].outer.size()-1], polys[i].outer[0]); // do the last edge between end and start
+  
+  for (PolyOutList::size_type j = 0; j < polys[i].holes.size(); j++) {	//over all polygons
+	for (PolyOutList::size_type k = 1; k < polys[i].holes[j].size(); k++) {	//over all edges
+		doFrontiers(polys[i].holes[j][k-1], polys[i].holes[j][k]);
+	}
+	doFrontiers(polys[i].holes[j][polys[i].holes[j].size()-1], polys[i].holes[j][0]); // do the last edge between end and start
+  }
+  }  
 }
 //------------------------------------------------------------------------------
 

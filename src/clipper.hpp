@@ -276,6 +276,7 @@ private:
   double compareEdges(TEdge *edge1, TEdge *edge2);
   void doFrontiers(IntPoint &pt1, IntPoint &pt2);
   void ExecuteFrontiers(Polygons& polys);
+  void ExecuteFrontiers(ExPolygons& polys);
   void BuildResultEx(ExPolygons& polys);
   void SetHoleState(TEdge *e, OutRec *OutRec);
   void DisposeIntersectNodes();

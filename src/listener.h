@@ -29,7 +29,8 @@ std::string toString(T val)
     return ss.str();
 }
 
-ClipperLib::Polygons subj(1), clip(1), clip_tmp(1), solution;
+ClipperLib::Polygons subj(1), clip(1), clip_tmp(1);
+ClipperLib::ExPolygons solution;
 
 #endif
 
