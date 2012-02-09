@@ -301,19 +301,19 @@ void convertPolyInCentimeters2SegsInMeters(ClipperLib::ExPolygons & poly, in_seg
 		s[k].y2 = (double)poly[n].outer[0].Y/CM;
 		k++;
 
-		for(unsigned int k = 0; k < poly[n].holes.size(); k++)	{	
-			unsigned int sz = poly[n].holes[k].size();
+		for(unsigned int m = 0; m < poly[n].holes.size(); m++)	{	
+			unsigned int sz = poly[n].holes[m].size();
 			for(unsigned int i = 0; i < sz - 1; i++)	{
-				s[k].x1 = (double)poly[n].holes[k][i].X/CM;
-				s[k].y1 = (double)poly[n].holes[k][i].Y/CM;
-				s[k].x2 = (double)poly[n].holes[k][i+1].X/CM;
-				s[k].y2 = (double)poly[n].holes[k][i+1].Y/CM;
+				s[k].x1 = (double)poly[n].holes[m][i].X/CM;
+				s[k].y1 = (double)poly[n].holes[m][i].Y/CM;
+				s[k].x2 = (double)poly[n].holes[m][i+1].X/CM;
+				s[k].y2 = (double)poly[n].holes[m][i+1].Y/CM;
 				k++;
 			}
-			s[k].x1 = (double)poly[n].holes[k][sz-1].X/CM;
-			s[k].y1 = (double)poly[n].holes[k][sz-1].Y/CM;
-			s[k].x2 = (double)poly[n].holes[k][0].X/CM;
-			s[k].y2 = (double)poly[n].holes[k][0].Y/CM;
+			s[k].x1 = (double)poly[n].holes[m][sz-1].X/CM;
+			s[k].y1 = (double)poly[n].holes[m][sz-1].Y/CM;
+			s[k].x2 = (double)poly[n].holes[m][0].X/CM;
+			s[k].y2 = (double)poly[n].holes[m][0].Y/CM;
 			k++;
 		}
 	}	
