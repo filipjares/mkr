@@ -423,6 +423,15 @@ static bool isDeg2WmatNode(int e, int n)
 	}
 }
 
+static bool isFrontierBasedEdge(int e)
+{
+	int s1, s2; t_site t1, t2;
+	GetLftSiteData(e, &s1, &t1);
+	GetRgtSiteData(e, &s2, &t2);
+
+	return (t1 == SEG && segs[s1].ext_appl) || (t2 == SEG && segs[s2].ext_appl);
+}
+
 /* *************** Utility functions (other) ************************* */
 
 //tempate <class T>
@@ -847,7 +856,7 @@ void Poly2VdConverter::publish_wmat_deg2_nodes(ros::Publisher & marker_pub, cons
 
 void Poly2VdConverter::publish_wmat(ros::Publisher & marker_pub, const std::string & frame_id, double duration)
 {
-	// prepare the Marker
+	// prepare Markers for both "ordinary" (non-frontier based)...
 	visualization_msgs::Marker wmat_marker;
 	wmat_marker.header.frame_id = frame_id;
 	wmat_marker.header.stamp = ros::Time::now();
@@ -860,6 +869,20 @@ void Poly2VdConverter::publish_wmat(ros::Publisher & marker_pub, const std::stri
 	wmat_marker.scale.x = 0.25;
 	wmat_marker.color.g = 1.0f;
 	wmat_marker.color.a = 1.0;
+	// ... and frontier-based edges
+	visualization_msgs::Marker wmat_f_marker;
+	wmat_f_marker.header.frame_id = frame_id;
+	wmat_f_marker.header.stamp = ros::Time::now();
+	wmat_f_marker.ns = "wmatF";
+	wmat_f_marker.action = visualization_msgs::Marker::ADD;
+	wmat_f_marker.pose.orientation.w = 1.0;
+	wmat_f_marker.id = 0;
+	wmat_f_marker.lifetime = ros::Duration(duration);
+	wmat_f_marker.type = visualization_msgs::Marker::LINE_LIST;
+	wmat_f_marker.scale.x = 0.25;
+	wmat_f_marker.color.g = 0.5f;
+	wmat_f_marker.color.b = 1.0f;
+	wmat_f_marker.color.a = 1.0;
 
 	using namespace std;
 
@@ -878,14 +901,23 @@ void Poly2VdConverter::publish_wmat(ros::Publisher & marker_pub, const std::stri
 		GetNodeData(GetStartNode(e), &c, &r);
 		p.x = UnscaleX(c.x);
 		p.y = UnscaleY(c.y);
-		wmat_marker.points.push_back(p);
+		if (isFrontierBasedEdge(e)) {
+			wmat_f_marker.points.push_back(p);
+		} else {
+			wmat_marker.points.push_back(p);
+		}
 		GetNodeData(GetEndNode(e), &c, &r);
 		p.x = UnscaleX(c.x);
 		p.y = UnscaleY(c.y);
-		wmat_marker.points.push_back(p);
+		if (isFrontierBasedEdge(e)) {
+			wmat_f_marker.points.push_back(p);
+		} else {
+			wmat_marker.points.push_back(p);
+		}
 	}
 
 	marker_pub.publish(wmat_marker);
+	marker_pub.publish(wmat_f_marker);
 }
 
 /* Sends single message with input and output data */
