@@ -51,6 +51,9 @@ class Poly2VdConverter
 {
 private:
 	bool input_prepared;
+
+	// TODO:
+	bool result_ready;
 public:
 	Poly2VdConverter();
 

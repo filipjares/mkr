@@ -582,7 +582,7 @@ void publishSphere(ros::Publisher & marker_pub, int id, coord location, double d
 	marker_pub.publish(marker);
 }
 
-/* n - node_id */
+/* e - edge id */
 static void publishCriticalNodeCandidateIfAppropriate(int e, std::list<int> & usedNodes, ros::Publisher & marker_pub, std::string frame_id, double duration, bool printIt)
 {
 		int n1 = GetStartNode(e);
