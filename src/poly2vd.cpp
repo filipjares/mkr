@@ -681,7 +681,7 @@ static void publishCriticalNodeCandidateIfAppropriate(int e, std::list<int> & us
 			}
 			if (areCoordsEqual(c_candidate, c_ccw)) {
 				using namespace std;
-				cout << "The candidate (" << candidate << ") and node related to it through"
+				cout << "The candidate (" << candidate << ") and node related to it through "
 					<< "e_ccw have the same coords: " << coordToString(c_candidate) << endl;
 			}
 		}
@@ -700,7 +700,7 @@ static void publishCriticalNodeCandidateIfAppropriate(int e, std::list<int> & us
 			}
 			if (areCoordsEqual(c_candidate, c_cw)) {
 				using namespace std;
-				cout << "The candidate (" << candidate << ") and node related to it through"
+				cout << "The candidate (" << candidate << ") and node related to it through "
 					<< "e_cw have the same coords: " << coordToString(c_candidate) << endl;
 			}
 		}
