@@ -55,6 +55,8 @@ static double const pi = 3.141592653589793238;
 enum Direction { dRightToLeft, dLeftToRight };
 enum RangeTest { rtLo, rtHi, rtError };
 
+#define MAX_DIST (1.0e+10)
+#define PERTURB (1.0)
 #define HORIZONTAL (-1.0E+40)
 #define TOLERANCE (1.0e-20)
 #define NEAR_ZERO(val) (((val) > -TOLERANCE) && ((val) < TOLERANCE))
@@ -523,6 +525,14 @@ void SetDx(TEdge &e)
 }
 //---------------------------------------------------------------------------
 
+void SetDx(TEdge *e)
+{
+  if (e->ybot == e->ytop) e->dx = HORIZONTAL;
+  else e->dx =
+    (double)(e->xtop - e->xbot) / (double)(e->ytop - e->ybot);
+}
+//---------------------------------------------------------------------------
+
 void SwapSides(TEdge &edge1, TEdge &edge2)
 {
   EdgeSide side =  edge1.side;
@@ -850,10 +860,13 @@ bool ClipperBase::AddPolygon( const Polygon &pg, PolyType polyType)
   edges[0].xcurr = p[0].X;
   edges[0].ycurr = p[0].Y;
   InitEdge(&edges[len-1], &edges[0], &edges[len-2], p[len-1], polyType);
-  for (int i = len-2; i > 0; --i)
+  edges[len-1].isFrontier = p[len-1].outputEdge && p[0].inputEdge;
+  for (int i = len-2; i > 0; --i){
     InitEdge(&edges[i], &edges[i+1], &edges[i-1], p[i], polyType);
+	edges[i].isFrontier = p[i].outputEdge && p[i+1].inputEdge;
+  }
   InitEdge(&edges[0], &edges[1], &edges[len-1], p[0], polyType);
-
+  edges[0].isFrontier = p[0].outputEdge && p[1].inputEdge;
   //reset xcurr & ycurr and find 'eHighest' (given the Y axis coordinates
   //increase downward so the 'highest' edge will have the smallest ytop) ...
   TEdge *e = &edges[0];
@@ -1081,7 +1094,7 @@ Clipper::Clipper() : ClipperBase() //constructor
   m_IntersectNodes = 0;
   m_ExecuteLocked = false;
   m_UseFullRange = false;
-  m_ReverseOutput = false;
+  m_ReverseOutput = true;
 }
 //------------------------------------------------------------------------------
 
@@ -1127,7 +1140,7 @@ void Clipper::Reset()
 //------------------------------------------------------------------------------
 
 bool Clipper::Execute(ClipType clipType, Polygons &solution,
-    PolyFillType subjFillType, PolyFillType clipFillType)
+    PolyFillType subjFillType, PolyFillType clipFillType, PolyFrontier pf)
 {
   if( m_ExecuteLocked ) return false;
   m_ExecuteLocked = true;
@@ -1137,13 +1150,15 @@ bool Clipper::Execute(ClipType clipType, Polygons &solution,
   m_ClipType = clipType;
   bool succeeded = ExecuteInternal(false);
   if (succeeded) BuildResult(solution);
+  if (pf == pftOn)
+  ExecuteFrontiers(solution);
   m_ExecuteLocked = false;
   return succeeded;
 }
 //------------------------------------------------------------------------------
 
 bool Clipper::Execute(ClipType clipType, ExPolygons &solution,
-    PolyFillType subjFillType, PolyFillType clipFillType)
+    PolyFillType subjFillType, PolyFillType clipFillType, PolyFrontier pf)
 {
   if( m_ExecuteLocked ) return false;
   m_ExecuteLocked = true;
@@ -2645,6 +2660,146 @@ void Clipper::FixupOutPolygon(OutRec &outRec)
 }
 //------------------------------------------------------------------------------
 
+double Clipper::perpendicularDistance(long64 x1, long64 x2, long64 y1, long64 y2, long64 z1, long64 z2){
+	double dx = y1-x1;
+	double dy = y2-x2;
+	return fabs(-dy*z1+dx*z2+dy*x1-dx*x2)/sqrt(dy*dy+dx*dx);
+}
+//------------------------------------------------------------------------------
+
+double Clipper::compareEdges(TEdge *edge1, TEdge *edge2)
+{
+	//if(!NEAR_EQUAL(edge1->dx,edge2->dx))	//simple criterion which eliminates most of edges
+	//	return false;
+	//fix orientation when necessary
+	if(edge2->ybot < edge2->ytop) {
+		long64 x = edge2->xbot;
+		long64 y = edge2->ybot;
+		edge2->xbot = edge2->xtop;	
+		edge2->ybot = edge2->ytop;
+		edge2->xtop = x;
+		edge2->ytop = y;
+	}
+
+	if(NEAR_EQUAL(edge2->dx,HORIZONTAL)) {
+		Direction dir1 = dRightToLeft;
+		Direction dir2 = dRightToLeft;
+		if(edge1->xbot < edge1->xtop)
+			dir1 = dLeftToRight;
+		if(edge2->xbot < edge2->xtop)
+			dir2 = dLeftToRight;
+		if(dir1 != dir2) {
+			long64 x = edge2->xbot;
+			long64 y = edge2->ybot;
+			edge2->xbot = edge2->xtop;	
+			edge2->ybot = edge2->ytop;
+			edge2->xtop = x;
+			edge2->ytop = y;
+		}
+	}
+	if(NEAR_EQUAL(edge1->dx,HORIZONTAL)) {
+		Direction dir1 = dRightToLeft;
+		Direction dir2 = dRightToLeft;
+		if(edge1->xbot < edge1->xtop)
+			dir1 = dLeftToRight;
+		if(edge2->xbot < edge2->xtop)
+			dir2 = dLeftToRight;
+		if(dir1 != dir2) {
+			long64 x = edge1->xbot;
+			long64 y = edge1->ybot;
+			edge1->xbot = edge1->xtop;	
+			edge1->ybot = edge1->ytop;
+			edge1->xtop = x;
+			edge1->ytop = y;
+		}
+	}
+
+	// check for perpendicular distance between the first edge and points of the second edge
+	double p1 = perpendicularDistance(edge1->xbot, edge1->ybot, edge1->xtop, edge1->ytop, edge2->xbot, edge2->ybot);
+	double p2 = perpendicularDistance(edge1->xbot, edge1->ybot, edge1->xtop, edge1->ytop, edge2->xtop, edge2->ytop);
+	double penalty = 0;
+	if(edge1->ybot > edge2->ybot)
+		penalty = abs(edge1->ybot - edge2->ybot);
+	if(edge1->ytop < edge2->ytop)
+		penalty += abs(edge2->ytop - edge1->ytop);
+
+	return p1 + p2 + penalty;
+}
+//------------------------------------------------------------------------------
+
+void Clipper::doFrontiers(IntPoint &pt1, IntPoint &pt2)
+{
+  TEdge *e = new TEdge;
+  TEdge *b = new TEdge;
+  LocalMinima* lm = new LocalMinima;
+  lm = m_MinimaList;	//reset LM
+  //initialize edge with bottom-up fashion
+  if(pt1.Y > pt2.Y) {
+  e->xbot = pt1.X;	
+  e->ybot = pt1.Y;
+  e->xtop = pt2.X;
+  e->ytop = pt2.Y;
+  } else {
+  e->xbot = pt2.X;	
+  e->ybot = pt2.Y;
+  e->xtop = pt1.X;
+  e->ytop = pt1.Y;
+  }
+  SetDx(e);
+  e->tmpX = MAX_DIST;
+  e->isFrontier = false;
+  do {
+//	  if(lm->Y < (e->ytop - PERTURB) && lm->Y < (e->ybot - PERTURB))
+//		  break;	//the edge is out of range LM and we can break all the search process;
+	  b = lm->leftBound;
+	  do {
+		  double d = compareEdges(e,b);
+		  if(d == e->tmpX) {
+			if(e->isFrontier)
+				e->isFrontier = b->isFrontier;
+		  }
+		  if(d < e->tmpX) {
+			e->tmpX = d;
+			e->isFrontier = b->isFrontier;
+		  }
+		  b = b->nextInLML;
+	  }
+	  while (b);	//over each left bound edge starting in LM
+
+	  b = lm->rightBound;
+	  do {
+		  double d = compareEdges(e,b);
+		  if(d == e->tmpX) {
+			if(e->isFrontier)
+				e->isFrontier = b->isFrontier;
+		  }
+		  if(d <= e->tmpX) {
+			e->tmpX = d;
+			e->isFrontier = b->isFrontier;
+		  }
+		  b = b->nextInLML;
+	  }
+	  while (b);	//over each right bound edge starting in LM
+	  lm = lm->next;
+  }
+  while (lm);	//starts from each local minima
+  //finally set properties of the points
+  pt1.outputEdge = e->isFrontier;
+  pt2.inputEdge = e->isFrontier;
+}
+//------------------------------------------------------------------------------
+
+void Clipper::ExecuteFrontiers(Polygons &polys)
+{
+  for (PolyOutList::size_type i = 0; i < polys.size(); i++) {	//over all polygons
+	for (PolyOutList::size_type j = 1; j < polys[i].size(); j++) {	//over all edges
+		doFrontiers(polys[i][j-1], polys[i][j]);
+	}
+	doFrontiers(polys[i][polys[i].size()-1], polys[i][0]); // do the last edge between end and start
+  }
+}
+//------------------------------------------------------------------------------
+
 void Clipper::BuildResult(Polygons &polys)
 {
   int k = 0;
@@ -3300,5 +3455,3 @@ std::ostream& operator <<(std::ostream &s, Polygons &p)
 //------------------------------------------------------------------------------
 
 } //ClipperLib namespace
-
-// vi:ai:sw=2 ts=2 sts=0

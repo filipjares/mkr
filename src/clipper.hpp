@@ -49,6 +49,7 @@ enum PolyType { ptSubject, ptClip };
 //Others rules include Positive, Negative and ABS_GTR_EQ_TWO (only in OpenGL)
 //see http://glprogramming.com/red/chapter11.html
 enum PolyFillType { pftEvenOdd, pftNonZero, pftPositive, pftNegative };
+enum PolyFrontier { pftOn, pftOff };
 
 typedef signed long long long64;
 typedef unsigned long long ulong64;
@@ -207,11 +208,13 @@ public:
   bool Execute(ClipType clipType,
   Polygons &solution,
   PolyFillType subjFillType = pftEvenOdd,
-  PolyFillType clipFillType = pftEvenOdd);
+  PolyFillType clipFillType = pftEvenOdd,
+  PolyFrontier pf = pftOn);
   bool Execute(ClipType clipType,
   ExPolygons &solution,
   PolyFillType subjFillType = pftEvenOdd,
-  PolyFillType clipFillType = pftEvenOdd);
+  PolyFillType clipFillType = pftEvenOdd,
+  PolyFrontier pf = pftOn);
   void Clear();
   bool ReverseSolution() {return m_ReverseOutput;};
   void ReverseSolution(bool value) {m_ReverseOutput = value;};
@@ -308,4 +311,3 @@ class clipperException : public std::exception
 #endif //clipper_hpp
 
 
-// vi:ai:sw=2 ts=2 sts=0

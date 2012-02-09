@@ -395,7 +395,7 @@ int main(int argc, char **argv) {
 		ClipperLib::Clipper c;
 		c.AddPolygons(subj, ClipperLib::ptSubject);
 		c.AddPolygons(clip, ClipperLib::ptClip);
-		c.Execute(ClipperLib::ctUnion, solution, ClipperLib::pftNonZero);
+		c.Execute(ClipperLib::ctUnion, solution, ClipperLib::pftNonZero, ClipperLib::pftNonZero, ClipperLib::pftOn);
 		for(unsigned int i = 0;i<solution.size();i++){
 			visualizeMap(marker_pub,solution,i);
 		}
