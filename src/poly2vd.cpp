@@ -719,6 +719,101 @@ static void publishCriticalNodeCandidateIfAppropriate(int e, std::list<int> & us
 		}
 }
 
+// FIXME: use VRONI's definition
+#define  ZERO      1.0e-13   /* small number, greater than machine precision */
+
+int getMaNodeNotOnBoundary()
+{
+	bool at_boundary = true;
+	int n = 0, e;
+	double r;
+
+	// find a MA node that is not on the boundary
+	e = 0;
+	while (at_boundary  &&  (e < GetNumberOfEdges())) {
+		if (IsWmatEdge(e)) {
+			n = GetStartNode(e);
+			r = GetNodeParam(n);
+			if (r > ZERO) {
+				at_boundary = false;
+			}
+			else {
+				n = GetOtherNode(e, n);
+				r = GetNodeParam(n);
+				if (r > ZERO) {
+					at_boundary = false;
+				}
+				else {
+					++e;
+				}
+			}
+		}
+		else {
+			++e;
+		}
+	}
+
+	if (at_boundary) {
+		return -1;
+	} else {
+		return n;
+	}
+}
+
+void addTheOtherNodeIfAppropriate(int edge, int sourceNode, std::list<int> & open, bool *closed)
+{
+	if (IsWmatEdge(edge)) {
+		int otherNode = GetOtherNode(edge, sourceNode);
+		if (closed[otherNode] == false) {
+			closed[otherNode] = true;
+			open.push_back(otherNode);
+		}
+	} else {
+		// TODO: check incident nodes
+	}
+}
+
+void doTheSearch(ros::Publisher & marker_pub, const std::string & frame_id, double duration)
+{
+	using namespace std;
+
+	int root = getMaNodeNotOnBoundary();
+	
+	if (root == -1) {
+		std::cerr << "Medial axis not known or data is corrupted. Could not find any node not on the boundary";
+		return;
+	}
+
+	// publish the root node as red sphere
+	coord c; double r;
+	GetNodeData(root, &c, &r);
+	publishSphere(marker_pub, root, c, 2*r, Color::RED, frame_id, duration);
+
+	// prepare open and close "lists":
+	int nodeCount = GetNumberOfNodes();
+	std::list<int> open;
+	bool closed[nodeCount];
+	for (int i = 0; i < nodeCount; i++) closed[i] = false;
+
+	open.push_back(root);
+	closed[root] = true;
+
+	while (!open.empty()) {
+		int n = open.front();
+		open.pop_front();
+
+		// each Vroni's node has at most three incident edges
+		int e1 = GetIncidentEdge(n);				// get the first one
+		addTheOtherNodeIfAppropriate(e1, n, open, closed);
+
+		int e_ccw = GetCCWEdge(e1, n);				// get the second one
+		addTheOtherNodeIfAppropriate(e_ccw, n, open, closed);
+
+		int e_cw = GetCWEdge(e1, n);
+		if (e_cw != e_ccw) addTheOtherNodeIfAppropriate(e_cw, n, open, closed);
+	}
+}
+
 void Poly2VdConverter::publish_wmat_deg2_nodes(ros::Publisher & marker_pub, const std::string & frame_id, double duration)
 {
 	static int printed = 0;
@@ -726,6 +821,8 @@ void Poly2VdConverter::publish_wmat_deg2_nodes(ros::Publisher & marker_pub, cons
 
 	using namespace std;
 	using namespace visualization_msgs;
+
+	doTheSearch(marker_pub, frame_id, duration);
 
 	list<int> usedNodes;
 

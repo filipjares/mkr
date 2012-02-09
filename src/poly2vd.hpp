@@ -28,6 +28,7 @@
 #include "fpkernel.h"			// because of the double_arg macro
 #include "vronivector.h"
 #include "defs.h"
+#include "offset.h"
 
 // ext_appl_inout.h has to be included after "defs.h" (which includes coord.h)
 #include "ext_appl_inout.h"
