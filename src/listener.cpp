@@ -7,6 +7,11 @@
 #include "poly2vd.hpp" // has to be included first because of the ZERO macro
 #include "listener.h"
 
+#include <errno.h>
+#include <signal.h>
+#include <termios.h>
+#include <fcntl.h>
+
 class Listener
 {
 public:
@@ -298,11 +303,87 @@ void convertPolyInCentimeters2SegsInMeters(ClipperLib::Polygons & poly, in_segs 
 	}	
 }
 
+/* ************* Terminal handling and DOT export ******************** */
+
+int kfd = 0; // stdin
+struct termios cooked, raw;
+
+void terminal_setup()
+{
+	// get the console in raw mode                                                              
+	tcgetattr(kfd, &cooked);
+	memcpy(&raw, &cooked, sizeof(struct termios));
+	raw.c_lflag &=~ (ICANON | ECHO);
+	// Setting a new line, then end of file                         
+	raw.c_cc[VEOL] = 1;
+	raw.c_cc[VEOF] = 2;
+	tcsetattr(kfd, TCSANOW, &raw);
+	// want non-blocking input; FIXME: check efficiency of this solution
+	int flags = fcntl(kfd, F_GETFL);
+	flags |= O_NONBLOCK;
+	fcntl(kfd, F_SETFL, flags);
+}
+
+void terminal_cleanup(int sig)
+{
+	tcsetattr(kfd, TCSANOW, &cooked);
+	ros::shutdown();
+}
+
+void quit(int status)
+{
+	terminal_cleanup(0);
+	exit(status);
+}
+
+#define EXPORT_KEY_LOWERCASE		'e'
+#define EXPORT_KEY_UPPERCASE		'E'
+#define DOT_FILE_PATH_AND_PREFIX	"/tmp/vd-"
+#define DOT_FILE_SUFFIX				".dot"
+
+/* If EXPORT_KEY_* was pressed, this function performs the export
+ * of resulting Voronoi diagram into DOT file */
+void handleDotExport(Poly2VdConverter &poly2vd)
+{
+	char ch;
+	// FIXME: check efficiency of this solution
+	// (the call to read and checking for error)
+	if (read(kfd, &ch, 1) < 0) {
+		if (errno == EAGAIN) {
+			ch = 0;
+		} else {
+			perror("read():");
+			quit(-1);
+		}
+	}
+
+	static int exportCounter = 0;
+	if (ch == EXPORT_KEY_LOWERCASE || ch == EXPORT_KEY_UPPERCASE) {
+		std::stringstream fileName;
+		fileName << DOT_FILE_PATH_AND_PREFIX << std::setfill('0') << std::setw(2) << std::right
+			<< exportCounter++ << DOT_FILE_SUFFIX;
+		poly2vd.exportVdToDot(fileName.str(), false, false);
+		std::cout << "DOT description of the Voronoi diagram saved to"
+			<< fileName.str() << std::endl;
+	}
+}
+
+/* **************************** main() ******************************* */
+
 int main(int argc, char **argv) {
 	ros::init(argc, argv, "listener");
 	ros::NodeHandle n;
 	ros::Publisher marker_pub = n.advertise<visualization_msgs::Marker>("visualization_marker", 10);
 	Listener l(n);
+
+	// Setup the terminal in order to be able to handle keypresses
+	terminal_setup();
+	signal(SIGINT,terminal_cleanup);
+	// Let the user know of the exportToDot feature
+	std::cout << "Pressing '" << EXPORT_KEY_LOWERCASE << "' produces DOT files "
+		<< DOT_FILE_PATH_AND_PREFIX << "XX" << DOT_FILE_SUFFIX << " for graphviz.  "
+		<< "This is however " << std::endl << "an experimental feature and resulting files are "
+		<< "too big to be processed by graphviz." << std::endl << std::endl;
 
 	Poly2VdConverter poly2vd;	// Vroni based polygons -> VD converter
 	
@@ -337,6 +418,9 @@ int main(int argc, char **argv) {
 			poly2vd.publish_wmat(marker_pub, "/odom", 5.0);
 			poly2vd.publish_wmat_deg2_nodes(marker_pub, "/odom", 5.0);
 		}
+
+		// if key pressed, export Voronoi diagram to DOT file in /tmp/
+		handleDotExport(poly2vd);
 
 		// cant be done so
 		//	l.simplifyMap(solution);
