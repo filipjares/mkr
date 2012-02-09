@@ -77,4 +77,4 @@ name "era"
 color "blue" 
 #ctrl "wander"
 )
-block( pose [ -10.924 20.020 0 180.000 ] color "red")
+#block( pose [ -10.924 20.020 0 180.000 ] color "red")
