@@ -431,7 +431,7 @@ static bool isDeg2WmatNode(int e, int n)
 //	list<T>::iterator it =  find(lst.begin(), lst.end(), element);
 //	return it != lst.end();
 //}
-bool contains(std::list<int> & lst, const int & element)
+bool contains(std::list<int> & lst, int element)
 {
 	std::list<int>::iterator it = find(lst.begin(), lst.end(), element);
 	return it != lst.end();
