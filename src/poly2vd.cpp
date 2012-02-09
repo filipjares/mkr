@@ -831,7 +831,7 @@ void Poly2VdConverter::publish_wmat_deg2_nodes(ros::Publisher & marker_pub, cons
 	using namespace std;
 	using namespace visualization_msgs;
 
-	doTheSearch(marker_pub, frame_id, duration);
+	// doTheSearch(marker_pub, frame_id, duration);
 
 	list<int> usedNodes;
 
