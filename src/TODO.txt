@@ -1,0 +1,20 @@
+
+===============================================================================
+				TODO LISTS
+===============================================================================
+
+CRITICAL NODE DEFINITION
+========================
+
+- should it really have strictly minimal clearance radius compared to its
+  neighbours?
+
+
+TESTS to write
+==============
+
+VRONI's representation of nodes of degree higher than 3
+-------------------------------------------------------
+
+- does exist node having only single edge?
+- does exist node having multiple 
