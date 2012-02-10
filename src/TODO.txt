@@ -6,8 +6,8 @@
 CRITICAL NODE DEFINITION
 ========================
 
-- should it really have strictly minimal clearance radius compared to its
-  neighbours?
+- should the critical node really have strictly minimal clearance radius
+  compared to its neighbours?
 
 
 TESTS to write
@@ -18,3 +18,17 @@ VRONI's representation of nodes of degree higher than 3
 
 - does exist node having only single edge?
 - does exist node having multiple 
+
+
+OTHER THINGS TO CHECK DISCUSS AND IMPROVE
+=========================================
+
+- frontiers in input segments for Vroni, frontier flag in Polygon segments:
+  different definition of segment being frontier in "outer" segments and "holes"?
+
+
+TODO
+====
+
+- create synthetic map similar to that in util/fiddling_with_vroni/data/map_from_the_paper.dxf
+  with more realistic passages 
