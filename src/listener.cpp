@@ -24,13 +24,14 @@ public:
 		init();
 	}
 	
-	void checkMap(ClipperLib::Polygons & obj) {
+	void checkMap(ClipperLib::ExPolygons & obj) {
+		//outer polygon
 		for (unsigned int i = 0; i < obj.size(); i++) {
-			for (unsigned int j = 1; j < obj[i].size(); j++) {
+			for (unsigned int j = 1; j < obj[i].outer.size(); j++) {
 				//mark frontiers with legth < that treshold
-				if(euclideanDistance(obj[i][j].X,obj[i][j].Y,obj[i][j-1].X,obj[i][j-1].Y) < FRONTIER_RANGE*2/3 && obj[i][j-1].outputEdge && obj[i][j].inputEdge){
-					obj[i][j-1].outputEdge = false;
-					obj[i][j].inputEdge = false;
+				if(euclideanDistance(obj[i].outer[j].X,obj[i].outer[j].Y,obj[i].outer[j-1].X,obj[i].outer[j-1].Y) < FRONTIER_RANGE*0.2 && obj[i].outer[j-1].outputEdge && obj[i].outer[j].inputEdge){
+					obj[i].outer[j-1].outputEdge = false;
+					obj[i].outer[j].inputEdge = false;
 				}
 			}
 		}
@@ -459,8 +460,7 @@ int main(int argc, char **argv) {
 		// if key pressed, export Voronoi diagram to DOT file in /tmp/
 		handleDotExport(poly2vd);
 
-		// cant be done so
-		//	l.simplifyMap(solution);
+		l.checkMap(solution);
 		
 		subj.clear();
 		for (unsigned int i = 0; i < solution.size(); i++) {
