@@ -777,8 +777,89 @@ int getMaNodeNotOnBoundary()
 	}
 }
 
+
+void addTheOtherNodeIfAppropriate(int edge, int sourceNode, std::list<int> & open, bool *closed)
+{
+	if (IsWmatEdge(edge)) {
+		int otherNode = GetOtherNode(edge, sourceNode);
+		if (closed[otherNode] == false) {
+			closed[otherNode] = true;
+			open.push_back(otherNode);
+		}
+	} else {
+		// TODO: check incident nodes
+	}
+}
+
+void BFS(int root, bool * nodes)
+{
+	std::list<int> open;
+	
+	open.push_back(root);
+
+	while (!open.empty()) {
+		int n = open.front();
+		open.pop_front();
+		
+		if(nodes[n] == true)
+			continue;
+
+		// each Vroni's node has at most three incident edges
+		int e1 = GetIncidentEdge(n);				// get the first one
+		nodes[GetStartNode(e1)] = true;
+		nodes[GetEndNode(e1)] = true;
+		if(!isEdgeBasedEdge(e1)){
+			open.push_back(GetStartNode(e1));
+			open.push_back(GetEndNode(e1));
+		}
+
+		int e_ccw = GetCCWEdge(e1, n);				// get the second one
+		nodes[GetStartNode(e_ccw)] = true;
+		nodes[GetEndNode(e_ccw)] = true;
+		if(!isEdgeBasedEdge(e_ccw)){
+			open.push_back(GetStartNode(e_ccw));
+			open.push_back(GetEndNode(e_ccw));
+		}
+
+		int e_cw = GetCWEdge(e1, n);
+		if (e_cw != e_ccw){
+			nodes[GetStartNode(e_cw)] = true;
+			nodes[GetEndNode(e_cw)] = true;
+			if(!isEdgeBasedEdge(e_cw)){
+				open.push_back(GetStartNode(e_cw));
+				open.push_back(GetEndNode(e_cw));
+			}	
+		}
+		
+	}
+
+}
+
+void markOutNodes(bool * nodes)
+{	
+	coord c; double r;
+	for (int e = 0;  e < GetNumberOfEdges(); e++) {	
+		if (!IsWmatEdge(e)) {
+			continue;
+		}
+
+		GetNodeData(GetStartNode(e), &c, &r);
+		if(abs(c.x) >= 1 || abs(c.y) >= 1)
+			BFS(GetStartNode(e),nodes);
+
+		GetNodeData(GetEndNode(e), &c, &r);
+		if(abs(c.x) >= 1 || abs(c.y) >= 1)
+			BFS(GetEndNode(e),nodes);
+	}
+}
+
 int getRootNode(SPosition & pos){
 // find node which is not on the boundary and is inside polygon
+
+	bool outNodes[GetNumberOfNodes()];
+	for (int i = 0; i < GetNumberOfNodes(); i++) outNodes[i] = false;
+	markOutNodes(outNodes);
+
 	coord p;
 	p.x = pos.x;
 	p.y = pos.y;
@@ -822,42 +903,6 @@ int getRootNode(SPosition & pos){
 	}
 	assert(root != -1);
 	return root;
-}
-
-void addTheOtherNodeIfAppropriate(int edge, int sourceNode, std::list<int> & open, bool *closed)
-{
-	if (IsWmatEdge(edge)) {
-		int otherNode = GetOtherNode(edge, sourceNode);
-		if (closed[otherNode] == false) {
-			closed[otherNode] = true;
-			open.push_back(otherNode);
-		}
-	} else {
-		// TODO: check incident nodes
-	}
-}
-
-void BFS(int root, std::list<int> & nodes)
-{
-
-}
-
-void markOutNodes(std::list<int> & nodes)
-{
-	coord c; double r;
-	for (int e = 0;  e < GetNumberOfEdges(); e++) {	
-		if (!IsWmatEdge(e)) {
-			continue;
-		}
-
-		GetNodeData(GetStartNode(e), &c, &r);
-		if(abs(c.x) >= 1 || abs(c.y) >= 1)
-			BFS(GetStartNode(e),nodes);
-
-		GetNodeData(GetEndNode(e), &c, &r);
-		if(abs(c.x) >= 1 || abs(c.y) >= 1)
-			BFS(GetEndNode(e),nodes);
-	}
 }
 
 void doTheSearch(ros::Publisher & marker_pub, const std::string & frame_id, double duration)
