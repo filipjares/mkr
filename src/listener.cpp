@@ -84,6 +84,7 @@ private:
 	float orientation;
 	float posX;
 	float posY;
+	SPosition pos;
 	
 	void init() {
 		subs_.push_back(node_handle_.subscribe("base_scan", 1, &Listener::laserCallback,this));
@@ -212,6 +213,9 @@ private:
 			posX = srv.response.x;
 			posY = srv.response.y;
 			orientation = srv.response.angle;
+			pos.x = srv.response.x;
+			pos.y = srv.response.y;
+			pos.yaw = srv.response.angle;
 		}else
 			ROS_ERROR("Failed to call service get_robot_state. Position is not actual!");
 		std::vector<ClipperLib::IntPoint> scan;
