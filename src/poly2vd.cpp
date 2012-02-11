@@ -882,12 +882,12 @@ int getRootNode(SPosition & pos){
 		if (isEdgeBasedEdge(e)) {
 			continue;
 		}
-
+		
 		GetNodeData(GetStartNode(e), &c, &r);
 		cu.x = UnscaleX(c.x);
 		cu.y = UnscaleY(c.y);
 		dist = coordDistance(p,cu);
-		if(dist < min_dist){
+		if(dist < min_dist && !outNodes[GetStartNode(e)]){
 			root = GetStartNode(e);
 			min_dist = dist;
 		}
@@ -896,7 +896,7 @@ int getRootNode(SPosition & pos){
 		cu.x = UnscaleX(c.x);
 		cu.y = UnscaleY(c.y);
 		dist = coordDistance(p,cu);
-		if(dist < min_dist){
+		if(dist < min_dist && !outNodes[GetEndNode(e)]){
 			root = GetEndNode(e);
 			min_dist = dist;
 		}
@@ -1028,11 +1028,17 @@ void Poly2VdConverter::publish_wmat(ros::Publisher & marker_pub, const std::stri
 		if (!IsWmatEdge(e)) {
 			continue;
 		}
+	bool outNodes[GetNumberOfNodes()];
+	for (int i = 0; i < GetNumberOfNodes(); i++) outNodes[i] = false;
+	markOutNodes(outNodes);
+
+	if(outNodes[GetStartNode(e)] || outNodes[GetEndNode(e)])
+		continue;
+
 /*		
 		if (isEdgeDefinedByDummyPoint(e)){
 			continue;
 		}
-*/
 			GetNodeData(GetStartNode(e), &c, &r);
 			ROS_INFO("coords S:%d %f, %f",e,c.x,c.y);
 			GetNodeData(GetEndNode(e), &c, &r);
@@ -1044,6 +1050,7 @@ void Poly2VdConverter::publish_wmat(ros::Publisher & marker_pub, const std::stri
 		if(abs(c.x) >= 1 || abs(c.y) >= 1)
 			publishSphere(marker_pub, GetEndNode(e), c, 0.05, Color::RED, frame_id, duration);
 
+*/
 		GetNodeData(GetStartNode(e), &c, &r);
 		p.x = UnscaleX(c.x);
 		p.y = UnscaleY(c.y);
