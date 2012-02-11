@@ -23,7 +23,11 @@ public:
 	{
 		init();
 	}
-	
+
+	SPosition getPosition(void) const {
+		return pos;
+	}
+
 	void checkMap(ClipperLib::ExPolygons & obj) {
 		//outer polygon
 		for (unsigned int i = 0; i < obj.size(); i++) {
@@ -81,9 +85,6 @@ public:
 	}
 	*/
 private:
-	float orientation;
-	float posX;
-	float posY;
 	SPosition pos;
 	
 	void init() {
@@ -151,7 +152,7 @@ private:
 					scan[scan.size()-1].outputEdge = true;
 				}
 			}
-			scan.push_back(ClipperLib::IntPoint(posX+x,posY+y,frontierIn,frontierOut));
+			scan.push_back(ClipperLib::IntPoint(pos.x+x,pos.y+y,frontierIn,frontierOut));
 			angle -= msg.angle_increment;
 		}
 	}
@@ -163,8 +164,8 @@ private:
 		scan[scan.size()-1].intersectPt = true;
 		scan[scan.size()-1].outputEdge = true;
 		unsigned int idx = 0; 
-		double x = posX;
-		double y = posY;
+		double x = pos.x;
+		double y = pos.y;
 		for(unsigned int i = 0; i<scan.size()-1;i++) {
 			if(abs(euclideanDistance(scan[i].X,scan[i].Y,x,y) - euclideanDistance(scan[i+1].X,scan[i+1].Y,x,y)) > FRONTIER_RANGE) {
 				RDP(scan, EPSILON, idx, i);
@@ -179,7 +180,7 @@ private:
 				RDP(scan, EPSILON, idx, scan.size()-1);
 		}
 		//adding position of robot to polygon
-		scan.push_back(ClipperLib::IntPoint(posX,posY,true,true));
+		scan.push_back(ClipperLib::IntPoint(pos.x,pos.y,true,true));
 		scan[scan.size()-1].intersectPt = true;
 	}
 	
@@ -200,7 +201,7 @@ private:
 			}
 		}	
 	/*	ROS_INFO("new scan");
-		ROS_INFO("robot position %f %f",posX,posY);
+		ROS_INFO("robot position %f %f",pos.x,pos.y);
 		for(unsigned int i = 0; i<clip[0].size();i++) {
 			ROS_INFO("%lld %lld %d %d", CLIP(i).X,CLIP(i).Y,CLIP(i).inputEdge,CLIP(i).outputEdge);
 		}*/	
@@ -210,16 +211,13 @@ private:
 	{
 		project::GetOdometry srv;
 		if(odom_client.call(srv)){
-			posX = srv.response.x;
-			posY = srv.response.y;
-			orientation = srv.response.angle;
 			pos.x = srv.response.x;
 			pos.y = srv.response.y;
 			pos.yaw = srv.response.angle;
 		}else
 			ROS_ERROR("Failed to call service get_robot_state. Position is not actual!");
 		std::vector<ClipperLib::IntPoint> scan;
-		tfScanToPoints(msg, scan, MIN_ANGLE, MAX_ANGLE, orientation);
+		tfScanToPoints(msg, scan, MIN_ANGLE, MAX_ANGLE, pos.yaw);
 		processScan(scan);
 		selectFrontiers(scan);
 	}

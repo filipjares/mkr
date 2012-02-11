@@ -769,6 +769,11 @@ int getMaNodeNotOnBoundary()
 	}
 }
 
+int getRootNode(SPosition & pos){
+
+return -1;
+}
+
 void addTheOtherNodeIfAppropriate(int edge, int sourceNode, std::list<int> & open, bool *closed)
 {
 	if (IsWmatEdge(edge)) {
