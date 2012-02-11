@@ -128,7 +128,7 @@ void Poly2VdConverter::convert()
 		          /* approximation threshold?     */
 		false,    /* compute VD/DT of points only */
 		false,    /* output point VD/DT           */
-		false,    /* output file for point VD/DT  */
+		emptyString,    /* output file for point VD/DT  */
 		false);   /* FIXME: use true here? shall we clean up
 		             the data prior to the VD computation?
 		             I suppose it will be needed, poly2vd() will

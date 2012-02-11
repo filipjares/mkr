@@ -1094,7 +1094,7 @@ Clipper::Clipper() : ClipperBase() //constructor
   m_IntersectNodes = 0;
   m_ExecuteLocked = false;
   m_UseFullRange = false;
-  m_ReverseOutput = true;
+  m_ReverseOutput = false;
 }
 //------------------------------------------------------------------------------
 
