@@ -794,17 +794,20 @@ void addTheOtherNodeIfAppropriate(int edge, int sourceNode, std::list<int> & ope
 void BFS(int root, bool * nodes)
 {
 	std::list<int> open;
+	bool closed[GetNumberOfNodes()];	
+	for (int i = 0; i < GetNumberOfNodes(); i++) closed[i] = false;
 	
 	open.push_back(root);
-	
 
 	while (!open.empty()) {
 		int n = open.front();
 		open.pop_front();
 		
-		if(nodes[n] == true)
+		if(closed[n] == true)
 			continue;
 
+		closed[n] = true;
+		
 		// each Vroni's node has at most three incident edges
 		int e1 = GetIncidentEdge(n);				// get the first one
 		nodes[GetStartNode(e1)] = true;
