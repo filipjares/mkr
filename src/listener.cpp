@@ -30,12 +30,13 @@ public:
 
 	void checkMap(ClipperLib::ExPolygons & obj) {
 		//outer polygon
-		int i = OUTER_IDX;
-		for (unsigned int j = 1; j < obj[i].outer.size(); j++) {
-			//mark frontiers with legth < that treshold
-			if(euclideanDistance(obj[i].outer[j].X,obj[i].outer[j].Y,obj[i].outer[j-1].X,obj[i].outer[j-1].Y) < FRONTIER_RANGE*0.2 && obj[i].outer[j-1].outputEdge && obj[i].outer[j].inputEdge){
-				obj[i].outer[j-1].outputEdge = false;
-				obj[i].outer[j].inputEdge = false;
+		for (unsigned int i = 0; i < obj.size(); i++) {
+			for (unsigned int j = 1; j < obj[i].outer.size(); j++) {
+				//mark frontiers with legth < that treshold
+				if(euclideanDistance(obj[i].outer[j].X,obj[i].outer[j].Y,obj[i].outer[j-1].X,obj[i].outer[j-1].Y) < FRONTIER_RANGE*0.2 && obj[i].outer[j-1].outputEdge && obj[i].outer[j].inputEdge){
+					obj[i].outer[j-1].outputEdge = false;
+					obj[i].outer[j].inputEdge = false;
+				}
 			}
 		}
 	}
