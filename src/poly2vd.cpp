@@ -788,6 +788,7 @@ int getRootNode(SPosition & pos){
 	double min_dist = std::numeric_limits<double>::max();
 	double dist;
 	for (int e = 0;  e < GetNumberOfEdges(); e++) {
+		
 		if (!IsWmatEdge(e)) {
 			continue;
 		}
@@ -819,7 +820,6 @@ int getRootNode(SPosition & pos){
 			min_dist = dist;
 		}
 	}
-		//ROS_INFO("dist: %f", dist);
 	assert(root != -1);
 	return root;
 }
@@ -834,6 +834,29 @@ void addTheOtherNodeIfAppropriate(int edge, int sourceNode, std::list<int> & ope
 		}
 	} else {
 		// TODO: check incident nodes
+	}
+}
+
+void BFS(int root, std::list<int> & nodes)
+{
+
+}
+
+void markOutNodes(std::list<int> & nodes)
+{
+	coord c; double r;
+	for (int e = 0;  e < GetNumberOfEdges(); e++) {	
+		if (!IsWmatEdge(e)) {
+			continue;
+		}
+
+		GetNodeData(GetStartNode(e), &c, &r);
+		if(abs(c.x) >= 1 || abs(c.y) >= 1)
+			BFS(GetStartNode(e),nodes);
+
+		GetNodeData(GetEndNode(e), &c, &r);
+		if(abs(c.x) >= 1 || abs(c.y) >= 1)
+			BFS(GetEndNode(e),nodes);
 	}
 }
 
@@ -951,18 +974,31 @@ void Poly2VdConverter::publish_wmat(ros::Publisher & marker_pub, const std::stri
 
 	using namespace std;
 
+	ROS_INFO("**********************************");
 	geometry_msgs::Point p;
 	for (int e = 0;  e < GetNumberOfEdges(); e++) {
-//		either
-//		if (isEdgeDefinedByDummyPoint)
-//			continue;
-//		}
-//		or
+
+		coord c; double r;
+		
 		if (!IsWmatEdge(e)) {
 			continue;
 		}
+/*		
+		if (isEdgeDefinedByDummyPoint(e)){
+			continue;
+		}
+*/
+			GetNodeData(GetStartNode(e), &c, &r);
+			ROS_INFO("coords S:%d %f, %f",e,c.x,c.y);
+			GetNodeData(GetEndNode(e), &c, &r);
+			ROS_INFO("coords E:%d %f, %f",e,c.x,c.y);
+		GetNodeData(GetStartNode(e), &c, &r);
+		if(abs(c.x) >= 1 || abs(c.y) >= 1)
+			publishSphere(marker_pub, GetStartNode(e), c, 0.05, Color::RED, frame_id, duration);
+		GetNodeData(GetEndNode(e), &c, &r);
+		if(abs(c.x) >= 1 || abs(c.y) >= 1)
+			publishSphere(marker_pub, GetEndNode(e), c, 0.05, Color::RED, frame_id, duration);
 
-		coord c; double r;
 		GetNodeData(GetStartNode(e), &c, &r);
 		p.x = UnscaleX(c.x);
 		p.y = UnscaleY(c.y);
