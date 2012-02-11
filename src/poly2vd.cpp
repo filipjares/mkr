@@ -432,6 +432,14 @@ static bool isFrontierBasedEdge(int e)
 	return (t1 == SEG && segs[s1].ext_appl) || (t2 == SEG && segs[s2].ext_appl);
 }
 
+static bool isEdgeBasedEdge(int e)
+{
+	int s1, s2; t_site t1, t2;
+	GetLftSiteData(e, &s1, &t1);
+	GetRgtSiteData(e, &s2, &t2);
+
+	return (t1 == SEG) || (t2 == SEG);
+}
 /* *************** Utility functions (other) ************************* */
 
 //tempate <class T>
@@ -770,8 +778,50 @@ int getMaNodeNotOnBoundary()
 }
 
 int getRootNode(SPosition & pos){
+// find node which is not on the boundary and is inside polygon
+	coord p;
+	p.x = pos.x;
+	p.y = pos.y;
+	coord c,cu;
+	double r;
+	int root = -1;
+	double min_dist = std::numeric_limits<double>::max();
+	double dist;
+	for (int e = 0;  e < GetNumberOfEdges(); e++) {
+		if (!IsWmatEdge(e)) {
+			continue;
+		}
 
-return -1;
+// FIXME: we must consider this additional condition
+// It filters root nodes at the boundary, but if the robot is in tho corner it selects node outside polygon.
+// It would be OK if the edge on the bondary is not connected with edges outside for for our search its sufficient.
+// Additional criterion should be test for placement inside polygon.
+
+		if (isEdgeBasedEdge(e)) {
+			continue;
+		}
+
+		GetNodeData(GetStartNode(e), &c, &r);
+		cu.x = UnscaleX(c.x);
+		cu.y = UnscaleY(c.y);
+		dist = coordDistance(p,cu);
+		if(dist < min_dist){
+			root = GetStartNode(e);
+			min_dist = dist;
+		}
+
+		GetNodeData(GetEndNode(e), &c, &r);
+		cu.x = UnscaleX(c.x);
+		cu.y = UnscaleY(c.y);
+		dist = coordDistance(p,cu);
+		if(dist < min_dist){
+			root = GetEndNode(e);
+			min_dist = dist;
+		}
+	}
+		//ROS_INFO("dist: %f", dist);
+	assert(root != -1);
+	return root;
 }
 
 void addTheOtherNodeIfAppropriate(int edge, int sourceNode, std::list<int> & open, bool *closed)
@@ -857,6 +907,16 @@ void Poly2VdConverter::publish_wmat_deg2_nodes(ros::Publisher & marker_pub, cons
 		cout << endl;
 	}
 	printed++;
+}
+
+void Poly2VdConverter::publish_root(ros::Publisher & marker_pub, SPosition & p, const std::string & frame_id, double duration)
+{
+	int root = getRootNode(p);
+//	ROS_INFO("root: %d", root);
+	// publish the root node as red sphere
+	coord c; double r;
+	GetNodeData(root, &c, &r);
+	publishSphere(marker_pub, root, c, 0.05, Color::RED, frame_id, duration);
 }
 
 void Poly2VdConverter::publish_wmat(ros::Publisher & marker_pub, const std::string & frame_id, double duration)

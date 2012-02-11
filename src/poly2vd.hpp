@@ -69,6 +69,8 @@ public:
 	void convert();
 
 #ifndef POLY2VD_STANDALONE
+	void publish_root(ros::Publisher & marker_pub, SPosition & p, const std::string & frame_id, double duration);
+	
 	void publish_wmat(ros::Publisher & marker_pub, const std::string & frame_id, double duration);
 
 	void publish_wmat_deg2_nodes(ros::Publisher & marker_pub, const std::string & frame_id, double duration);
