@@ -459,7 +459,7 @@ int main(int argc, char **argv) {
 			p.y = p.y / CM;
 			poly2vd.publish_root(marker_pub, p, "/odom", 2.0);
 			poly2vd.publish_wmat(marker_pub, "/odom", 5.0);
-			poly2vd.publish_wmat_deg2_nodes(marker_pub, "/odom", 5.0);
+//			poly2vd.publish_wmat_deg2_nodes(marker_pub, "/odom", 5.0);
 		}
 
 		// if key pressed, export Voronoi diagram to DOT file in /tmp/

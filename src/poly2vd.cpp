@@ -862,6 +862,7 @@ int getRootNode(SPosition & pos){
 
 	bool outNodes[GetNumberOfNodes()];
 	for (int i = 0; i < GetNumberOfNodes(); i++) outNodes[i] = false;
+
 	markOutNodes(outNodes);
 
 	coord p;
@@ -984,7 +985,7 @@ void Poly2VdConverter::publish_wmat_deg2_nodes(ros::Publisher & marker_pub, cons
 void Poly2VdConverter::publish_root(ros::Publisher & marker_pub, SPosition & p, const std::string & frame_id, double duration)
 {
 	int root = getRootNode(p);
-//	ROS_INFO("root: %d", root);
+	rootNode = root;
 	// publish the root node as red sphere
 	coord c; double r;
 	GetNodeData(root, &c, &r);
@@ -1023,6 +1024,11 @@ void Poly2VdConverter::publish_wmat(ros::Publisher & marker_pub, const std::stri
 
 	using namespace std;
 
+	bool inNodes[GetNumberOfNodes()];
+	for (int i = 0; i < GetNumberOfNodes(); i++) inNodes[i] = false;
+
+	BFS(rootNode, inNodes);
+	
 	geometry_msgs::Point p;
 	for (int e = 0;  e < GetNumberOfEdges(); e++) {
 
@@ -1031,11 +1037,8 @@ void Poly2VdConverter::publish_wmat(ros::Publisher & marker_pub, const std::stri
 		if (!IsWmatEdge(e)) {
 			continue;
 		}
-		bool outNodes[GetNumberOfNodes()];
-		for (int i = 0; i < GetNumberOfNodes(); i++) outNodes[i] = false;
-		markOutNodes(outNodes);
 
-		if(outNodes[GetStartNode(e)] || outNodes[GetEndNode(e)])
+		if(!inNodes[GetStartNode(e)] || !inNodes[GetEndNode(e)])
 			continue;
 
 		GetNodeData(GetStartNode(e), &c, &r);

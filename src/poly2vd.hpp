@@ -55,6 +55,7 @@ class Poly2VdConverter
 private:
 	bool input_prepared;
 
+	int rootNode;
 	// TODO:
 	bool result_ready;
 public:
