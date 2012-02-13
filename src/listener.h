@@ -18,6 +18,8 @@
 #include "types.h"
 
 #define CLIP(i) clip[0][i]
+#define OUTER(i) obj[0].outer[i]
+#define HOLE(i,j) obj[0].holes[i][j]
 
 #define TOLERANCE (1.0e-4)
 #define NEAR_ZERO(val) (((val) > -TOLERANCE) && ((val) < TOLERANCE))

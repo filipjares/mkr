@@ -41,16 +41,19 @@ public:
 		}
 	}
 	
-	void simplifyMap(ClipperLib::Polygons & obj) {
+	void simplifyMap(ClipperLib::ExPolygons & obj) {
 		for (unsigned int i = 0; i < obj.size(); i++) {
-			for (unsigned int j = 1; j < obj[i].size()-1; j++) {
-				//simplifying map
-				if((obj[i][j-1].outputEdge && obj[i][j+1].inputEdge) || (!obj[i][j-1].outputEdge && !obj[i][j+1].inputEdge)) {
-					if(perpendicularDistance(obj[i][j-1], obj[i][j+1], obj[i][j]) < EPSILON) {
-						obj[i][j].intersectPt = true;
-						j = j+1;
-					}		
-				}
+		//outer polygon
+		double lenA,lenB,lenAB;
+			for (unsigned int j = 1; j < obj[i].outer.size()-1; j++) {
+				if(obj[i].outer[j].inputEdge == obj[i].outer[j].outputEdge){
+					lenA = euclideanDistance(obj[i].outer[j].X,obj[i].outer[j].Y,obj[i].outer[j-1].X,obj[i].outer[j-1].Y);
+					lenB = euclideanDistance(obj[i].outer[j].X,obj[i].outer[j].Y,obj[i].outer[j+1].X,obj[i].outer[j+1].Y);
+					lenAB = euclideanDistance(obj[i].outer[j+1].X,obj[i].outer[j+1].Y,obj[i].outer[j-1].X,obj[i].outer[j-1].Y);
+//					ROS_INFO("difference: %f",lenA+lenB-lenAB);
+					if((lenA + lenB - lenAB) < 5)
+						obj[i].outer[j].intersectPt = true;	//mark for remove
+				}	
 			}
 		}
 	}
@@ -466,10 +469,17 @@ int main(int argc, char **argv) {
 		handleDotExport(poly2vd);
 
 		l.checkMap(solution);
-		
+		l.simplifyMap(solution);
+
 		subj.clear();
 		for (unsigned int i = 0; i < solution.size(); i++) {
-			subj.push_back(solution[i].outer);	
+			subj.push_back(solution[i].outer);
+			//just for test
+			subj[i].clear();
+			for (unsigned int j = 0; j < solution[i].outer.size(); j++) {
+				if(!solution[i].outer[j].intersectPt)
+				subj[i].push_back(solution[i].outer[j]);
+			}	
 			for (unsigned int j = 0; j < solution[i].holes.size(); j++) {
 				subj.push_back(solution[i].holes[j]);
 			}	
