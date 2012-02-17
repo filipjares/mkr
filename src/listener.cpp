@@ -51,7 +51,7 @@ public:
 					lenB = euclideanDistance(obj[i].outer[j].X,obj[i].outer[j].Y,obj[i].outer[j+1].X,obj[i].outer[j+1].Y);
 					lenAB = euclideanDistance(obj[i].outer[j+1].X,obj[i].outer[j+1].Y,obj[i].outer[j-1].X,obj[i].outer[j-1].Y);
 //					ROS_INFO("difference: %f",lenA+lenB-lenAB);
-					if((lenA + lenB - lenAB) < 5)
+					if((lenA + lenB - lenAB) < 0.1)
 						obj[i].outer[j].intersectPt = true;	//mark for remove
 				}	
 			}

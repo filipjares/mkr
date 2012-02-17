@@ -173,10 +173,12 @@ struct Color {
 
 	static const Color BLUE;
 	static const Color RED;
+	static const Color YELLOW;
 };
 
 const Color Color::BLUE(0.0f, 0.0f, 1.0f, 0.5f);
 const Color Color::RED (1.0f, 0.0f, 0.0f, 0.75f);
+const Color Color::YELLOW (1.0f, 1.0f, 0.0f, 0.75f);
 
 static std::string site_type_names[] = {"SEG", "ARC", "PNT", "VDN", "VDE", "DTE", "CCW", "CW", "UNKNOWN" };
 
@@ -812,16 +814,20 @@ void BFS(int root, bool * nodes)
 		int e1 = GetIncidentEdge(n);				// get the first one
 		nodes[GetStartNode(e1)] = true;
 		nodes[GetEndNode(e1)] = true;
-		if(!isEdgeBasedEdge(e1)){
+		if(GetNodeParam(GetStartNode(e1)) != 0){
 			open.push_back(GetStartNode(e1));
+		}
+		if(GetNodeParam(GetEndNode(e1)) != 0){
 			open.push_back(GetEndNode(e1));
 		}
 
 		int e_ccw = GetCCWEdge(e1, n);				// get the second one
 		nodes[GetStartNode(e_ccw)] = true;
 		nodes[GetEndNode(e_ccw)] = true;
-		if(!isEdgeBasedEdge(e_ccw)){
+		if(GetNodeParam(GetStartNode(e_ccw)) != 0){
 			open.push_back(GetStartNode(e_ccw));
+		}
+		if(GetNodeParam(GetEndNode(e_ccw)) != 0){
 			open.push_back(GetEndNode(e_ccw));
 		}
 
@@ -829,10 +835,12 @@ void BFS(int root, bool * nodes)
 		if (e_cw != e_ccw){
 			nodes[GetStartNode(e_cw)] = true;
 			nodes[GetEndNode(e_cw)] = true;
-			if(!isEdgeBasedEdge(e_cw)){
+			if(GetNodeParam(GetStartNode(e_cw)) != 0){
 				open.push_back(GetStartNode(e_cw));
+			}
+			if(GetNodeParam(GetEndNode(e_cw)) != 0){
 				open.push_back(GetEndNode(e_cw));
-			}	
+			}
 		}
 		
 	}
@@ -984,6 +992,7 @@ void Poly2VdConverter::publish_wmat_deg2_nodes(ros::Publisher & marker_pub, cons
 void Poly2VdConverter::publish_root(ros::Publisher & marker_pub, SPosition & p, const std::string & frame_id, double duration)
 {
 	int root = getRootNode(p);
+	rootNode = root;
 //	ROS_INFO("root: %d", root);
 	// publish the root node as red sphere
 	coord c; double r;
@@ -1023,6 +1032,10 @@ void Poly2VdConverter::publish_wmat(ros::Publisher & marker_pub, const std::stri
 
 	using namespace std;
 
+	bool inNodes[GetNumberOfNodes()];
+	for (int i = 0; i < GetNumberOfNodes(); i++) inNodes[i] = false;
+	BFS(rootNode,inNodes);
+	
 	geometry_msgs::Point p;
 	for (int e = 0;  e < GetNumberOfEdges(); e++) {
 
@@ -1031,11 +1044,8 @@ void Poly2VdConverter::publish_wmat(ros::Publisher & marker_pub, const std::stri
 		if (!IsWmatEdge(e)) {
 			continue;
 		}
-		bool outNodes[GetNumberOfNodes()];
-		for (int i = 0; i < GetNumberOfNodes(); i++) outNodes[i] = false;
-		markOutNodes(outNodes);
 
-		if(outNodes[GetStartNode(e)] || outNodes[GetEndNode(e)])
+		if(!inNodes[GetStartNode(e)] || !inNodes[GetEndNode(e)])
 			continue;
 
 		GetNodeData(GetStartNode(e), &c, &r);
