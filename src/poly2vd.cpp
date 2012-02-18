@@ -442,6 +442,18 @@ static bool isEdgeBasedEdge(int e)
 
 	return (t1 == SEG) || (t2 == SEG);
 }
+
+/* Not yet ready, need to modify VRONI, now VRONI doesnt know attribute isHole
+static bool isHoleBasedEdge(int e)
+{
+	int s1, s2; t_site t1, t2;
+	GetLftSiteData(e, &s1, &t1);
+	GetRgtSiteData(e, &s2, &t2);
+
+	return (t1 == SEG && segs[s1].isHole) || (t2 == SEG && segs[s2].isHole);
+}
+*/
+
 /* *************** Utility functions (other) ************************* */
 
 //tempate <class T>
@@ -886,20 +898,24 @@ int getRootNode(SPosition & pos){
 			continue;
 		}
 
+		if(outNodes[GetStartNode(e)] || outNodes[GetEndNode(e)])
+			continue;
+
+		if (isEdgeBasedEdge(e)) {
+			continue;
+		}
+
 // FIXME: we must consider this additional condition
 // It filters root nodes at the boundary, but if the robot is in tho corner it selects node outside polygon.
 // It would be OK if the edge on the bondary is not connected with edges outside for for our search its sufficient.
 // Additional criterion should be test for placement inside polygon.
 
-		if (isEdgeBasedEdge(e)) {
-			continue;
-		}
 		
 		GetNodeData(GetStartNode(e), &c, &r);
 		cu.x = UnscaleX(c.x);
 		cu.y = UnscaleY(c.y);
 		dist = coordDistance(p,cu);
-		if(dist < min_dist && !outNodes[GetStartNode(e)]){
+		if(dist < min_dist){
 			root = GetStartNode(e);
 			min_dist = dist;
 		}
@@ -908,7 +924,7 @@ int getRootNode(SPosition & pos){
 		cu.x = UnscaleX(c.x);
 		cu.y = UnscaleY(c.y);
 		dist = coordDistance(p,cu);
-		if(dist < min_dist && !outNodes[GetEndNode(e)]){
+		if(dist < min_dist){
 			root = GetEndNode(e);
 			min_dist = dist;
 		}
