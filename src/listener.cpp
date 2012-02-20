@@ -302,7 +302,7 @@ void convertPolyInCentimeters2SegsInMeters(ClipperLib::ExPolygons & poly, in_seg
 			s[k].y2 = (double)poly[n].outer[i+1].Y/CM;
 			// is it a frontier
 			s[k].ext_appl.isFrontier = (poly[n].outer[i].outputEdge && poly[n].outer[i+1].inputEdge);
-			s[k].ext_appl.isHole = true;
+			s[k].ext_appl.isHole = false;
 			k++;
 		}
 		// endpoint coords
