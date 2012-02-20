@@ -431,7 +431,7 @@ static bool isFrontierBasedEdge(int e)
 	GetLftSiteData(e, &s1, &t1);
 	GetRgtSiteData(e, &s2, &t2);
 
-	return (t1 == SEG && segs[s1].ext_appl) || (t2 == SEG && segs[s2].ext_appl);
+	return (t1 == SEG && segs[s1].ext_appl.isFrontier) || (t2 == SEG && segs[s2].ext_appl.isFrontier);
 }
 
 static bool isEdgeBasedEdge(int e)
@@ -450,7 +450,7 @@ static bool isHoleBasedEdge(int e)
 	GetLftSiteData(e, &s1, &t1);
 	GetRgtSiteData(e, &s2, &t2);
 
-	return (t1 == SEG && segs[s1].isHole) || (t2 == SEG && segs[s2].isHole);
+	return (t1 == SEG && segs[s1].ext_appl.isHole) || (t2 == SEG && segs[s2].ext_appl.isHole);
 }
 */
 
