@@ -302,7 +302,7 @@ void convertPolyInCentimeters2SegsInMeters(ClipperLib::ExPolygons & poly, in_seg
 			s[k].y2 = (double)poly[n].outer[i+1].Y/CM;
 			// is it a frontier
 			s[k].ext_appl.isFrontier = (poly[n].outer[i].outputEdge && poly[n].outer[i+1].inputEdge);
-			s[k].ext_appl.isHole = false;
+			s[k].ext_appl.isOuter = true;
 			k++;
 		}
 		// endpoint coords
@@ -312,7 +312,7 @@ void convertPolyInCentimeters2SegsInMeters(ClipperLib::ExPolygons & poly, in_seg
 		s[k].y2 = (double)poly[n].outer[0].Y/CM;
 		// is it a frontier
 		s[k].ext_appl.isFrontier = (poly[n].outer[sz-1].outputEdge && poly[n].outer[0].inputEdge);
-		s[k].ext_appl.isHole = false;
+		s[k].ext_appl.isOuter = true;
 		k++;
 
 		for(unsigned int m = 0; m < poly[n].holes.size(); m++)	{	
@@ -325,7 +325,7 @@ void convertPolyInCentimeters2SegsInMeters(ClipperLib::ExPolygons & poly, in_seg
 				s[k].y2 = (double)poly[n].holes[m][i+1].Y/CM;
 				// is it a frontier
 				s[k].ext_appl.isFrontier = (poly[n].holes[m][i].outputEdge && poly[n].holes[m][i+1].inputEdge);
-				s[k].ext_appl.isHole = true;
+				s[k].ext_appl.isOuter = false;
 				k++;
 			}
 			// endpoint coords
@@ -335,7 +335,7 @@ void convertPolyInCentimeters2SegsInMeters(ClipperLib::ExPolygons & poly, in_seg
 			s[k].y2 = (double)poly[n].holes[m][0].Y/CM;
 			// is it a frontier
 			s[k].ext_appl.isFrontier = (poly[n].holes[m][sz-1].outputEdge && poly[n].holes[m][0].inputEdge);
-			s[k].ext_appl.isHole = true;
+			s[k].ext_appl.isOuter = false;
 			k++;
 		}
 	}	

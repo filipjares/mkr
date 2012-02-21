@@ -443,16 +443,14 @@ static bool isEdgeBasedEdge(int e)
 	return (t1 == SEG) || (t2 == SEG);
 }
 
-/* Not yet ready, need to modify VRONI, now VRONI doesnt know attribute isHole
-static bool isHoleBasedEdge(int e)
+static bool isOuterBasedEdge(int e)
 {
 	int s1, s2; t_site t1, t2;
 	GetLftSiteData(e, &s1, &t1);
 	GetRgtSiteData(e, &s2, &t2);
 
-	return (t1 == SEG && segs[s1].ext_appl.isHole) || (t2 == SEG && segs[s2].ext_appl.isHole);
+	return (t1 == SEG && segs[s1].ext_appl.isOuter) || (t2 == SEG && segs[s2].ext_appl.isOuter);
 }
-*/
 
 /* *************** Utility functions (other) ************************* */
 
@@ -877,6 +875,59 @@ void markOutNodes(bool * nodes)
 	}
 }
 
+bool testRootNode(int root)
+{
+	std::list<int> open;
+	bool closed[GetNumberOfNodes()];	
+	for (int i = 0; i < GetNumberOfNodes(); i++) closed[i] = false;
+	
+	open.push_back(root);
+
+	while (!open.empty()) {
+		int n = open.front();
+		open.pop_front();
+		
+		if(closed[n] == true)
+			continue;
+
+		closed[n] = true;
+		
+		int e1 = GetIncidentEdge(n);				// get the first one
+		if(isOuterBasedEdge(e1))
+			return true;		
+		if(GetNodeParam(GetStartNode(e1)) != 0){
+			open.push_back(GetStartNode(e1));
+		}
+		if(GetNodeParam(GetEndNode(e1)) != 0){
+			open.push_back(GetEndNode(e1));
+		}
+
+		int e_ccw = GetCCWEdge(e1, n);				// get the second one
+		if(isOuterBasedEdge(e_ccw))
+			return true;		
+		if(GetNodeParam(GetStartNode(e_ccw)) != 0){
+			open.push_back(GetStartNode(e_ccw));
+		}
+		if(GetNodeParam(GetEndNode(e_ccw)) != 0){
+			open.push_back(GetEndNode(e_ccw));
+		}
+
+		int e_cw = GetCWEdge(e1, n);
+		if (e_cw != e_ccw){
+			if(isOuterBasedEdge(e_cw))
+				return true;		
+			if(GetNodeParam(GetStartNode(e_cw)) != 0){
+				open.push_back(GetStartNode(e_cw));
+			}
+			if(GetNodeParam(GetEndNode(e_cw)) != 0){
+				open.push_back(GetEndNode(e_cw));
+			}
+		}
+		
+	}
+	return false;
+}
+
 int getRootNode(SPosition & pos){
 // find node which is not on the boundary and is inside polygon
 
@@ -888,48 +939,47 @@ int getRootNode(SPosition & pos){
 	p.x = pos.x;
 	p.y = pos.y;
 	coord c,cu;
-	double r;
-	int root = -1;
+	double r, dist;
+	int root;
+	do{
+	root = -1;
 	double min_dist = std::numeric_limits<double>::max();
-	double dist;
-	for (int e = 0;  e < GetNumberOfEdges(); e++) {
-		
-		if (!IsWmatEdge(e)) {
-			continue;
+		for (int e = 0;  e < GetNumberOfEdges(); e++) {
+			
+			if (!IsWmatEdge(e)) {
+				continue;
+			}
+	
+			if(outNodes[GetStartNode(e)] || outNodes[GetEndNode(e)])
+				continue;
+	
+			if (isEdgeBasedEdge(e)) {
+				continue;
+			}
+	
+			GetNodeData(GetStartNode(e), &c, &r);
+			cu.x = UnscaleX(c.x);
+			cu.y = UnscaleY(c.y);
+			dist = coordDistance(p,cu);
+			if(dist < min_dist){
+				root = GetStartNode(e);
+				min_dist = dist;
+			}
+	
+			GetNodeData(GetEndNode(e), &c, &r);
+			cu.x = UnscaleX(c.x);
+			cu.y = UnscaleY(c.y);
+			dist = coordDistance(p,cu);
+			if(dist < min_dist){
+				root = GetEndNode(e);
+				min_dist = dist;
+			}
 		}
-
-		if(outNodes[GetStartNode(e)] || outNodes[GetEndNode(e)])
-			continue;
-
-		if (isEdgeBasedEdge(e)) {
-			continue;
-		}
-
-// FIXME: we must consider this additional condition
-// It filters root nodes at the boundary, but if the robot is in tho corner it selects node outside polygon.
-// It would be OK if the edge on the bondary is not connected with edges outside for for our search its sufficient.
-// Additional criterion should be test for placement inside polygon.
-
-		
-		GetNodeData(GetStartNode(e), &c, &r);
-		cu.x = UnscaleX(c.x);
-		cu.y = UnscaleY(c.y);
-		dist = coordDistance(p,cu);
-		if(dist < min_dist){
-			root = GetStartNode(e);
-			min_dist = dist;
-		}
-
-		GetNodeData(GetEndNode(e), &c, &r);
-		cu.x = UnscaleX(c.x);
-		cu.y = UnscaleY(c.y);
-		dist = coordDistance(p,cu);
-		if(dist < min_dist){
-			root = GetEndNode(e);
-			min_dist = dist;
-		}
+		assert(root != -1);
+		outNodes[root] = true;
 	}
-	assert(root != -1);
+	while(!testRootNode(root));
+
 	return root;
 }
 
