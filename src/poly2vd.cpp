@@ -1024,6 +1024,13 @@ void doTheSearch(ros::Publisher & marker_pub, const std::string & frame_id, doub
 	}
 }
 
+void findCriticalNodes(bool * nodes)
+{
+	//TODO - here the nodes inside should be analyzed and searched for criticle ones and then published
+	//now just vizualize them
+	//later the functions will be modified to return usable data and suppress vizualization
+}
+
 void Poly2VdConverter::publish_wmat_deg2_nodes(ros::Publisher & marker_pub, const std::string & frame_id, double duration)
 {
 	static int printed = 0;
@@ -1131,6 +1138,8 @@ void Poly2VdConverter::publish_wmat(ros::Publisher & marker_pub, const std::stri
 			wmat_marker.points.push_back(p);
 		}
 	}
+
+	findCriticalNodes(inNodes);
 
 	marker_pub.publish(wmat_marker);
 	marker_pub.publish(wmat_f_marker);
