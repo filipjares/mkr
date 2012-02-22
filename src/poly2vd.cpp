@@ -425,6 +425,20 @@ static bool isDeg2WmatNode(int e, int n)
 	}
 }
 
+static bool isDeg2Node(int n)
+{
+	int e = GetIncidentEdge(n);
+	int e_ccw = GetCCWEdge(e, n);
+	int e_cw  = GetCWEdge(e, n);
+		
+	if (e_ccw == e_cw) {
+		return IsWmatEdge(e_ccw);
+	} else {
+		return ( IsWmatEdge(e_ccw) && !IsWmatEdge(e_cw) )
+		    || (!IsWmatEdge(e_ccw) &&  IsWmatEdge(e_cw) );
+	}
+}
+
 static bool isFrontierBasedEdge(int e)
 {
 	int s1, s2; t_site t1, t2;
@@ -1024,11 +1038,20 @@ void doTheSearch(ros::Publisher & marker_pub, const std::string & frame_id, doub
 	}
 }
 
-void findCriticalNodes(bool * nodes)
+void findCriticalNodes(bool * cNodes, bool * nodes)
 {
 	//TODO - here the nodes inside should be analyzed and searched for criticle ones and then published
 	//now just vizualize them
 	//later the functions will be modified to return usable data and suppress vizualization
+
+	for (int n = 0;  n < GetNumberOfNodes(); n++) {
+		cNodes[n] = false;	
+		
+		if (nodes[n]) {
+			if(isDeg2Node(n) && GetNodeParam(n) != 0)
+				cNodes[n] = true;
+		}
+	}
 }
 
 void Poly2VdConverter::publish_wmat_deg2_nodes(ros::Publisher & marker_pub, const std::string & frame_id, double duration)
@@ -1139,8 +1162,18 @@ void Poly2VdConverter::publish_wmat(ros::Publisher & marker_pub, const std::stri
 		}
 	}
 
-	findCriticalNodes(inNodes);
+	bool cNodes[GetNumberOfNodes()];
+	findCriticalNodes(cNodes,inNodes);
 
+	coord c; double r;
+
+	for (int n = 0;  n < GetNumberOfNodes(); n++) {
+		if(cNodes[n]){
+			GetNodeData(n, &c, &r);
+			publishSphere(marker_pub, n, c, 0.05, Color::BLUE, frame_id, duration);
+		}
+	}
+	
 	marker_pub.publish(wmat_marker);
 	marker_pub.publish(wmat_f_marker);
 }
