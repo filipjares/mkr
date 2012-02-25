@@ -469,7 +469,7 @@ static bool isFrontierBasedEdge(int e)
 	return (t1 == SEG && segs[s1].ext_appl.isFrontier) || (t2 == SEG && segs[s2].ext_appl.isFrontier);
 }
 
-static bool isEdgeBasedEdge(int e)
+static bool isSegmentBasedEdge(int e)
 {
 	int s1, s2; t_site t1, t2;
 	GetLftSiteData(e, &s1, &t1);
@@ -990,7 +990,7 @@ int getRootNode(SPosition & pos){
 	
 			// With this condition included, I (fj) found initial robot position
 			// which resulted in unsatisfied assertion after the for loop
-			// if (isEdgeBasedEdge(e)) {
+			// if (isSegmentBasedEdge(e)) {
 			// 	continue;
 			// }
 	
