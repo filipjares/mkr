@@ -822,17 +822,38 @@ int getMaNodeNotOnBoundary()
 	}
 }
 
-
-void addTheOtherNodeIfAppropriate(int edge, int sourceNode, std::list<int> & open, bool *closed)
+void addTheOtherNodeIfAppropriate(int edge, int sourceNode, std::list<int> & open, bool *closed, int *previous, visualization_msgs::Marker & wmat_marker, visualization_msgs::Marker & wmat_f_marker)
 {
+	int otherNode = GetOtherNode(edge, sourceNode);
 	if (IsWmatEdge(edge)) {
-		int otherNode = GetOtherNode(edge, sourceNode);
+		coord c1 = GetNodeCoord(sourceNode);
+		coord c2 = GetNodeCoord(otherNode);
+		geometry_msgs::Point p1;
+		p1.x = UnscaleX(c1.x);
+		p1.y = UnscaleY(c1.y);
+		geometry_msgs::Point p2;
+		p2.x = UnscaleX(c2.x);
+		p2.y = UnscaleY(c2.y);
+		if (isFrontierBasedEdge(edge)) {
+			wmat_f_marker.points.push_back(p1);
+			wmat_f_marker.points.push_back(p2);
+		} else {
+			wmat_marker.points.push_back(p1);
+			wmat_marker.points.push_back(p2);
+		}
 		if (closed[otherNode] == false) {
 			closed[otherNode] = true;
-			open.push_back(otherNode);
+			previous[otherNode] = sourceNode;
+			if (GetNodeParam(otherNode) > ZERO) {
+				open.push_back(otherNode);
+			}
 		}
 	} else {
-		// TODO: check incident nodes
+		// check for incident nodes and report such a situation
+		if (areNodesEqual(sourceNode, otherNode)) {
+			std::cerr << "Nodes " << sourceNode << " and " << otherNode << " are equal"
+				<< std::endl;
+		}
 	}
 }
 
@@ -1031,27 +1052,66 @@ int getRootNode(const coord & p)
 	return root;
 }
 
-void doTheSearch(ros::Publisher & marker_pub, const std::string & frame_id, double duration)
+void prepareNonFrontierMarker(visualization_msgs::Marker & wmat_marker, const std::string & frame_id, double duration)
 {
+	// prepare Markers for both "ordinary" (non-frontier based)...
+	wmat_marker.header.frame_id = frame_id;
+	wmat_marker.header.stamp = ros::Time::now();
+	wmat_marker.ns = "wmat";
+	wmat_marker.action = visualization_msgs::Marker::ADD;
+	wmat_marker.pose.orientation.w = 1.0;
+	wmat_marker.id = 0;
+	wmat_marker.lifetime = ros::Duration(duration);
+	wmat_marker.type = visualization_msgs::Marker::LINE_LIST;
+	wmat_marker.scale.x = 0.25;
+	wmat_marker.color.g = 1.0f;
+	wmat_marker.color.a = 1.0;
+}
+
+void prepareFrontierMarker(visualization_msgs::Marker & wmat_f_marker, const std::string & frame_id, double duration)
+{
+	// ... and frontier-based edges
+	wmat_f_marker.header.frame_id = frame_id;
+	wmat_f_marker.header.stamp = ros::Time::now();
+	wmat_f_marker.ns = "wmatF";
+	wmat_f_marker.action = visualization_msgs::Marker::ADD;
+	wmat_f_marker.pose.orientation.w = 1.0;
+	wmat_f_marker.id = 0;
+	wmat_f_marker.lifetime = ros::Duration(duration);
+	wmat_f_marker.type = visualization_msgs::Marker::LINE_LIST;
+	wmat_f_marker.scale.x = 0.25;
+	wmat_f_marker.color.g = 0.5f;
+	wmat_f_marker.color.b = 1.0f;
+	wmat_f_marker.color.a = 1.0;
+}
+
+void Poly2VdConverter::doTheSearch(const coord & start, ros::Publisher & marker_pub, const std::string & frame_id, double duration)
+{
+	visualization_msgs::Marker wmat_marker;
+	visualization_msgs::Marker wmat_f_marker;
+	prepareNonFrontierMarker(wmat_marker, frame_id, duration);
+	prepareFrontierMarker(wmat_f_marker, frame_id, duration);
+
 	using namespace std;
 
-	int root = getMaNodeNotOnBoundary();
-	
-	if (root == -1) {
-		std::cerr << "Medial axis not known or data is corrupted. Could not find any node not on the boundary";
-		return;
-	}
+	// get the rootNode
+	int root = getRootNode(start);
+	assert(root >= 0 && root < GetNumberOfNodes());
 
 	// publish the root node as red sphere
 	coord c; double r;
 	GetNodeData(root, &c, &r);
-	publishSphere(marker_pub, root, c, 2*r, Color::RED, frame_id, duration);
+	publishSphere(marker_pub, root, c, r, Color::RED, frame_id, duration);
 
 	// prepare open and close "lists":
 	int nodeCount = GetNumberOfNodes();
 	std::list<int> open;
 	bool closed[nodeCount];
-	for (int i = 0; i < nodeCount; i++) closed[i] = false;
+	int previous[nodeCount];
+	for (int i = 0; i < nodeCount; i++) {
+		closed[i] = false;
+		previous[i] = -1;
+	}
 
 	open.push_back(root);
 	closed[root] = true;
@@ -1062,14 +1122,17 @@ void doTheSearch(ros::Publisher & marker_pub, const std::string & frame_id, doub
 
 		// each Vroni's node has at most three incident edges
 		int e1 = GetIncidentEdge(n);				// get the first one
-		addTheOtherNodeIfAppropriate(e1, n, open, closed);
+		addTheOtherNodeIfAppropriate(e1, n, open, closed, previous, wmat_marker, wmat_f_marker);
 
 		int e_ccw = GetCCWEdge(e1, n);				// get the second one
-		addTheOtherNodeIfAppropriate(e_ccw, n, open, closed);
+		addTheOtherNodeIfAppropriate(e_ccw, n, open, closed, previous, wmat_marker, wmat_f_marker);
 
 		int e_cw = GetCWEdge(e1, n);
-		if (e_cw != e_ccw) addTheOtherNodeIfAppropriate(e_cw, n, open, closed);
+		if (e_cw != e_ccw) addTheOtherNodeIfAppropriate(e_cw, n, open, closed, previous, wmat_marker, wmat_f_marker);
 	}
+
+	marker_pub.publish(wmat_marker);
+	marker_pub.publish(wmat_f_marker);
 }
 
 void findCriticalNodes(bool * cNodes, bool * nodes)

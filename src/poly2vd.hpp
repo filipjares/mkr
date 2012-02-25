@@ -74,6 +74,8 @@ public:
 	void publish_wmat(ros::Publisher & marker_pub, const std::string & frame_id, double duration);
 
 	void publish_wmat_deg2_nodes(ros::Publisher & marker_pub, const std::string & frame_id, double duration);
+
+	void doTheSearch(const coord & start, ros::Publisher & marker_pub, const std::string & frame_id, double duration);
 #endif
 	void exportVdToDot(const std::string &fileName, bool shuffle, bool shrink);
 };
