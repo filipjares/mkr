@@ -858,9 +858,11 @@ void BFS(int root, bool * nodes)
 		nodes[GetStartNode(e1)] = true;
 		nodes[GetEndNode(e1)] = true;
 		if(GetNodeParam(GetStartNode(e1)) != 0){
+			// FIXME: filling the open list even with the closed nodes
 			open.push_back(GetStartNode(e1));
 		}
 		if(GetNodeParam(GetEndNode(e1)) != 0){
+			// FIXME: filling the open list even with the closed nodes
 			open.push_back(GetEndNode(e1));
 		}
 
@@ -868,9 +870,11 @@ void BFS(int root, bool * nodes)
 		nodes[GetStartNode(e_ccw)] = true;
 		nodes[GetEndNode(e_ccw)] = true;
 		if(GetNodeParam(GetStartNode(e_ccw)) != 0){
+			// FIXME: filling the open list even with the closed nodes
 			open.push_back(GetStartNode(e_ccw));
 		}
 		if(GetNodeParam(GetEndNode(e_ccw)) != 0){
+			// FIXME: filling the open list even with the closed nodes
 			open.push_back(GetEndNode(e_ccw));
 		}
 
@@ -879,9 +883,11 @@ void BFS(int root, bool * nodes)
 			nodes[GetStartNode(e_cw)] = true;
 			nodes[GetEndNode(e_cw)] = true;
 			if(GetNodeParam(GetStartNode(e_cw)) != 0){
+			// FIXME: filling the open list even with the closed nodes
 				open.push_back(GetStartNode(e_cw));
 			}
 			if(GetNodeParam(GetEndNode(e_cw)) != 0){
+			// FIXME: filling the open list even with the closed nodes
 				open.push_back(GetEndNode(e_cw));
 			}
 		}
@@ -899,10 +905,13 @@ void markOutNodes(bool * nodes)
 		}
 
 		GetNodeData(GetStartNode(e), &c, &r);
+		// FIXME: why that? add comment
 		if(abs(c.x) >= 1 || abs(c.y) >= 1)
 			BFS(GetStartNode(e),nodes);
 
+		// FIXME: Is it possible to avoid doing the BFS twice?
 		GetNodeData(GetEndNode(e), &c, &r);
+		// FIXME: why that? add comment
 		if(abs(c.x) >= 1 || abs(c.y) >= 1)
 			BFS(GetEndNode(e),nodes);
 	}
@@ -929,9 +938,11 @@ bool rootNodeNotInsideHole(int root)
 		if(isOuterBasedEdge(e1))
 			return true;		
 		if(GetNodeParam(GetStartNode(e1)) != 0){
+			// FIXME: filling the open list even with the closed nodes
 			open.push_back(GetStartNode(e1));
 		}
 		if(GetNodeParam(GetEndNode(e1)) != 0){
+			// FIXME: filling the open list even with the closed nodes
 			open.push_back(GetEndNode(e1));
 		}
 
@@ -939,9 +950,11 @@ bool rootNodeNotInsideHole(int root)
 		if(isOuterBasedEdge(e_ccw))
 			return true;		
 		if(GetNodeParam(GetStartNode(e_ccw)) != 0){
+			// FIXME: filling the open list even with the closed nodes
 			open.push_back(GetStartNode(e_ccw));
 		}
 		if(GetNodeParam(GetEndNode(e_ccw)) != 0){
+			// FIXME: filling the open list even with the closed nodes
 			open.push_back(GetEndNode(e_ccw));
 		}
 
@@ -950,9 +963,11 @@ bool rootNodeNotInsideHole(int root)
 			if(isOuterBasedEdge(e_cw))
 				return true;		
 			if(GetNodeParam(GetStartNode(e_cw)) != 0){
+				// FIXME: filling the open list even with the closed nodes
 				open.push_back(GetStartNode(e_cw));
 			}
 			if(GetNodeParam(GetEndNode(e_cw)) != 0){
+				// FIXME: filling the open list even with the closed nodes
 				open.push_back(GetEndNode(e_cw));
 			}
 		}
@@ -1011,6 +1026,8 @@ int getRootNode(SPosition & pos){
 			}
 		}
 		assert(root != -1);
+		// FIXME: add comment? marking the root node as outer node
+		// just in order not to check it again?
 		outNodes[root] = true;
 	} while(!rootNodeNotInsideHole(root));
 
