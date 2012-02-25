@@ -988,9 +988,11 @@ int getRootNode(SPosition & pos){
 			if(outNodes[GetStartNode(e)] || outNodes[GetEndNode(e)])
 				continue;
 	
-			if (isEdgeBasedEdge(e)) {
-				continue;
-			}
+			// With this condition included, I (fj) found initial robot position
+			// which resulted in unsatisfied assertion after the for loop
+			// if (isEdgeBasedEdge(e)) {
+			// 	continue;
+			// }
 	
 			GetNodeData(GetStartNode(e), &c, &r);
 			cu.x = UnscaleX(c.x);
