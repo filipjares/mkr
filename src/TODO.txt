@@ -23,6 +23,8 @@ VRONI's representation of nodes of degree higher than 3
 OTHER THINGS TO CHECK DISCUSS AND IMPROVE
 =========================================
 
+- Is it possible to search for the root node in a more efficient way?
+
 # this is almost certainly misleading idea from me :) I'll check it.
 - frontiers in input segments for Vroni, frontier flag in Polygon segments:
   different definition of segment being frontier in "outer" segments and "holes"?
@@ -33,3 +35,5 @@ TODO
 
 - create synthetic map similar to that in util/fiddling_with_vroni/data/map_from_the_paper.dxf
   with more realistic passages 
+- remove dependency of poly2vd on SPosition type defined in types.h
+
