@@ -976,9 +976,9 @@ bool rootNodeNotInsideHole(int root)
 	return false;
 }
 
-int getRootNode(SPosition & pos){
-// find node which is not on the boundary and is inside polygon
-
+/** Find a node which is not on the boundary and is inside polygon */
+int getRootNode(SPosition & pos)
+{
 	bool outNodes[GetNumberOfNodes()];
 	for (int i = 0; i < GetNumberOfNodes(); i++) outNodes[i] = false;
 	markOutNodes(outNodes);
