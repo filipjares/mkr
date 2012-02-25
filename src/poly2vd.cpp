@@ -585,6 +585,105 @@ static std::string edgeDefiningSitesToString(int e)
 	return ss.str();
 }
 
+/* ********************** "VdPublisher" class ************************ */
+
+/** Tool that makes it easier to publish ROS messages for RViz */
+class VdPublisher
+{
+private:
+	const ros::Publisher & marker_pub;
+	std::string frame_id;
+	double duration;
+
+	visualization_msgs::Marker wmat_marker;
+	visualization_msgs::Marker wmat_f_marker;
+public:
+	VdPublisher(const ros::Publisher & _marker_pub, const std::string & _frame_id, double _duration): marker_pub(_marker_pub), frame_id(_frame_id), duration(_duration)
+	{
+		// prepare Markers for both "ordinary" (non-frontier based)...
+		wmat_marker.header.frame_id = frame_id;
+		wmat_marker.header.stamp = ros::Time::now();
+		wmat_marker.ns = "wmat";
+		wmat_marker.action = visualization_msgs::Marker::ADD;
+		wmat_marker.pose.orientation.w = 1.0;
+		wmat_marker.id = 0;
+		wmat_marker.lifetime = ros::Duration(duration);
+		wmat_marker.type = visualization_msgs::Marker::LINE_LIST;
+		wmat_marker.scale.x = 0.25;
+		wmat_marker.color.g = 1.0f;
+		wmat_marker.color.a = 1.0;
+
+		// ... and frontier-based edges
+		wmat_f_marker.header.frame_id = frame_id;
+		wmat_f_marker.header.stamp = ros::Time::now();
+		wmat_f_marker.ns = "wmatF";
+		wmat_f_marker.action = visualization_msgs::Marker::ADD;
+		wmat_f_marker.pose.orientation.w = 1.0;
+		wmat_f_marker.id = 0;
+		wmat_f_marker.lifetime = ros::Duration(duration);
+		wmat_f_marker.type = visualization_msgs::Marker::LINE_LIST;
+		wmat_f_marker.scale.x = 0.25;
+		wmat_f_marker.color.g = 0.5f;
+		wmat_f_marker.color.b = 1.0f;
+		wmat_f_marker.color.a = 1.0;
+	}
+
+	/** Publishes the specified sphere immediately */
+	void publishSphere(int id, coord location, double diameter, Color color)
+	{
+		// prepare the Marker
+		visualization_msgs::Marker marker;
+		marker.header.frame_id = frame_id;
+		marker.header.stamp = ros::Time::now();
+		marker.ns = "deg2Nodes";
+		marker.action = visualization_msgs::Marker::ADD;
+		marker.pose.orientation.w = 1.0;
+		marker.id = id;
+		marker.lifetime = ros::Duration(duration);
+		marker.type = visualization_msgs::Marker::SPHERE;
+
+		// set its position, diameter and color
+		marker.pose.position.x = UnscaleX(location.x);
+		marker.pose.position.y = UnscaleY(location.y);
+		marker.scale.x = marker.scale.y = marker.scale.z = UnscaleV(diameter);
+		marker.color.r = color.r; marker.color.g = color.g; marker.color.b = color.b;
+		marker.color.a = color.a;
+
+		// publish it using given publisher
+		marker_pub.publish(marker);
+	}
+
+	/* Appends Vroni's resulting edge to list of edges that will be published with publishEdges() */
+	void appendEdge(int edge)
+	{
+		// get endnodes coordinates
+		coord c1 = GetNodeCoord(GetStartNode(edge));
+		coord c2 = GetNodeCoord(GetEndNode(edge));
+		geometry_msgs::Point p1;
+		p1.x = UnscaleX(c1.x);
+		p1.y = UnscaleY(c1.y);
+		geometry_msgs::Point p2;
+		p2.x = UnscaleX(c2.x);
+		p2.y = UnscaleY(c2.y);
+
+		// append them
+		if (isFrontierBasedEdge(edge)) {
+			wmat_f_marker.points.push_back(p1);
+			wmat_f_marker.points.push_back(p2);
+		} else {
+			wmat_marker.points.push_back(p1);
+			wmat_marker.points.push_back(p2);
+		}
+	}
+
+	/** Publishes Vroni's edges */
+	void publishEdges()
+	{
+		marker_pub.publish(wmat_marker);
+		marker_pub.publish(wmat_f_marker);
+	}
+};
+
 /* ********************** "Publisher" functions ********************** */
 
 #ifndef POLY2VD_STANDALONE
@@ -620,30 +719,6 @@ static void publish_input_data(ros::Publisher & marker_pub, std::string frame_id
 	}
 
 	marker_pub.publish(input_marker);
-}
-
-void publishSphere(ros::Publisher & marker_pub, int id, coord location, double diameter, Color color, std::string frame_id, double duration)
-{
-	// prepare the Marker
-	visualization_msgs::Marker marker;
-	marker.header.frame_id = frame_id;
-	marker.header.stamp = ros::Time::now();
-	marker.ns = "deg2Nodes";
-	marker.action = visualization_msgs::Marker::ADD;
-	marker.pose.orientation.w = 1.0;
-	marker.id = id;
-	marker.lifetime = ros::Duration(duration);
-	marker.type = visualization_msgs::Marker::SPHERE;
-
-	// set its position, diameter and color
-	marker.pose.position.x = UnscaleX(location.x);
-	marker.pose.position.y = UnscaleY(location.y);
-	marker.scale.x = marker.scale.y = marker.scale.z = UnscaleV(diameter);
-	marker.color.r = color.r; marker.color.g = color.g; marker.color.b = color.b;
-	marker.color.a = color.a;
-
-	// publish it using given publisher
-	marker_pub.publish(marker);
 }
 
 /* e - edge id */
@@ -768,7 +843,8 @@ static void publishCriticalNodeCandidateIfAppropriate(int e, std::list<int> & us
 	// All right. Our candidate node is a true critical node!
 
 	if (!contains(usedNodes, candidate)) {
-		publishSphere(marker_pub, candidate, c_candidate, r_candidate, Color::BLUE, frame_id, duration);
+		VdPublisher vdPub(marker_pub, frame_id, duration);
+		vdPub.publishSphere(candidate, c_candidate, r_candidate, Color::BLUE);
 		usedNodes.push_back(candidate);
 
 		using namespace std;
@@ -822,25 +898,11 @@ int getMaNodeNotOnBoundary()
 	}
 }
 
-void addTheOtherNodeIfAppropriate(int edge, int sourceNode, std::list<int> & open, bool *closed, int *previous, visualization_msgs::Marker & wmat_marker, visualization_msgs::Marker & wmat_f_marker)
+void addTheOtherNodeIfAppropriate(int edge, int sourceNode, std::list<int> & open, bool *closed, int *previous, VdPublisher & vdPub)
 {
 	int otherNode = GetOtherNode(edge, sourceNode);
 	if (IsWmatEdge(edge)) {
-		coord c1 = GetNodeCoord(sourceNode);
-		coord c2 = GetNodeCoord(otherNode);
-		geometry_msgs::Point p1;
-		p1.x = UnscaleX(c1.x);
-		p1.y = UnscaleY(c1.y);
-		geometry_msgs::Point p2;
-		p2.x = UnscaleX(c2.x);
-		p2.y = UnscaleY(c2.y);
-		if (isFrontierBasedEdge(edge)) {
-			wmat_f_marker.points.push_back(p1);
-			wmat_f_marker.points.push_back(p2);
-		} else {
-			wmat_marker.points.push_back(p1);
-			wmat_marker.points.push_back(p2);
-		}
+		vdPub.appendEdge(edge);
 		if (closed[otherNode] == false) {
 			closed[otherNode] = true;
 			previous[otherNode] = sourceNode;
@@ -1052,45 +1114,9 @@ int getRootNode(const coord & p)
 	return root;
 }
 
-void prepareNonFrontierMarker(visualization_msgs::Marker & wmat_marker, const std::string & frame_id, double duration)
-{
-	// prepare Markers for both "ordinary" (non-frontier based)...
-	wmat_marker.header.frame_id = frame_id;
-	wmat_marker.header.stamp = ros::Time::now();
-	wmat_marker.ns = "wmat";
-	wmat_marker.action = visualization_msgs::Marker::ADD;
-	wmat_marker.pose.orientation.w = 1.0;
-	wmat_marker.id = 0;
-	wmat_marker.lifetime = ros::Duration(duration);
-	wmat_marker.type = visualization_msgs::Marker::LINE_LIST;
-	wmat_marker.scale.x = 0.25;
-	wmat_marker.color.g = 1.0f;
-	wmat_marker.color.a = 1.0;
-}
-
-void prepareFrontierMarker(visualization_msgs::Marker & wmat_f_marker, const std::string & frame_id, double duration)
-{
-	// ... and frontier-based edges
-	wmat_f_marker.header.frame_id = frame_id;
-	wmat_f_marker.header.stamp = ros::Time::now();
-	wmat_f_marker.ns = "wmatF";
-	wmat_f_marker.action = visualization_msgs::Marker::ADD;
-	wmat_f_marker.pose.orientation.w = 1.0;
-	wmat_f_marker.id = 0;
-	wmat_f_marker.lifetime = ros::Duration(duration);
-	wmat_f_marker.type = visualization_msgs::Marker::LINE_LIST;
-	wmat_f_marker.scale.x = 0.25;
-	wmat_f_marker.color.g = 0.5f;
-	wmat_f_marker.color.b = 1.0f;
-	wmat_f_marker.color.a = 1.0;
-}
-
 void Poly2VdConverter::doTheSearch(const coord & start, ros::Publisher & marker_pub, const std::string & frame_id, double duration)
 {
-	visualization_msgs::Marker wmat_marker;
-	visualization_msgs::Marker wmat_f_marker;
-	prepareNonFrontierMarker(wmat_marker, frame_id, duration);
-	prepareFrontierMarker(wmat_f_marker, frame_id, duration);
+	VdPublisher vdPub(marker_pub, frame_id, duration);
 
 	using namespace std;
 
@@ -1101,7 +1127,7 @@ void Poly2VdConverter::doTheSearch(const coord & start, ros::Publisher & marker_
 	// publish the root node as red sphere
 	coord c; double r;
 	GetNodeData(root, &c, &r);
-	publishSphere(marker_pub, root, c, r, Color::RED, frame_id, duration);
+	vdPub.publishSphere(root, c, r, Color::RED);
 
 	// prepare open and close "lists":
 	int nodeCount = GetNumberOfNodes();
@@ -1122,17 +1148,16 @@ void Poly2VdConverter::doTheSearch(const coord & start, ros::Publisher & marker_
 
 		// each Vroni's node has at most three incident edges
 		int e1 = GetIncidentEdge(n);				// get the first one
-		addTheOtherNodeIfAppropriate(e1, n, open, closed, previous, wmat_marker, wmat_f_marker);
+		addTheOtherNodeIfAppropriate(e1, n, open, closed, previous, vdPub);
 
 		int e_ccw = GetCCWEdge(e1, n);				// get the second one
-		addTheOtherNodeIfAppropriate(e_ccw, n, open, closed, previous, wmat_marker, wmat_f_marker);
+		addTheOtherNodeIfAppropriate(e_ccw, n, open, closed, previous, vdPub);
 
 		int e_cw = GetCWEdge(e1, n);
-		if (e_cw != e_ccw) addTheOtherNodeIfAppropriate(e_cw, n, open, closed, previous, wmat_marker, wmat_f_marker);
+		if (e_cw != e_ccw) addTheOtherNodeIfAppropriate(e_cw, n, open, closed, previous, vdPub);
 	}
 
-	marker_pub.publish(wmat_marker);
-	marker_pub.publish(wmat_f_marker);
+	vdPub.publishEdges();
 }
 
 void findCriticalNodes(bool * cNodes, bool * nodes)
@@ -1192,7 +1217,8 @@ void Poly2VdConverter::publish_root(ros::Publisher & marker_pub, const coord & s
 	// publish the root node as red sphere
 	coord c; double r;
 	GetNodeData(root, &c, &r);
-	publishSphere(marker_pub, root, c, 0.05, Color::RED, frame_id, duration);
+	VdPublisher vdPub(marker_pub, frame_id, duration);
+	vdPub.publishSphere(root, c, 0.05, Color::RED);
 }
 
 void Poly2VdConverter::publish_wmat(ros::Publisher & marker_pub, const std::string & frame_id, double duration)
@@ -1269,7 +1295,8 @@ void Poly2VdConverter::publish_wmat(ros::Publisher & marker_pub, const std::stri
 	for (int n = 0;  n < GetNumberOfNodes(); n++) {
 		if(cNodes[n]){
 			GetNodeData(n, &c, &r);
-			publishSphere(marker_pub, n, c, 0.05, Color::BLUE, frame_id, duration);
+			VdPublisher vdPub(marker_pub, frame_id, duration);
+			vdPub.publishSphere(n, c, 0.05, Color::BLUE);
 		}
 	}
 	
