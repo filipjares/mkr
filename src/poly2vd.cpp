@@ -974,9 +974,9 @@ int getRootNode(SPosition & pos){
 	coord c,cu;
 	double r, dist;
 	int root;
-	do{
-	root = -1;
-	double min_dist = std::numeric_limits<double>::max();
+	do {
+		root = -1;
+		double min_dist = std::numeric_limits<double>::max();
 		for (int e = 0;  e < GetNumberOfEdges(); e++) {
 			
 			if (!IsWmatEdge(e)) {
@@ -1012,8 +1012,7 @@ int getRootNode(SPosition & pos){
 		}
 		assert(root != -1);
 		outNodes[root] = true;
-	}
-	while(!testRootNode(root));
+	} while(!testRootNode(root));
 
 	return root;
 }
