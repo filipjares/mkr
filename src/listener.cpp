@@ -462,9 +462,10 @@ int main(int argc, char **argv) {
 			poly2vd.convert();
 			// publish results
 			SPosition p = l.getPosition();
-			p.x = p.x / CM;
-			p.y = p.y / CM;
-			poly2vd.publish_root(marker_pub, p, "/odom", 2.0);
+			coord start;
+			start.x = p.x / CM;
+			start.y = p.y / CM;
+			poly2vd.publish_root(marker_pub, start, "/odom", 2.0);
 			poly2vd.publish_wmat(marker_pub, "/odom", 5.0);
 		//	poly2vd.publish_wmat_deg2_nodes(marker_pub, "/odom", 5.0);
 		}

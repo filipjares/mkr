@@ -34,7 +34,6 @@
 
 // ext_appl_inout.h has to be included after "defs.h" (which includes coord.h)
 #include "ext_appl_inout.h"
-#include "types.h"
 
 #undef ZERO // both src/consts.h and VRONI_6.0/src/consts.H define ZERO (differently)
 
@@ -70,7 +69,7 @@ public:
 	void convert();
 
 #ifndef POLY2VD_STANDALONE
-	void publish_root(ros::Publisher & marker_pub, SPosition & p, const std::string & frame_id, double duration);
+	void publish_root(ros::Publisher & marker_pub, const coord & start, const std::string & frame_id, double duration);
 	
 	void publish_wmat(ros::Publisher & marker_pub, const std::string & frame_id, double duration);
 

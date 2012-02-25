@@ -977,15 +977,12 @@ bool rootNodeNotInsideHole(int root)
 }
 
 /** Find a node which is not on the boundary and is inside polygon */
-int getRootNode(SPosition & pos)
+int getRootNode(const coord & p)
 {
 	bool outNodes[GetNumberOfNodes()];
 	for (int i = 0; i < GetNumberOfNodes(); i++) outNodes[i] = false;
 	markOutNodes(outNodes);
 
-	coord p;
-	p.x = pos.x;
-	p.y = pos.y;
 	coord c,cu;
 	double r, dist;
 	int root;
@@ -1124,9 +1121,9 @@ void Poly2VdConverter::publish_wmat_deg2_nodes(ros::Publisher & marker_pub, cons
 	printed++;
 }
 
-void Poly2VdConverter::publish_root(ros::Publisher & marker_pub, SPosition & p, const std::string & frame_id, double duration)
+void Poly2VdConverter::publish_root(ros::Publisher & marker_pub, const coord & start, const std::string & frame_id, double duration)
 {
-	int root = getRootNode(p);
+	int root = getRootNode(start);
 	rootNode = root;
 //	ROS_INFO("root: %d", root);
 	// publish the root node as red sphere
