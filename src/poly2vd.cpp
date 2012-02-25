@@ -487,321 +487,320 @@ static bool isOuterBasedEdge(int e)
 	return (t1 == SEG && segs[s1].ext_appl.isOuter) || (t2 == SEG && segs[s2].ext_appl.isOuter);
 }
 
-	/* *************** Utility functions (other) ************************* */
+/* *************** Utility functions (other) ************************* */
 
-	//tempate <class T>
-	//boolean contains(list<T> & lst, const T &element)
-	//{
-	//	list<T>::iterator it =  find(lst.begin(), lst.end(), element);
-	//	return it != lst.end();
-	//}
-	bool contains(std::list<int> & lst, int element)
-	{
-		std::list<int>::iterator it = find(lst.begin(), lst.end(), element);
-		return it != lst.end();
+//tempate <class T>
+//boolean contains(list<T> & lst, const T &element)
+//{
+//	list<T>::iterator it =  find(lst.begin(), lst.end(), element);
+//	return it != lst.end();
+//}
+bool contains(std::list<int> & lst, int element)
+{
+	std::list<int>::iterator it = find(lst.begin(), lst.end(), element);
+	return it != lst.end();
+}
+
+/** random double in range [-1, 1] */
+double random_double()
+{
+	return 2*((double)rand()/(double)RAND_MAX) - 1;
+}
+
+template <class T>
+inline std::string to_string (const T& t)
+{
+	std::stringstream ss;
+	ss << t;
+	return ss.str();
+}
+
+/* ********************** toString() functions *********************** */
+
+std::string coordToString(const coord & coord, bool addParentheses)
+{
+	using namespace std;
+
+	string lp, rp;
+	if (addParentheses) {
+		lp = "(";
+		rp = ")";
+	} else {
+		lp = rp = "";
 	}
 
-	/** random double in range [-1, 1] */
-	double random_double()
-	{
-		return 2*((double)rand()/(double)RAND_MAX) - 1;
+	stringstream ss;
+	ss << fixed << setprecision(2) << right;
+	ss << lp << setw(6) << right << UnscaleX(coord.x) << ", " // FIXME
+			 << setw(6) << right << UnscaleY(coord.y) << rp;
+	return ss.str();
+}
+
+std::string coordToString(const coord & coord)
+{
+	return coordToString(coord, true);
+}
+
+std::string nodeToString(int n)
+{
+	coord c; double r;
+	GetNodeData(n, &c, &r);
+
+	using namespace std;
+	stringstream ss;
+	ss << fixed << setprecision(2) << right;
+	ss << "[n=" << n << ", r =" << setw(6) << UnscaleV(r) << ", coord = " << coordToString(c) << "]";
+
+	return ss.str();
+}
+
+std::string edgeToString(int e)
+{
+	int n1 = GetStartNode(e);
+	int n2 = GetEndNode(e);
+
+	using namespace std;
+	stringstream ss;
+	ss << fixed << setprecision(2) << right;
+	ss << "{e = " << e << ", " << (IsWmatEdge(e)?"WMAT":"nowm") << ": "
+		<< nodeToString(n1) << ", " << nodeToString(n2) << "}";
+
+	return ss.str();
+}
+
+static std::string edgeDefiningSitesToString(int e)
+{
+	int s1, s2; t_site t1, t2;
+	GetLftSiteData(e, &s1, &t1);
+	GetRgtSiteData(e, &s2, &t2);
+
+	using namespace std;
+
+	stringstream ss;
+
+	ss << "s1 = " << setw(2) << right << s1
+		<< " [" << site_type_names[t1] << "],  s2 = "
+		<< setw(2) << right << s2
+		<< " [" << site_type_names[t2] << "]";
+	return ss.str();
+}
+
+/* ********************** "Publisher" functions ********************** */
+
+#ifndef POLY2VD_STANDALONE
+
+static void publish_input_data(ros::Publisher & marker_pub, std::string frame_id, double duration)
+{
+	// prepare the Marker
+	visualization_msgs::Marker input_marker;
+	input_marker.header.frame_id = frame_id;
+	input_marker.header.stamp = ros::Time::now();
+	input_marker.ns = "input";
+	input_marker.action = visualization_msgs::Marker::ADD;
+	input_marker.pose.orientation.w = 1.0;
+	input_marker.id = 1;
+	input_marker.lifetime = ros::Duration(duration);
+	input_marker.type = visualization_msgs::Marker::LINE_LIST;
+	input_marker.scale.x = 2;
+	input_marker.color.g = 1.0f;
+	input_marker.color.a = 1.0;
+
+	using namespace std;
+
+	//cout << "Number of input segments: " << num_segs << endl;
+
+	geometry_msgs::Point p;
+	for(int i = 0; i < num_segs; i++) { // num_segs is internal Vroni variable
+		p.x = UnscaleX(GetSegStartCoord(i).x);
+		p.y = UnscaleY(GetSegStartCoord(i).y);
+		input_marker.points.push_back(p);
+		p.x = UnscaleX(GetSegEndCoord(i).x);
+		p.y = UnscaleY(GetSegEndCoord(i).y);
+		input_marker.points.push_back(p);
 	}
 
-	template <class T>
-	inline std::string to_string (const T& t)
-	{
-		std::stringstream ss;
-		ss << t;
-		return ss.str();
+	marker_pub.publish(input_marker);
+}
+
+void publishSphere(ros::Publisher & marker_pub, int id, coord location, double diameter, Color color, std::string frame_id, double duration)
+{
+	// prepare the Marker
+	visualization_msgs::Marker marker;
+	marker.header.frame_id = frame_id;
+	marker.header.stamp = ros::Time::now();
+	marker.ns = "deg2Nodes";
+	marker.action = visualization_msgs::Marker::ADD;
+	marker.pose.orientation.w = 1.0;
+	marker.id = id;
+	marker.lifetime = ros::Duration(duration);
+	marker.type = visualization_msgs::Marker::SPHERE;
+
+	// set its position, diameter and color
+	marker.pose.position.x = UnscaleX(location.x);
+	marker.pose.position.y = UnscaleY(location.y);
+	marker.scale.x = marker.scale.y = marker.scale.z = UnscaleV(diameter);
+	marker.color.r = color.r; marker.color.g = color.g; marker.color.b = color.b;
+	marker.color.a = color.a;
+
+	// publish it using given publisher
+	marker_pub.publish(marker);
+}
+
+/* e - edge id */
+static void publishCriticalNodeCandidateIfAppropriate(int e, std::list<int> & usedNodes, ros::Publisher & marker_pub, std::string frame_id, double duration, bool printIt)
+{
+	int n1 = GetStartNode(e);
+	int n2 = GetEndNode(e);
+
+	// are the end-nodes connecting this WMAT Edge (e) with just one other WMAT Edge?
+	bool isN1Deg2 = isDeg2WmatNode(e, n1); // IsDeg2Node(n1);
+	bool isN2Deg2 = isDeg2WmatNode(e, n2); // IsDeg2Node(n2);
+
+	// only degree 2 nodes are critical point candidates
+	if (!isN1Deg2 && !isN2Deg2) {
+		return;
 	}
 
-	/* ********************** toString() functions *********************** */
+	coord c1, c2; double r1, r2;
+	GetNodeData(n1, &c1, &r1);
+	GetNodeData(n2, &c2, &r2);
 
-	std::string coordToString(const coord & coord, bool addParentheses)
-	{
-		using namespace std;
+	// FIXME: VRONI does not have VD nodes with degree higher than 3. Nodes
+	// of higher degree are represented by multiple nodes of maximum
+	// degree 3 located at the same position and iterconnected together.
+	// Have to cope with that... For now, I am pretending there are no such
+	// connected nodes.
 
-		string lp, rp;
-		if (addParentheses) {
-			lp = "(";
-			rp = ")";
-		} else {
-			lp = rp = "";
+	// critical point candidate has to be local minimum
+	if (contrastCompare(r1, r2) == 0) {
+		return;
+	}
+
+	bool hasNeighbourOfDeg3 = false;
+	int candidate;
+	coord c_candidate;
+	double r_candidate;
+
+	// the one with smaller clearance radius is the candidate
+	if (contrastCompare(r1, r2) < 0) {
+		// the candidate is degree 3 -> not a critical point
+		if (!isN1Deg2) {
+			return;
 		}
-
-		stringstream ss;
-		ss << fixed << setprecision(2) << right;
-		ss << lp << setw(6) << right << UnscaleX(coord.x) << ", " // FIXME
-				 << setw(6) << right << UnscaleY(coord.y) << rp;
-		return ss.str();
-	}
-
-	std::string coordToString(const coord & coord)
-	{
-		return coordToString(coord, true);
-	}
-
-	std::string nodeToString(int n)
-	{
-		coord c; double r;
-		GetNodeData(n, &c, &r);
-
-		using namespace std;
-		stringstream ss;
-		ss << fixed << setprecision(2) << right;
-		ss << "[n=" << n << ", r =" << setw(6) << UnscaleV(r) << ", coord = " << coordToString(c) << "]";
-
-		return ss.str();
-	}
-
-	std::string edgeToString(int e)
-	{
-		int n1 = GetStartNode(e);
-		int n2 = GetEndNode(e);
-
-		using namespace std;
-		stringstream ss;
-		ss << fixed << setprecision(2) << right;
-		ss << "{e = " << e << ", " << (IsWmatEdge(e)?"WMAT":"nowm") << ": "
-			<< nodeToString(n1) << ", " << nodeToString(n2) << "}";
-
-		return ss.str();
-	}
-
-	static std::string edgeDefiningSitesToString(int e)
-	{
-		int s1, s2; t_site t1, t2;
-		GetLftSiteData(e, &s1, &t1);
-		GetRgtSiteData(e, &s2, &t2);
-
-		using namespace std;
-
-		stringstream ss;
-
-		ss << "s1 = " << setw(2) << right << s1
-			<< " [" << site_type_names[t1] << "],  s2 = "
-			<< setw(2) << right << s2
-			<< " [" << site_type_names[t2] << "]";
-		return ss.str();
-	}
-
-	/* ********************** "Publisher" functions ********************** */
-
-	#ifndef POLY2VD_STANDALONE
-
-	static void publish_input_data(ros::Publisher & marker_pub, std::string frame_id, double duration)
-	{
-		// prepare the Marker
-		visualization_msgs::Marker input_marker;
-		input_marker.header.frame_id = frame_id;
-		input_marker.header.stamp = ros::Time::now();
-		input_marker.ns = "input";
-		input_marker.action = visualization_msgs::Marker::ADD;
-		input_marker.pose.orientation.w = 1.0;
-		input_marker.id = 1;
-		input_marker.lifetime = ros::Duration(duration);
-		input_marker.type = visualization_msgs::Marker::LINE_LIST;
-		input_marker.scale.x = 2;
-		input_marker.color.g = 1.0f;
-		input_marker.color.a = 1.0;
-
-		using namespace std;
-
-	//	cout << "Number of input segments: " << num_segs << endl;
-
-		geometry_msgs::Point p;
-		for(int i = 0; i < num_segs; i++) { // num_segs is internal Vroni variable
-			p.x = UnscaleX(GetSegStartCoord(i).x);
-			p.y = UnscaleY(GetSegStartCoord(i).y);
-			input_marker.points.push_back(p);
-			p.x = UnscaleX(GetSegEndCoord(i).x);
-			p.y = UnscaleY(GetSegEndCoord(i).y);
-			input_marker.points.push_back(p);
+		// clearance radius has to be positive
+		if (r1 == 0) {
+			return;
 		}
-
-		marker_pub.publish(input_marker);
+		if (!isN2Deg2) {
+			hasNeighbourOfDeg3 = true;
+		}
+		candidate = n1;
+		r_candidate = r1;
+		c_candidate = c1;
+	} else {
+		// the candidate is degree 3 -> not a critical point
+		if (!isN2Deg2) {
+			return;
+		}
+		// clearance radius has to be positive
+		if (r2 == 0) {
+			return;
+		}
+		if (!isN1Deg2) {
+			hasNeighbourOfDeg3 = true;
+		}
+		candidate = n2;
+		r_candidate = r2;
+		c_candidate = c2;
 	}
 
-	void publishSphere(ros::Publisher & marker_pub, int id, coord location, double diameter, Color color, std::string frame_id, double duration)
-	{
-		// prepare the Marker
-		visualization_msgs::Marker marker;
-		marker.header.frame_id = frame_id;
-		marker.header.stamp = ros::Time::now();
-		marker.ns = "deg2Nodes";
-		marker.action = visualization_msgs::Marker::ADD;
-		marker.pose.orientation.w = 1.0;
-		marker.id = id;
-		marker.lifetime = ros::Duration(duration);
-		marker.type = visualization_msgs::Marker::SPHERE;
+	coord c_ccw, c_cw; double r_ccw, r_cw;
 
-		// set its position, diameter and color
-		marker.pose.position.x = UnscaleX(location.x);
-		marker.pose.position.y = UnscaleY(location.y);
-		marker.scale.x = marker.scale.y = marker.scale.z = UnscaleV(diameter);
-		marker.color.r = color.r; marker.color.g = color.g; marker.color.b = color.b;
-		marker.color.a = color.a;
+	// Note: e_ccw and e_cw are not neccessarily equal now.  Even though the
+	// candidate node is has WMAT degree of 2, its VD degree may be higher.
 
-		// publish it using given publisher
-		marker_pub.publish(marker);
+	int e_ccw = GetCCWEdge(e,candidate);
+	int e_cw = GetCWEdge(e,candidate);
+
+	if (IsWmatEdge(e_ccw)) {
+		assert(e_ccw == e_cw || !IsWmatEdge(e_cw));
+
+		int n_ccw = GetOtherNode(e_ccw, candidate);
+		GetNodeData(n_ccw, &c_ccw, &r_ccw);
+		// clearance radii of all the neighbours have to be greater than ours
+		if (r_candidate >= r_ccw) {
+			return;
+		}
+		if (!IsDeg2Node(n_ccw)) {
+			hasNeighbourOfDeg3 = true;
+		}
+		if (areCoordsEqual(c_candidate, c_ccw)) {
+			using namespace std;
+			cout << "The candidate (" << candidate << ") and node related to it through "
+				<< "e_ccw have the same coords: " << coordToString(c_candidate) << endl;
+		}
 	}
 
-	/* e - edge id */
-	static void publishCriticalNodeCandidateIfAppropriate(int e, std::list<int> & usedNodes, ros::Publisher & marker_pub, std::string frame_id, double duration, bool printIt)
-	{
-			int n1 = GetStartNode(e);
-			int n2 = GetEndNode(e);
+	if (IsWmatEdge(e_cw)) {
+		assert(e_ccw == e_cw || !IsWmatEdge(e_ccw));
 
-			// are the end-nodes connecting this WMAT Edge (e) with just one other WMAT Edge?
-			bool isN1Deg2 = isDeg2WmatNode(e, n1); // IsDeg2Node(n1);
-			bool isN2Deg2 = isDeg2WmatNode(e, n2); // IsDeg2Node(n2);
+		int n_cw = GetOtherNode(e_cw, candidate);
+		GetNodeData(n_cw, &c_cw, &r_cw);
+		// clearance radii of all neighbours have to be greater than ours
+		if (r_candidate >= r_cw) {
+			return;
+		}
+		if (!IsDeg2Node(n_cw)) {
+			hasNeighbourOfDeg3 = true;
+		}
+		if (areCoordsEqual(c_candidate, c_cw)) {
+			using namespace std;
+			cout << "The candidate (" << candidate << ") and node related to it through "
+				<< "e_cw have the same coords: " << coordToString(c_candidate) << endl;
+		}
+	}
 
-			// only degree 2 nodes are critical point candidates
-			if (!isN1Deg2 && !isN2Deg2) {
-				return;
-			}
+	// candidate node has to have neighbour of degree 3
+	if (!hasNeighbourOfDeg3) {
+		return;
+	}
 
-			coord c1, c2; double r1, r2;
-			GetNodeData(n1, &c1, &r1);
-			GetNodeData(n2, &c2, &r2);
+	// All right. Our candidate node is a true critical node!
 
-			// FIXME: VRONI does not have VD nodes with degree higher than 3. Nodes
-			// of higher degree are represented by multiple nodes of maximum
-			// degree 3 located at the same position and iterconnected together.
-			// Have to cope with that... For now, I am pretending there are no such
-			// connected nodes.
+	if (!contains(usedNodes, candidate)) {
+		publishSphere(marker_pub, candidate, c_candidate, r_candidate, Color::BLUE, frame_id, duration);
+		usedNodes.push_back(candidate);
 
-			// critical point candidate has to be local minimum
-			if (contrastCompare(r1, r2) == 0) {
-				return;
-			}
+		using namespace std;
 
-			bool hasNeighbourOfDeg3 = false;
-			int candidate;
-			coord c_candidate;
-			double r_candidate;
+		if (printIt) {
+			cout << setw(4) << right << candidate << ": " << coordToString(c_candidate)
+				<< " (" << fixed << setprecision(3) << r_candidate << ")"
+				<< ":\t"
+				<< endl;
+			// TODO
+		}
+	}
+}
 
-			// the one with smaller clearance radius is the candidate
-			if (contrastCompare(r1, r2) < 0) {
-				// the candidate is degree 3 -> not a critical point
-				if (!isN1Deg2) {
-					return;
-				}
-				// clearance radius has to be positive
-				if (r1 == 0) {
-					return;
-				}
-				if (!isN2Deg2) {
-					hasNeighbourOfDeg3 = true;
-				}
-				candidate = n1;
-				r_candidate = r1;
-				c_candidate = c1;
+// FIXME: use VRONI's definition
+#define  ZERO      1.0e-13   /* small number, greater than machine precision */
+
+int getMaNodeNotOnBoundary()
+{
+	bool at_boundary = true;
+	int n = 0, e;
+	double r;
+
+	// find a MA node that is not on the boundary
+	e = 0;
+	while (at_boundary  &&  (e < GetNumberOfEdges())) {
+		if (IsWmatEdge(e)) {
+			n = GetStartNode(e);
+			r = GetNodeParam(n);
+			if (r > ZERO) {
+				at_boundary = false;
 			} else {
-				// the candidate is degree 3 -> not a critical point
-				if (!isN2Deg2) {
-					return;
-				}
-				// clearance radius has to be positive
-				if (r2 == 0) {
-					return;
-				}
-				if (!isN1Deg2) {
-					hasNeighbourOfDeg3 = true;
-				}
-				candidate = n2;
-				r_candidate = r2;
-				c_candidate = c2;
-			}
-
-			coord c_ccw, c_cw; double r_ccw, r_cw;
-
-			// Note: e_ccw and e_cw are not neccessarily equal now.  Even though the
-			// candidate node is has WMAT degree of 2, its VD degree may be higher.
-
-			int e_ccw = GetCCWEdge(e,candidate);
-			int e_cw = GetCWEdge(e,candidate);
-
-			if (IsWmatEdge(e_ccw)) {
-				assert(e_ccw == e_cw || !IsWmatEdge(e_cw));
-
-				int n_ccw = GetOtherNode(e_ccw, candidate);
-				GetNodeData(n_ccw, &c_ccw, &r_ccw);
-				// clearance radii of all the neighbours have to be greater than ours
-				if (r_candidate >= r_ccw) {
-					return;
-				}
-				if (!IsDeg2Node(n_ccw)) {
-					hasNeighbourOfDeg3 = true;
-				}
-				if (areCoordsEqual(c_candidate, c_ccw)) {
-					using namespace std;
-					cout << "The candidate (" << candidate << ") and node related to it through "
-						<< "e_ccw have the same coords: " << coordToString(c_candidate) << endl;
-				}
-			}
-
-			if (IsWmatEdge(e_cw)) {
-				assert(e_ccw == e_cw || !IsWmatEdge(e_ccw));
-
-				int n_cw = GetOtherNode(e_cw, candidate);
-				GetNodeData(n_cw, &c_cw, &r_cw);
-				// clearance radii of all neighbours have to be greater than ours
-				if (r_candidate >= r_cw) {
-					return;
-				}
-				if (!IsDeg2Node(n_cw)) {
-					hasNeighbourOfDeg3 = true;
-				}
-				if (areCoordsEqual(c_candidate, c_cw)) {
-					using namespace std;
-					cout << "The candidate (" << candidate << ") and node related to it through "
-						<< "e_cw have the same coords: " << coordToString(c_candidate) << endl;
-				}
-			}
-
-			// candidate node has to have neighbour of degree 3
-			if (!hasNeighbourOfDeg3) {
-				return;
-			}
-
-			// All right. Our candidate node is a true critical node!
-
-			if (!contains(usedNodes, candidate)) {
-				publishSphere(marker_pub, candidate, c_candidate, r_candidate, Color::BLUE, frame_id, duration);
-				usedNodes.push_back(candidate);
-
-				using namespace std;
-
-				if (printIt) {
-					cout << setw(4) << right << candidate << ": " << coordToString(c_candidate)
-						<< " (" << fixed << setprecision(3) << r_candidate << ")"
-						<< ":\t"
-						<< endl;
-					// TODO
-				}
-			}
-	}
-
-	// FIXME: use VRONI's definition
-	#define  ZERO      1.0e-13   /* small number, greater than machine precision */
-
-	int getMaNodeNotOnBoundary()
-	{
-		bool at_boundary = true;
-		int n = 0, e;
-		double r;
-
-		// find a MA node that is not on the boundary
-		e = 0;
-		while (at_boundary  &&  (e < GetNumberOfEdges())) {
-			if (IsWmatEdge(e)) {
-				n = GetStartNode(e);
-				r = GetNodeParam(n);
-				if (r > ZERO) {
-					at_boundary = false;
-				}
-				else {
 				n = GetOtherNode(e, n);
 				r = GetNodeParam(n);
 				if (r > ZERO) {
@@ -811,8 +810,7 @@ static bool isOuterBasedEdge(int e)
 					++e;
 				}
 			}
-		}
-		else {
+		} else {
 			++e;
 		}
 	}
