@@ -908,7 +908,7 @@ void markOutNodes(bool * nodes)
 	}
 }
 
-bool testRootNode(int root)
+bool rootNodeNotInsideHole(int root)
 {
 	std::list<int> open;
 	bool closed[GetNumberOfNodes()];	
@@ -1012,7 +1012,7 @@ int getRootNode(SPosition & pos){
 		}
 		assert(root != -1);
 		outNodes[root] = true;
-	} while(!testRootNode(root));
+	} while(!rootNodeNotInsideHole(root));
 
 	return root;
 }
