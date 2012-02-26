@@ -28,6 +28,7 @@
 #include <assert.h>
 #include <cmath>
 #include "poly2vd.hpp"
+#include "GraphMeta.hpp"
 #include "Color.hpp"
 #include "VroniUtils.hpp"
 
@@ -404,16 +405,19 @@ int getMaNodeNotOnBoundary()
 	}
 }
 
-void addTheOtherNodeIfAppropriate(int edge, int sourceNode, std::list<int> & open, bool *closed, int *previous, VdPublisher & vdPub)
+void addTheOtherNodeIfAppropriate(int edge, int sourceNode, GraphMeta & graph, VdPublisher & vdPub)
 {
 	int otherNode = GetOtherNode(edge, sourceNode);
 	if (IsWmatEdge(edge)) {
-		vdPub.appendEdge(edge);
-		if (closed[otherNode] == false) {
-			closed[otherNode] = true;
-			previous[otherNode] = sourceNode;
+		if (!graph.isEdgeUsed(edge)) {
+			graph.setEdgeUsed(edge);
+			vdPub.appendEdge(edge);
+		}
+		if (!graph.isNodeClosed(otherNode)) {
+			graph.setNodeClosed(otherNode);
+			graph.setPrevious(otherNode, sourceNode, edge); // FIXME: use euclidean length to determine the shortest path
 			if (GetNodeParam(otherNode) > ZERO) {
-				open.push_back(otherNode);
+				graph.addToOpenList(otherNode);
 			}
 		}
 	} else {
@@ -635,32 +639,24 @@ void Poly2VdConverter::doTheSearch(const coord & start, ros::Publisher & marker_
 	GetNodeData(root, &c, &r);
 	vdPub.publishSphere(root, c, r, Color::RED);
 
-	// prepare open and close "lists":
-	int nodeCount = GetNumberOfNodes();
-	std::list<int> open;
-	bool closed[nodeCount];
-	int previous[nodeCount];
-	for (int i = 0; i < nodeCount; i++) {
-		closed[i] = false;
-		previous[i] = -1;
-	}
+	// prepare open and closed "lists" and other graph metadata:
+	GraphMeta graph(GetNumberOfNodes(), GetNumberOfEdges());
 
-	open.push_back(root);
-	closed[root] = true;
+	graph.addToOpenList(root);
+	graph.setNodeClosed(root);
 
-	while (!open.empty()) {
-		int n = open.front();
-		open.pop_front();
+	while (!graph.isOpenListEmpty()) {
+		int n = graph.getFirstNodeFromOpenList();
 
 		// each Vroni's node has at most three incident edges
 		int e1 = GetIncidentEdge(n);				// get the first one
-		addTheOtherNodeIfAppropriate(e1, n, open, closed, previous, vdPub);
+		addTheOtherNodeIfAppropriate(e1, n, graph, vdPub);
 
 		int e_ccw = GetCCWEdge(e1, n);				// get the second one
-		addTheOtherNodeIfAppropriate(e_ccw, n, open, closed, previous, vdPub);
+		addTheOtherNodeIfAppropriate(e_ccw, n, graph, vdPub);
 
 		int e_cw = GetCWEdge(e1, n);
-		if (e_cw != e_ccw) addTheOtherNodeIfAppropriate(e_cw, n, open, closed, previous, vdPub);
+		if (e_cw != e_ccw) addTheOtherNodeIfAppropriate(e_cw, n, graph, vdPub);
 	}
 
 	vdPub.publishEdges();
@@ -933,7 +929,6 @@ void performTests()
 
 	std::cout << "Tests passed." << std::endl;
 }
-
 
 /* **************************** main() ******************************* */
 
