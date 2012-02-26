@@ -305,6 +305,7 @@ static bool isDeg3Node(int n)
 	}
 }
 
+// FIXME: This does not work in my opinion (fj)
 static bool hasDeg3Neighbour(int n)
 {
 	int e = GetIncidentEdge(n);

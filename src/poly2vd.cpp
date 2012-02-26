@@ -662,24 +662,6 @@ void Poly2VdConverter::doTheSearch(const coord & start, ros::Publisher & marker_
 	vdPub.publishEdges();
 }
 
-void findCriticalNodes(bool * cNodes, bool * nodes)
-{
-	//TODO - here the nodes inside should be analyzed and searched for criticle ones and then published
-	//now just vizualize them
-	//later the functions will be modified to return usable data and suppress vizualization
-
-	for (int n = 0;  n < GetNumberOfNodes(); n++) {
-		cNodes[n] = false;	
-		
-		if (nodes[n]) {
-			if(isDeg2Node(n) && GetNodeParam(n) > 0.01) {
-				if(hasDeg3Neighbour(n))
-					cNodes[n] = true;
-			}
-		}
-	}
-}
-
 void Poly2VdConverter::publish_wmat_deg2_nodes(ros::Publisher & marker_pub, const std::string & frame_id, double duration)
 {
 	static int printed = 0;
@@ -723,92 +705,14 @@ void Poly2VdConverter::publish_root(ros::Publisher & marker_pub, const coord & s
 	vdPub.publishSphere(root, c, 0.05, Color::RED);
 }
 
-void Poly2VdConverter::publish_wmat(ros::Publisher & marker_pub, const std::string & frame_id, double duration)
-{
-	// prepare Markers for both "ordinary" (non-frontier based)...
-	visualization_msgs::Marker wmat_marker;
-	wmat_marker.header.frame_id = frame_id;
-	wmat_marker.header.stamp = ros::Time::now();
-	wmat_marker.ns = "wmat";
-	wmat_marker.action = visualization_msgs::Marker::ADD;
-	wmat_marker.pose.orientation.w = 1.0;
-	wmat_marker.id = 0;
-	wmat_marker.lifetime = ros::Duration(duration);
-	wmat_marker.type = visualization_msgs::Marker::LINE_LIST;
-	wmat_marker.scale.x = 0.25;
-	wmat_marker.color.g = 1.0f;
-	wmat_marker.color.a = 1.0;
-	// ... and frontier-based edges
-	visualization_msgs::Marker wmat_f_marker;
-	wmat_f_marker.header.frame_id = frame_id;
-	wmat_f_marker.header.stamp = ros::Time::now();
-	wmat_f_marker.ns = "wmatF";
-	wmat_f_marker.action = visualization_msgs::Marker::ADD;
-	wmat_f_marker.pose.orientation.w = 1.0;
-	wmat_f_marker.id = 0;
-	wmat_f_marker.lifetime = ros::Duration(duration);
-	wmat_f_marker.type = visualization_msgs::Marker::LINE_LIST;
-	wmat_f_marker.scale.x = 0.25;
-	wmat_f_marker.color.g = 0.5f;
-	wmat_f_marker.color.b = 1.0f;
-	wmat_f_marker.color.a = 1.0;
-
-	using namespace std;
-
-	bool inNodes[GetNumberOfNodes()];
-	for (int i = 0; i < GetNumberOfNodes(); i++) inNodes[i] = false;
-	BFS(rootNode,inNodes);
-	
-	geometry_msgs::Point p;
-	for (int e = 0;  e < GetNumberOfEdges(); e++) {
-
-		coord c; double r;
-		
-		if (!IsWmatEdge(e)) {
-			continue;
-		}
-
-		if(!inNodes[GetStartNode(e)] || !inNodes[GetEndNode(e)])
-			continue;
-
-		GetNodeData(GetStartNode(e), &c, &r);
-		p.x = UnscaleX(c.x);
-		p.y = UnscaleY(c.y);
-		if (isFrontierBasedEdge(e)) {
-			wmat_f_marker.points.push_back(p);
-		} else {
-			wmat_marker.points.push_back(p);
-		}
-		GetNodeData(GetEndNode(e), &c, &r);
-		p.x = UnscaleX(c.x);
-		p.y = UnscaleY(c.y);
-		if (isFrontierBasedEdge(e)) {
-			wmat_f_marker.points.push_back(p);
-		} else {
-			wmat_marker.points.push_back(p);
-		}
-	}
-
-	bool cNodes[GetNumberOfNodes()];
-	findCriticalNodes(cNodes,inNodes);
-
-	coord c; double r;
-
-	for (int n = 0;  n < GetNumberOfNodes(); n++) {
-		if(cNodes[n]){
-			GetNodeData(n, &c, &r);
-			VdPublisher vdPub(marker_pub, frame_id, duration);
-			vdPub.publishSphere(n, c, 0.05, Color::BLUE);
-		}
-	}
-	
-	marker_pub.publish(wmat_marker);
-	marker_pub.publish(wmat_f_marker);
-}
-
 /* Sends single message with input and output data */
 void publish_result( int argc, char *argv[], Poly2VdConverter & p2vd )
 {
+	// FIXME: retrieve start coords from the command line arguments
+	coord start;
+	start.x = 0.0;
+	start.y = 0.0;
+
 	// init ros
 	ros::init(argc, argv, "poly2vd");
 	ros::NodeHandle n;
@@ -820,8 +724,8 @@ void publish_result( int argc, char *argv[], Poly2VdConverter & p2vd )
 	{
 		// publish both input segments and output wmat data
 		publish_input_data(marker_pub, "/odom", 5.0);
-		p2vd.publish_wmat(marker_pub, "/odom", 5.0);
 		p2vd.publish_wmat_deg2_nodes(marker_pub, "/odom", 5.0);
+		p2vd.doTheSearch(start, marker_pub, "/odom", 5.0);
 
 		r.sleep();
  	}
