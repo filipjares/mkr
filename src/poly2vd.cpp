@@ -31,7 +31,7 @@
 
 /* ************ ROS includes (other than in poly2vd.hpp) ************* */
 
-#ifndef POLY2VD_STANDALONE
+#ifndef POLY2VD_WITHOUT_ROS
 
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
@@ -587,6 +587,8 @@ static std::string edgeDefiningSitesToString(int e)
 
 /* ********************** "VdPublisher" class ************************ */
 
+#ifndef POLY2VD_WITHOUT_ROS
+
 /** Tool that makes it easier to publish ROS messages for RViz */
 class VdPublisher
 {
@@ -685,8 +687,6 @@ public:
 };
 
 /* ********************** "Publisher" functions ********************** */
-
-#ifndef POLY2VD_STANDALONE
 
 static void publish_input_data(ros::Publisher & marker_pub, std::string frame_id, double duration)
 {
@@ -1460,7 +1460,7 @@ int main ( int argc, char *argv[] )
 	cout << "segs count: " << num_segs << endl;
 
 	if (EXPORT2DOT) p2vd.exportVdToDot("/tmp/vd.dot", SHUFFLE, SHRINK);
-#ifndef POLY2VD_STANDALONE
+#ifndef POLY2VD_WITHOUT_ROS
 	if (PUBLISH_ROS) publish_result(argc, argv, p2vd);
 #endif
 

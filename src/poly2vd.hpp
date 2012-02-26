@@ -39,7 +39,7 @@
 
 /* ********************** ROS includes ******************************* */
 
-#ifndef POLY2VD_STANDALONE
+#ifndef POLY2VD_WITHOUT_ROS
 
 #include <ros/ros.h>
 
@@ -68,7 +68,7 @@ public:
 
 	void convert();
 
-#ifndef POLY2VD_STANDALONE
+#ifndef POLY2VD_WITHOUT_ROS
 	void publish_root(ros::Publisher & marker_pub, const coord & start, const std::string & frame_id, double duration);
 	
 	void publish_wmat(ros::Publisher & marker_pub, const std::string & frame_id, double duration);
