@@ -160,8 +160,8 @@ void Poly2VdConverter::convert()
 
 const bool SHRINK = false;
 const bool SHUFFLE = true;
-const bool EXPORT2DOT = true;
-const bool PUBLISH_ROS = false;
+const bool EXPORT2DOT = false;
+const bool PUBLISH_ROS = true;
 
 /* *************** Utility functions (non-Vroni related) ************* */
 
@@ -569,6 +569,40 @@ bool rootNodeNotInsideHole(int root)
 	return false;
 }
 
+int getNearestRootNode(const coord &p)
+{
+	int root = -1;
+	
+	double min_dist = std::numeric_limits<double>::max();
+
+	for (int e = 0;  e < GetNumberOfEdges(); e++) {
+		if (IsWmatEdge(e)) {
+			coord c, cu;
+			double r;
+			GetNodeData(GetStartNode(e), &c, &r);
+			cu.x = UnscaleX(c.x);
+			cu.y = UnscaleY(c.y);
+			double dist = coordDistance(p,cu);
+			if (dist < min_dist && r > ZERO) {
+				root = GetStartNode(e);
+				min_dist = dist;
+			}
+
+			GetNodeData(GetEndNode(e), &c, &r);
+			cu.x = UnscaleX(c.x);
+			cu.y = UnscaleY(c.y);
+			dist = coordDistance(p,cu);
+			if (dist < min_dist && r > ZERO) {
+				root = GetEndNode(e);
+				min_dist = dist;
+			}
+		}
+	}
+
+	assert(root != -1);
+	return root;
+}
+
 /** Find a node which is not on the boundary and is inside polygon */
 int getRootNode(const coord & p)
 {
@@ -631,7 +665,8 @@ void Poly2VdConverter::doTheSearch(const coord & start, ros::Publisher & marker_
 	using namespace std;
 
 	// get the rootNode
-	int root = getRootNode(start);
+	// int root = getRootNode(start);
+	int root = getNearestRootNode(start);
 	assert(root >= 0 && root < GetNumberOfNodes());
 
 	// publish the root node as red sphere
@@ -710,8 +745,8 @@ void publish_result( int argc, char *argv[], Poly2VdConverter & p2vd )
 {
 	// FIXME: retrieve start coords from the command line arguments
 	coord start;
-	start.x = 0.0;
-	start.y = 0.0;
+	start.x = 105.0;
+	start.y = 163.0;
 
 	// init ros
 	ros::init(argc, argv, "poly2vd");
