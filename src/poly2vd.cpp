@@ -432,6 +432,21 @@ void addTheOtherNodeIfAppropriate(int edge, int sourceNode, GraphMeta & graph, V
 		if (!graph.isEdgeUsed(edge)) {
 			graph.setEdgeUsed(edge);
 			vdPub.appendEdge(edge);
+
+			EdgeStatus status;	// edge status to be set
+
+			int prevEdge = graph.getPreviousEdge(sourceNode);
+			if (prevEdge != -1 && graph.getEdgeStatus(prevEdge) == FRONTIER) {
+				status = FRONTIER;
+			} else {
+				if (isFrontierBasedEdge(edge)) {
+					status = FRONTIER;
+					vdPub.appendPath(sourceNode, graph);
+				} else {
+					status = EXPLORED;
+				}
+			}
+			graph.setEdgeStatus(edge, status);
 		}
 		if (!graph.isNodeClosed(otherNode)) {
 			graph.setNodeClosed(otherNode);
@@ -692,13 +707,15 @@ void Poly2VdConverter::doTheSearch(const coord & start, ros::Publisher & marker_
 	// publish the root node as red sphere
 	coord c; double r;
 	GetNodeData(root, &c, &r);
-	vdPub.publishSphere(root, c, r, Color::RED);
+	vdPub.publishSphere(root, c, r/10.0, Color::RED);
 
 	// prepare open and closed "lists" and other graph metadata:
 	GraphMeta graph(GetNumberOfNodes(), GetNumberOfEdges());
 
 	graph.addToOpenList(root);
 	graph.setNodeClosed(root);
+
+	cout << "-------- root " << root << endl;
 
 	while (!graph.isOpenListEmpty()) {
 		int n = graph.getFirstNodeFromOpenList();

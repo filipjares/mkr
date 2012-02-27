@@ -17,11 +17,17 @@
 #ifndef  GRAPH_META_H_INC
 #define  GRAPH_META_H_INC
 
+/// Status of WMAT Voronoi edges
 typedef enum {
+	/// Unprocessed edge
 	UNDEF,
+	/// Edge in already explored area
 	EXPLORED,
+	/// Edge in neighbourhood of frontiers, located near the unexplored area
 	FRONTIER 
 } EdgeStatus;
+
+const std::string EdgeStatusNames[] = {"UNDEF", "EXPLORED", "FRONTIER_BASED"};
 
 struct NodeMeta
 {
@@ -34,6 +40,11 @@ struct EdgeMeta
 {
 	bool used;
 	EdgeStatus status;
+	/**
+	 * Id of Node that edge with EXPLORED status leads to.
+	 * For nodes in other states it is set to -1.
+	 */
+	int frontierGoalNode;
 };
 
 class GraphMeta
@@ -73,6 +84,7 @@ public:
 		for (int i = 0; i < edgeCount; i++) {
 			edges[i].used = false;
 			edges[i].status = UNDEF;
+			edges[i].frontierGoalNode = -1;
 		}
 	}
 
@@ -130,6 +142,20 @@ public:
 		nodes[n].previousEdge = edge;
 	}
 
+	int getPreviousEdge(int n)
+	{
+		assert(inNodesList(n));
+		// assert(nodes[n].previousEdge != -1);
+		return nodes[n].previousEdge;
+	}
+
+	int getPreviousNode(int n)
+	{
+		assert(inNodesList(n));
+		// assert(nodes[n].previousNode != -1);
+		return nodes[n].previousNode;
+	}
+
 	/* Edge markers (used/published or not) */
 
 	bool isEdgeUsed(int e)
@@ -143,6 +169,37 @@ public:
 		assert(inEdgesList(e));
 		edges[e].used = true;
 	}
+
+	/* Edge status */
+
+	EdgeStatus getEdgeStatus(int e)
+	{
+		assert(inEdgesList(e));
+		return edges[e].status;
+	}
+
+	void setEdgeStatus(int e, EdgeStatus status)
+	{
+		assert(inEdgesList(e));
+		edges[e].status = status;
+	}
+
+	/* Frontier boundary node info */
+
+	int getFrontierBoundaryNode(int e)
+	{
+		assert(inEdgesList(e));
+		assert(getEdgeStatus(e) == EXPLORED);
+		return edges[e].frontierGoalNode;
+	}
+
+	void setFrontierBoundaryNode(int e, int frontierGoalNode)
+	{
+		assert(inEdgesList(e));
+		assert(getEdgeStatus(e) == EXPLORED);
+		edges[e].frontierGoalNode = frontierGoalNode;
+	}
+
 };
 
 #endif   /* ----- #ifndef GRAPH_META_H_INC  ----- */

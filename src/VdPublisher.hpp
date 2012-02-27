@@ -19,7 +19,9 @@
 #define  VD_PUBLISHER_H_INC
 
 #include "poly2vd.hpp"
+#include "GraphMeta.hpp"
 #include "Color.hpp"
+#include "VroniUtils.hpp"
 
 class VdPublisher
 {
@@ -129,15 +131,44 @@ public:
 	}
 
 	/**
-	 * Appends the whole path leading from the rootNode to goalNode to the list
-	 * of edges that will be published with publishEdges().
+	 * Appends to the list of edges that will be published with publishEdges()
+	 * the whole path leading from the rootNode to goalNode.
 	 *
 	 * \param <goalNode> Node that will be searched 
-	 * \param <previous> Pointer to array of indices of previous nodes
+	 * \param <graph> 
 	 */
-	void appendPath(int goalNode, int * previous)
+	void appendPath(int goalNode, GraphMeta & graph)
 	{
-		
+		std::cout << "Appending path leading to node " << goalNode << " via ";
+
+		int n = goalNode;
+		int prevNode;
+
+		while ((prevNode = graph.getPreviousNode(n)) != -1) {
+			int prevEdge = graph.getPreviousEdge(n);
+			assert(graph.getEdgeStatus(prevEdge) == EXPLORED);
+			int frontierGoalNode = graph.getFrontierBoundaryNode(prevEdge);
+			if (frontierGoalNode == -1) {
+				graph.setFrontierBoundaryNode(prevEdge, goalNode);
+				frontierGoalNode = goalNode;
+			}
+			std::cout << prevNode << " (" << frontierGoalNode << "), ";
+
+			// add one endpoint
+			coord c = GetNodeCoord(n);
+			geometry_msgs::Point p;
+			p.x = UnscaleX(c.x);
+			p.y = UnscaleY(c.y);
+			path_marker.points.push_back(p);
+			// add the other endpoint
+			c = GetNodeCoord(prevNode);
+			p.x = UnscaleX(c.x);
+			p.y = UnscaleY(c.y);
+			path_marker.points.push_back(p);
+			n = prevNode;
+		}
+
+		std::cout << std::endl;
 	}
 
 	/** Publishes Vroni's edges */
