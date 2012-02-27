@@ -197,35 +197,55 @@ inline std::string to_string (const T& t)
 
 static void publish_input_data(ros::Publisher & marker_pub, std::string frame_id, double duration)
 {
-	// prepare the Marker
+	// prepare the Marker - non-frontier edge
 	visualization_msgs::Marker input_marker;
 	input_marker.header.frame_id = frame_id;
 	input_marker.header.stamp = ros::Time::now();
-	input_marker.ns = "input";
+	input_marker.ns = "non-frontier-input";
 	input_marker.action = visualization_msgs::Marker::ADD;
 	input_marker.pose.orientation.w = 1.0;
 	input_marker.id = 1;
 	input_marker.lifetime = ros::Duration(duration);
 	input_marker.type = visualization_msgs::Marker::LINE_LIST;
 	input_marker.scale.x = 2;
-	input_marker.color.g = 1.0f;
+	input_marker.color.r = 1.0;
 	input_marker.color.a = 1.0;
+
+	// prepare the Marker - frontier edge
+	visualization_msgs::Marker frontier_marker;
+	frontier_marker.header.frame_id = frame_id;
+	frontier_marker.header.stamp = ros::Time::now();
+	frontier_marker.ns = "frontier-input";
+	frontier_marker.action = visualization_msgs::Marker::ADD;
+	frontier_marker.pose.orientation.w = 1.0;
+	frontier_marker.id = 1;
+	frontier_marker.lifetime = ros::Duration(duration);
+	frontier_marker.type = visualization_msgs::Marker::LINE_LIST;
+	frontier_marker.scale.x = 2;
+	frontier_marker.color.b = 1.0;
+	frontier_marker.color.a = 1.0;
 
 	using namespace std;
 
 	//cout << "Number of input segments: " << num_segs << endl;
 
-	geometry_msgs::Point p;
+	geometry_msgs::Point p1, p2;
 	for(int i = 0; i < num_segs; i++) { // num_segs is internal Vroni variable
-		p.x = UnscaleX(GetSegStartCoord(i).x);
-		p.y = UnscaleY(GetSegStartCoord(i).y);
-		input_marker.points.push_back(p);
-		p.x = UnscaleX(GetSegEndCoord(i).x);
-		p.y = UnscaleY(GetSegEndCoord(i).y);
-		input_marker.points.push_back(p);
+		p1.x = UnscaleX(GetSegStartCoord(i).x);
+		p1.y = UnscaleY(GetSegStartCoord(i).y);
+		p2.x = UnscaleX(GetSegEndCoord(i).x);
+		p2.y = UnscaleY(GetSegEndCoord(i).y);
+		if (GetExtApplSeg(i).isFrontier) {
+			frontier_marker.points.push_back(p1);
+			frontier_marker.points.push_back(p2);
+		} else {
+			input_marker.points.push_back(p1);
+			input_marker.points.push_back(p2);
+		}
 	}
 
 	marker_pub.publish(input_marker);
+	marker_pub.publish(frontier_marker);
 }
 
 /* e - edge id */
