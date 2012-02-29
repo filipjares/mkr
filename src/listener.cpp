@@ -51,7 +51,7 @@ public:
 					lenB = euclideanDistance(obj[i].outer[j].X,obj[i].outer[j].Y,obj[i].outer[j+1].X,obj[i].outer[j+1].Y);
 					lenAB = euclideanDistance(obj[i].outer[j+1].X,obj[i].outer[j+1].Y,obj[i].outer[j-1].X,obj[i].outer[j-1].Y);
 //					ROS_INFO("difference: %f",lenA+lenB-lenAB);
-					if((lenA + lenB - lenAB) < 0.1)
+					if((lenA + lenB - lenAB) < 10)
 						obj[i].outer[j].intersectPt = true;	//mark for remove
 				}	
 			}
@@ -466,7 +466,7 @@ int main(int argc, char **argv) {
 			start.x = p.x / CM;
 			start.y = p.y / CM;
 			// poly2vd.publish_root(marker_pub, start, "/odom", 2.0);
-			poly2vd.doTheSearch(start, marker_pub, "/odom", 5.0);
+			poly2vd.doTheSearch(start, marker_pub, "/odom", 0.5);
 		}
 
 		// if key pressed, export Voronoi diagram to DOT file in /tmp/
