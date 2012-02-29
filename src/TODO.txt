@@ -28,12 +28,19 @@ OTHER THINGS TO CHECK DISCUSS AND IMPROVE
 # this is almost certainly misleading idea from me :) I'll check it.
 - frontiers in input segments for Vroni, frontier flag in Polygon segments:
   different definition of segment being frontier in "outer" segments and "holes"?
+- Shift exists between base_laser_link coordinate frame and base_link frames.
+  Is it taken into account? It seems that VD data and input data do not fit exactly.
+  VD edges seem to hang over input segments.
+- Is it possible that listener is providing different polygons to ROS (for visualization) and
+  different polygons as input for Vroni?
 
 
 TODO
 ====
 
+- use euclidean lengths and when setting "pointers" to previous nodes, store the shortest path
 - create synthetic map similar to that in util/fiddling_with_vroni/data/map_from_the_paper.dxf
   with more realistic passages 
+- create world map for the Stage with larger rooms in order to obtain larger unexplored areas
 - remove dependency of poly2vd on SPosition type defined in types.h
 
