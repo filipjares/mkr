@@ -193,6 +193,11 @@ public:
 		return edges[e].frontierGoalNode;
 	}
 
+	bool isFrontierBoundaryNodeSet(int e)
+	{
+		return getFrontierBoundaryNode(e) != -1;
+	}
+
 	void setFrontierBoundaryNode(int e, int frontierGoalNode)
 	{
 		assert(inEdgesList(e));

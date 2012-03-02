@@ -148,10 +148,6 @@ public:
 			int prevEdge = graph.getPreviousEdge(n);
 			assert(graph.getEdgeStatus(prevEdge) == EXPLORED);
 			int frontierGoalNode = graph.getFrontierBoundaryNode(prevEdge);
-			if (frontierGoalNode == -1) {
-				graph.setFrontierBoundaryNode(prevEdge, goalNode);
-				frontierGoalNode = goalNode;
-			}
 			std::cout << prevNode << " (" << frontierGoalNode << "), ";
 
 			// add one endpoint

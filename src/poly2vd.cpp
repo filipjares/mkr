@@ -425,6 +425,32 @@ int getMaNodeNotOnBoundary()
 	}
 }
 
+void exploreCriticalNodesOnPath(int goalNode, GraphMeta & graph)
+{
+	int prevEdge;
+	int n = goalNode;
+
+	// std::cout << "Setting path leading to node " << goalNode << " via ";
+
+	while ((prevEdge = graph.getPreviousEdge(n)) != -1 && !graph.isFrontierBoundaryNodeSet(prevEdge)) {
+		int prevNode = graph.getPreviousNode(n);
+		assert(graph.getEdgeStatus(prevEdge) == EXPLORED);
+
+		// FIXME: we may remove this
+		int frontierGoalNode = graph.getFrontierBoundaryNode(prevEdge);
+		assert(frontierGoalNode == -1);
+
+		graph.setFrontierBoundaryNode(prevEdge, goalNode);
+		// std::cout << prevNode << " (" << goalNode << "), ";
+
+		// TODO: examine node 'n', is it a critical node?
+
+		n = prevNode;
+	}
+
+	// std::cout << std::endl;
+}
+
 void addTheOtherNodeIfAppropriate(int edge, int sourceNode, GraphMeta & graph, VdPublisher & vdPub)
 {
 	int otherNode = GetOtherNode(edge, sourceNode);
@@ -441,6 +467,7 @@ void addTheOtherNodeIfAppropriate(int edge, int sourceNode, GraphMeta & graph, V
 			} else {
 				if (isFrontierBasedEdge(edge)) {
 					status = FRONTIER;
+					exploreCriticalNodesOnPath(sourceNode, graph);
 					vdPub.appendPath(sourceNode, graph);
 				} else {
 					status = EXPLORED;
