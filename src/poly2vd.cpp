@@ -728,7 +728,7 @@ void Poly2VdConverter::doTheSearch(const coord & start, ros::Publisher & marker_
 
 	// get the rootNode
 	// int root = getRootNode(start);
-	int root = getNearestRootNode(start);
+	int root = getNearestRootNode(start);	// FIXME: this is faster but is not correct
 	assert(root >= 0 && root < GetNumberOfNodes());
 
 	// publish the root node as red sphere
