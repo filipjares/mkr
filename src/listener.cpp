@@ -466,7 +466,7 @@ int main(int argc, char **argv) {
 			start.x = p.x / CM;
 			start.y = p.y / CM;
 			// poly2vd.publish_root(marker_pub, start, "/odom", 2.0);
-			poly2vd.doTheSearch(start, marker_pub, "/odom", 0.5);
+			poly2vd.doTheSearch(start, marker_pub, "/odom", 2.5);
 		}
 
 		// if key pressed, export Voronoi diagram to DOT file in /tmp/
