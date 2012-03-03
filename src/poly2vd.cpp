@@ -255,8 +255,8 @@ static void publishCriticalNodeCandidateIfAppropriate(int e, std::list<int> & us
 	int n2 = GetEndNode(e);
 
 	// are the end-nodes connecting this WMAT Edge (e) with just one other WMAT Edge?
-	bool isN1Deg2 = isDeg2WmatNode(e, n1); // IsDeg2Node(n1);
-	bool isN2Deg2 = isDeg2WmatNode(e, n2); // IsDeg2Node(n2);
+	bool isN1Deg2 = isDeg2WmatNode(n1); // IsDeg2Node(n1);
+	bool isN2Deg2 = isDeg2WmatNode(n2); // IsDeg2Node(n2);
 
 	// only degree 2 nodes are critical point candidates
 	if (!isN1Deg2 && !isN2Deg2) {
@@ -425,7 +425,167 @@ int getMaNodeNotOnBoundary()
 	}
 }
 
-void exploreCriticalNodesOnPath(int goalNode, GraphMeta & graph)
+/**
+ * Returns true if the clearance radius of the node n is "significantly smaller"
+ * than the clearance radius of the nearest neighbour with "significantly
+ * different" clearance radius occuring in the direction of the neighbour node
+ * n1. In case of the clearance radius of neighbour n1 being "almost equal" to
+ * the clearance radius of the node n, "further" neighbours are examined only if
+ * n1 (and the eventual further ones) are of WMAT degree 2. If they are of
+ * higher degree, false is returned.
+ */
+bool testNForBeingFuzzyMinimum(int n, int e1, int n1)
+{
+	double r = GetNodeParam(n);
+	double r1 = GetNodeParam(n1);
+
+	char comparison = contrastCompare(r, r1);
+	if (comparison < 0) {
+		return true;
+	}
+	if (comparison > 0) {
+		return false;
+	}
+
+	// we see that r and r1 are (almost) equal
+	
+	// is such a situation likely to occur? However the response will be
+	// nagative in such a case
+	if (!isDeg2WmatNode(n1)) {
+		return false;
+	}
+	
+	int e2 = GetCCWEdge(e1, n1);
+	if (!IsWmatEdge(e2)) {
+		e2 = GetCCWEdge(e2, n1);
+		if (!IsWmatEdge(e2)) {
+			std::cerr << "ERROR: node n = " << n <<
+				"does not have two incident WMAT edges even though it should"
+				<< std::endl;
+			exit(1);
+		}
+	}
+
+	int n2 = GetOtherNode(e2, n1);
+	return testNForBeingFuzzyMinimum(n1, e2, n2);
+}
+
+/**
+ * Determines whether the node n is a critical node. Critical node has to meet
+ * following four criteria (mentioning neighbours and degrees, only WMAT edges
+ * are considered):
+ *
+ * <ul>
+ * 	<li>it has to be a degree 2 node,</li>
+ * 	<li>its clearance radius has to be a local minimum compared to the
+ * 		clearance radius of its neighbours (however see the function
+ * 		testNForBeingFuzzyMinimum() for details on how neighbours are
+ * 		examined),</li>
+ * 	<li>it has to have neighbour of degree 3</li>
+ * 	<li>it has to divide explored and unexplored subcomponents of the map</li>
+ * </ul>
+ *
+ * Another implicit criterion for the critical node is that its clearance radius
+ * it has to have positive (non-zero) clearance radius.
+ */
+bool examineNode(int n, GraphMeta & graph, VdPublisher & vdPub)
+{
+	using visualization_msgs::Marker;
+
+	// FIXME: examine only neighbours connected to n by EXAMINED WMAT edges?
+
+	// only degree 2 nodes are critical point candidates
+	if (!isDeg2WmatNode(n)) {
+		// std::cout << "It is not a Deg2 node." << std::endl;
+		// vdPub.publishPoint(n, Marker::CUBE, GetNodeCoord(n), 0.01, Color::PINK);
+		return false;
+	}
+
+	// critical node can not have zero clearance radius
+	double r = GetNodeParam(n);
+	if (r == 0) {
+		// std::cout << "It has zero radius." << std::endl;
+		// vdPub.publishPoint(n, Marker::CUBE, GetNodeCoord(n), 0.01, Color::VIOLET);
+		return false;
+	}
+
+	// the node n has (I hope!) exactly two incident WMAT edges, find them
+	int e1 = GetIncidentEdge(n);
+	if (!IsWmatEdge(e1)) {
+		e1 = GetCWEdge(e1, n);
+		// if now e1 is not WMAT edge then n does not have
+		// two incident WMAT edges
+		if (!IsWmatEdge(e1)) {
+			std::cerr << "ERROR: node n = " << n <<
+				"does not have two incident WMAT edges even though it should"
+				<< std::endl;
+			exit(1);
+		}
+	}
+
+	int e2 = GetCWEdge(e1, n);
+	if (!IsWmatEdge(e2)) {
+		e2 = GetCWEdge(e2, n);
+		// if now e1 is not WMAT edge then n does not have
+		// two incident WMAT edges
+		if (!IsWmatEdge(e2)) {
+			std::cerr << "ERROR: node n = " << n <<
+				"does not have two incident WMAT edges even though it should"
+				<< std::endl;
+			exit(1);
+		}
+	}
+
+	assert(e1 != e2);
+	assert(IsWmatEdge(e1) && IsWmatEdge(e2));
+
+	int n1 = GetOtherNode(e1, n);
+	int n2 = GetOtherNode(e2, n);
+
+	assert(n1 != n2);
+
+	double r1 = GetNodeParam(n1);
+	double r2 = GetNodeParam(n2);
+
+	// Is the clearance radius of the node n a local minimum?
+	// At least a fuzzy one? Analyze left and right side separatedly.
+	bool isLocalMinimum1 = false;
+	bool isLocalMinimum2 = false;
+
+	if (contrastCompare(r, r1) == 0) {
+		isLocalMinimum1 = testNForBeingFuzzyMinimum(n, e1, n1);
+	} else {
+		isLocalMinimum1 = (contrastCompare(r, r1) < 0);
+	}
+	if (contrastCompare(r, r2) == 0) {
+		isLocalMinimum2 = testNForBeingFuzzyMinimum(n, e2, n2);
+	} else {
+		isLocalMinimum2 = (contrastCompare(r, r2) < 0);
+	}
+
+	// critical node has to be local minimum
+	// add recursive search of nodes with "equal" radius
+	if ( !isLocalMinimum1 || !isLocalMinimum2 ) {
+		// std::cout << "Its clearance radius is not a local minimum (r1, r, r2) =="
+		//				<< "(" << r1 << ", " << r << ", " << r2 << ")." << std::endl;
+		// vdPub.publishPoint(n, Marker::CUBE, GetNodeCoord(n), 0.01, Color::ORANGE);
+		return false;
+	}
+
+	// FIXME rename the isDeg3Node() function
+	bool hasWmatDeg3Neighbour = isDeg3Node(n1) || isDeg3Node(n2);
+
+	if (!hasWmatDeg3Neighbour) {
+		// std::cout << "It does not have a deg3 neighbour." << std::endl;
+		// vdPub.publishPoint(n, Marker::CUBE, GetNodeCoord(n), 0.01, Color::GREEN);
+		return false;
+	}
+
+	// all the critical node criteria are satisfied
+	return true;
+}
+
+void exploreCriticalNodesOnPath(int goalNode, GraphMeta & graph, VdPublisher & vdPub)
 {
 	int prevEdge;
 	int n = goalNode;
@@ -434,11 +594,59 @@ void exploreCriticalNodesOnPath(int goalNode, GraphMeta & graph)
 		int prevNode = graph.getPreviousNode(n);
 		assert(graph.getEdgeStatus(prevEdge) == EXPLORED);
 
+		// mark the explored prevEdge as edge leading from
+		// the root to the frontierBoundaryNode edge goalNode
 		graph.setFrontierBoundaryNode(prevEdge, goalNode);
 
-		// TODO: examine node 'n', is it a critical node?
+		// examine node n for being a critical node
+		bool isCritical = examineNode(n, graph, vdPub);
+		// std::cout << "Node " << n << " is " << (isCritical?"":"NOT ")
+		// 	<< "a critical node." << std::endl;
+		if (isCritical) {
+			vdPub.publishSphere(n, GetNodeCoord(n), GetNodeParam(n)/2.0, Color::YELLOW);
+			break; // no more critical points on this path
+		} /* else {
+			vdPub.publishSphere(n, GetNodeCoord(n), GetNodeParam(n)/5.0, Color::BLUE);
+		} */
 
 		n = prevNode;
+	}
+}
+
+/**
+ * Using the vdPub VdPublisher, this function publishes a Marker for the
+ * specified node n, colour and shape of the marker are determined by the node
+ * properties. Useful for testing.
+ *
+ * \param <n> node id of the node to be marked (published)
+ * \param <vdPub> publisher to be used to publish the marker
+ */
+void experimentallyMarkTheNode(int n, VdPublisher & vdPub)
+{
+	using visualization_msgs::Marker;
+
+	bool published = true;
+
+	if (GetNodeParam(n) == 0) {
+		vdPub.publishPoint(n, Marker::CUBE, GetNodeCoord(n), 0.01, Color::RED);
+	} else {
+		if (isDeg3Node(n)) { // FIXME: rename (WMAT)
+			if (isDeg2WmatNode(n)) {
+				std::cerr << "ERROR, inconsistence" << std::endl;
+				exit(2);
+			}
+			vdPub.publishPoint(n, Marker::CYLINDER, GetNodeCoord(n), 0.01, Color::YELLOW);
+		} else {
+			if (isDeg2WmatNode(n)) {
+				vdPub.publishPoint(n, Marker::CYLINDER, GetNodeCoord(n), 0.01, Color::VIOLET);
+			} else {
+				published = false;
+			}
+		}
+	}
+
+	if (!published) {
+		vdPub.publishPoint(n, Marker::CUBE, GetNodeCoord(n), 0.03, Color::ORANGE);
 	}
 }
 
@@ -458,8 +666,8 @@ void addTheOtherNodeIfAppropriate(int edge, int sourceNode, GraphMeta & graph, V
 			} else {
 				if (isFrontierBasedEdge(edge)) {
 					status = FRONTIER;
-					exploreCriticalNodesOnPath(sourceNode, graph);
-					vdPub.appendPath(sourceNode, graph);
+					exploreCriticalNodesOnPath(sourceNode, graph, vdPub);
+					// vdPub.appendPath(sourceNode, graph);
 				} else {
 					status = EXPLORED;
 				}
@@ -468,6 +676,7 @@ void addTheOtherNodeIfAppropriate(int edge, int sourceNode, GraphMeta & graph, V
 		}
 		if (!graph.isNodeClosed(otherNode)) {
 			graph.setNodeClosed(otherNode);
+			// experimentallyMarkTheNode(otherNode, vdPub);
 			graph.setPrevious(otherNode, sourceNode, edge); // FIXME: use euclidean length to determine the shortest path
 			if (GetNodeParam(otherNode) > ZERO) {
 				graph.addToOpenList(otherNode);
@@ -725,7 +934,7 @@ void Poly2VdConverter::doTheSearch(const coord & start, ros::Publisher & marker_
 	// publish the root node as red sphere
 	coord c; double r;
 	GetNodeData(root, &c, &r);
-	vdPub.publishSphere(root, c, r/10.0, Color::RED);
+	vdPub.publishSphere(root, c, 0.01, Color::RED);
 
 	// prepare open and closed "lists" and other graph metadata:
 	GraphMeta graph(GetNumberOfNodes(), GetNumberOfEdges());
@@ -733,7 +942,7 @@ void Poly2VdConverter::doTheSearch(const coord & start, ros::Publisher & marker_
 	graph.addToOpenList(root);
 	graph.setNodeClosed(root);
 
-	cout << "-------- root " << root << endl;
+	// cout << "-------- root " << root << endl;
 
 	while (!graph.isOpenListEmpty()) {
 		int n = graph.getFirstNodeFromOpenList();
@@ -752,6 +961,7 @@ void Poly2VdConverter::doTheSearch(const coord & start, ros::Publisher & marker_
 	vdPub.publishEdges();
 }
 
+// FIXME: remove?
 void Poly2VdConverter::publish_wmat_deg2_nodes(ros::Publisher & marker_pub, const std::string & frame_id, double duration)
 {
 	static int printed = 0;
@@ -759,8 +969,6 @@ void Poly2VdConverter::publish_wmat_deg2_nodes(ros::Publisher & marker_pub, cons
 
 	using namespace std;
 	using namespace visualization_msgs;
-
-	// doTheSearch(marker_pub, frame_id, duration);
 
 	list<int> usedNodes;
 
@@ -783,6 +991,7 @@ void Poly2VdConverter::publish_wmat_deg2_nodes(ros::Publisher & marker_pub, cons
 	printed++;
 }
 
+// FIXME: remove?
 void Poly2VdConverter::publish_root(ros::Publisher & marker_pub, const coord & start, const std::string & frame_id, double duration)
 {
 	int root = getRootNode(start);

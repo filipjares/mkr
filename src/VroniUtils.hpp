@@ -263,8 +263,20 @@ static bool isEdgeDefinedByDummyPoint(int e)
 	return isDummyPoint(s1, t1) || isDummyPoint(s2, t2);
 }
 
-static bool isDeg2WmatNode(int e, int n)
+static bool isDeg2WmatNode(int n)
 {
+	int e = GetIncidentEdge(n);
+	if (!IsWmatEdge(e)) {
+		e = GetCWEdge(e, n);
+		if (!IsWmatEdge(e)) {
+			e = GetCWEdge(e, n);
+			if (!IsWmatEdge(e)) {
+				std::cerr << "ERROR in isDeg2WmatNode, the given node (" << n << ") is not WMAT node at all." << std::endl;
+				exit(1);
+			}
+		}
+	}
+
 	assert(IsWmatEdge(e));
 
 	int e_ccw = GetCCWEdge(e, n);
@@ -278,6 +290,8 @@ static bool isDeg2WmatNode(int e, int n)
 	}
 }
 
+// FIXME: this does not work as expected, I think (fj)
+// Remove
 static bool isDeg2Node(int n)
 {
 	int e = GetIncidentEdge(n);
@@ -292,6 +306,7 @@ static bool isDeg2Node(int n)
 	}
 }
 
+// FIXME: rename (WMAT)
 static bool isDeg3Node(int n)
 {
 	int e = GetIncidentEdge(n);
@@ -306,6 +321,7 @@ static bool isDeg3Node(int n)
 }
 
 // FIXME: This does not work in my opinion (fj)
+// Remove?
 static bool hasDeg3Neighbour(int n)
 {
 	int e = GetIncidentEdge(n);

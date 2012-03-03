@@ -26,11 +26,21 @@ struct Color {
 	static const Color BLUE;
 	static const Color RED;
 	static const Color YELLOW;
+
+	static const Color GREEN;
+	static const Color PINK;
+	static const Color VIOLET;
+	static const Color ORANGE;
 };
 
-const Color Color::BLUE(0.0f, 0.0f, 1.0f, 0.5f);
-const Color Color::RED (1.0f, 0.0f, 0.0f, 0.75f);
-const Color Color::YELLOW (1.0f, 1.0f, 0.0f, 0.75f);
+const Color Color::BLUE(0.0f, 0.0f, 1.0f, 0.95f);
+const Color Color::RED (1.0f, 0.0f, 0.0f, 0.95f);
+const Color Color::YELLOW (1.0f, 1.0f, 0.0f, 0.95f);
+
+const Color Color::GREEN(0.0f, 1.0f, 0.0f, 0.90f);
+const Color Color::PINK(1.0f, 192.0/255.0, 203.0/255.0, 0.90f);
+const Color Color::VIOLET (0.5f, 0.0f, 1.0f, 0.90f);
+const Color Color::ORANGE (1.0f, 0.5f, 0.0f, 0.90f);
 
 #endif   /* ----- #ifndef POLY2VD_COLOR_H_INC  ----- */
 

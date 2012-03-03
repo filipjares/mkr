@@ -82,6 +82,12 @@ public:
 	/** Publishes the specified sphere immediately */
 	void publishSphere(int id, coord location, double diameter, Color color)
 	{
+		publishPoint(id, visualization_msgs::Marker::SPHERE, location, diameter, color);
+	}
+
+	/** Publishes the specified sphere immediately */
+	void publishPoint(int id, int32_t type, coord location, double diameter, Color color)
+	{
 		// prepare the Marker
 		visualization_msgs::Marker marker;
 		marker.header.frame_id = frame_id;
@@ -91,7 +97,7 @@ public:
 		marker.pose.orientation.w = 1.0;
 		marker.id = id;
 		marker.lifetime = ros::Duration(duration);
-		marker.type = visualization_msgs::Marker::SPHERE;
+		marker.type = type;
 
 		// set its position, diameter and color
 		marker.pose.position.x = UnscaleX(location.x);

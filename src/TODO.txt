@@ -20,8 +20,8 @@ VRONI's representation of nodes of degree higher than 3
 - does exist node having multiple 
 
 
-OTHER THINGS TO CHECK DISCUSS AND IMPROVE
-=========================================
+OTHER THINGS TO CHECK, DISCUSS AND IMPROVE
+==========================================
 
 - Is it possible to search for the root node in a more efficient and correct way?
 
@@ -42,5 +42,5 @@ TODO
 - create synthetic map similar to that in util/fiddling_with_vroni/data/map_from_the_paper.dxf
   with more realistic passages 
 - create world map for the Stage with larger rooms in order to obtain larger unexplored areas
-- remove dependency of poly2vd on SPosition type defined in types.h
+- improve root node search
 
