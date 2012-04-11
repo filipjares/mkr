@@ -17,6 +17,8 @@
 #ifndef  GRAPH_META_H_INC
 #define  GRAPH_META_H_INC
 
+namespace poly2vd {
+
 /// Status of WMAT Voronoi edges
 typedef enum {
 	/// Unprocessed edge
@@ -206,6 +208,8 @@ public:
 	}
 
 };
+
+}        /* ----- namespace poly2vd ----- */
 
 #endif   /* ----- #ifndef GRAPH_META_H_INC  ----- */
 

@@ -435,7 +435,7 @@ void quit(int status)
 
 /* If EXPORT_KEY_* was pressed, this function performs the export
  * of resulting Voronoi diagram into DOT file */
-void handleDotExport(Poly2VdConverter &poly2vd)
+void handleDotExport(poly2vd::Poly2VdConverter &poly2vd)
 {
 	char ch;
 	// FIXME: check efficiency of this solution
@@ -477,7 +477,7 @@ int main(int argc, char **argv) {
 		<< "This is however " << std::endl << "an experimental feature and resulting files are "
 		<< "too big to be processed by graphviz." << std::endl << std::endl;
 
-	Poly2VdConverter poly2vd;	// Vroni based polygons -> VD converter
+	poly2vd::Poly2VdConverter poly2vd;	// Vroni based polygons -> VD converter
 	
 	ros::Rate r(0.5); // hz
 	while (ros::ok()) {

@@ -21,6 +21,8 @@
 
 #include "poly2vd.hpp"
 
+namespace poly2vd {
+
 /* ******************* Scale / Unscale macros ************************ */
 // These macros are defined in Vroni's basic.h; but I had problems including it
 
@@ -427,6 +429,7 @@ static std::string edgeDefiningSitesToString(int e)
 	return ss.str();
 }
 
+}        /* ----- namespace poly2vd  ----- */
 
 #endif   /* ----- #ifndef VRONI_UTILS_H_INC  ----- */
 

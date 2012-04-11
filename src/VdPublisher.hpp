@@ -23,6 +23,8 @@
 #include "Color.hpp"
 #include "VroniUtils.hpp"
 
+namespace poly2vd {
+
 class VdPublisher
 {
 private:
@@ -185,6 +187,8 @@ public:
 		marker_pub.publish(path_marker);
 	}
 };
+
+}        /* ----- namespace poly2vd -----  */
 
 #endif   /* ----- #ifndef VD_PUBLISHER_H_INC  ----- */
 

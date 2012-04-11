@@ -47,7 +47,7 @@
 
 /* ********************** Poly2VdConverter class ********************* */
 
-// FIXME: define some namespace?
+namespace poly2vd {
 
 class Poly2VdConverter
 {
@@ -79,5 +79,7 @@ public:
 #endif
 	void exportVdToDot(const std::string &fileName, bool shuffle, bool shrink);
 };
+
+}        /* ----- namespace poly2vd ----- */
 
 #endif   /* ----- #ifndef POLY2VD_H_INC  ----- */

@@ -45,6 +45,15 @@
 
 #endif
 
+/* ******************* Constants ************************************* */
+
+const bool SHRINK = false;
+const bool SHUFFLE = true;
+const bool EXPORT2DOT = false;
+const bool PUBLISH_ROS = true;
+
+namespace poly2vd {
+
 /* ******************************************************************* */
 /* ********************** Constructor and destructor ***************** */
 /* ******************************************************************* */
@@ -155,13 +164,6 @@ void Poly2VdConverter::convert()
 /* ******************************************************************* */
 /* ********************** Private methods follow ********************* */
 /* ******************************************************************* */
-
-/* ******************* Constants ************************************* */
-
-const bool SHRINK = false;
-const bool SHUFFLE = true;
-const bool EXPORT2DOT = false;
-const bool PUBLISH_ROS = true;
 
 /* *************** Utility functions (non-Vroni related) ************* */
 
@@ -1133,6 +1135,8 @@ void performTests()
 	std::cout << "Tests passed." << std::endl;
 }
 
+}				/* ----- namespace poly2vd ----- */
+
 /* **************************** main() ******************************* */
 
 #ifdef POLY2VD_STANDALONE
@@ -1152,13 +1156,13 @@ int main ( int argc, char *argv[] )
 		return EXIT_FAILURE;
 	}
 
-	Poly2VdConverter p2vd;
+	poly2vd::Poly2VdConverter p2vd;
 	// p2vd.prepareNewInput(segs, size);
 	p2vd.prepareNewInput(argv[1]);
 	p2vd.convert();
 
-	cout << "total edges size: " << edges.size() << ", wmat edges: " << getWmatEdgeCount() << endl;
-	cout << "WMAT edges count: " << getWmatEdgeCount() << endl;
+	cout << "total edges size: " << edges.size() << ", wmat edges: " << poly2vd::getWmatEdgeCount() << endl;
+	cout << "WMAT edges count: " << poly2vd::getWmatEdgeCount() << endl;
 	cout << "node count: " << GetNumberOfNodes() << endl;
 	cout << "pnts count: " << num_pnts << endl;
 	cout << "segs count: " << num_segs << endl;

@@ -17,6 +17,8 @@
 #ifndef  POLY2VD_COLOR_H_INC
 #define  POLY2VD_COLOR_H_INC
 
+namespace poly2vd {
+
 struct Color {
 	float r, g, b, a;
 	Color();
@@ -33,14 +35,7 @@ struct Color {
 	static const Color ORANGE;
 };
 
-const Color Color::BLUE(0.0f, 0.0f, 1.0f, 0.95f);
-const Color Color::RED (1.0f, 0.0f, 0.0f, 0.95f);
-const Color Color::YELLOW (1.0f, 1.0f, 0.0f, 0.95f);
-
-const Color Color::GREEN(0.0f, 1.0f, 0.0f, 0.90f);
-const Color Color::PINK(1.0f, 192.0/255.0, 203.0/255.0, 0.90f);
-const Color Color::VIOLET (0.5f, 0.0f, 1.0f, 0.90f);
-const Color Color::ORANGE (1.0f, 0.5f, 0.0f, 0.90f);
+}        /* ----- namespace poly2vd ----- */
 
 #endif   /* ----- #ifndef POLY2VD_COLOR_H_INC  ----- */
 
