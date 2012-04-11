@@ -131,6 +131,7 @@ public:
 					lenA = euclideanDistance(obj[i].outer[j].X,obj[i].outer[j].Y,obj[i].outer[j-1].X,obj[i].outer[j-1].Y);
 					lenB = euclideanDistance(obj[i].outer[j].X,obj[i].outer[j].Y,obj[i].outer[j+1].X,obj[i].outer[j+1].Y);
 					lenAB = euclideanDistance(obj[i].outer[j+1].X,obj[i].outer[j+1].Y,obj[i].outer[j-1].X,obj[i].outer[j-1].Y);
+					/* reasonable range of the divisor on the right side is between 10 (coarse polygons) and 10000 (fine polygons) */
 					if(abs(lenA + lenB - lenAB) < CM/10000) {
 						obj[i].outer[j].intersectPt = true;	//mark for remove
 						count++;	

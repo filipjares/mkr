@@ -30,8 +30,12 @@ private:
 	std::string frame_id;
 	double duration;
 
+	//  line segment markers
+	/// non-frontier WMAT edges
 	visualization_msgs::Marker wmat_marker;
+	/// frontier WMAT edges
 	visualization_msgs::Marker wmat_f_marker;
+	/// edges representing paths leading (from the root node direction) to frontier nodes
 	visualization_msgs::Marker path_marker;
 public:
 	VdPublisher(const ros::Publisher & _marker_pub, const std::string & _frame_id, double _duration): marker_pub(_marker_pub), frame_id(_frame_id), duration(_duration)
@@ -85,7 +89,7 @@ public:
 		publishPoint(id, visualization_msgs::Marker::SPHERE, location, diameter, color);
 	}
 
-	/** Publishes the specified sphere immediately */
+	/** Publishes the specified point marker immediately */
 	void publishPoint(int id, int32_t type, coord location, double diameter, Color color)
 	{
 		// prepare the Marker
