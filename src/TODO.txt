@@ -24,10 +24,12 @@ OTHER THINGS TO CHECK, DISCUSS AND IMPROVE
 ==========================================
 
 - Is it possible to search for the root node in a more efficient and correct way?
-
-# this is almost certainly misleading idea from me :) I'll check it.
 - frontiers in input segments for Vroni, frontier flag in Polygon segments:
   different definition of segment being frontier in "outer" segments and "holes"?
+  Note by Tomáš: this is almost certainly misleading idea from me :) I'll check it.
+- (create a class to store all the poly2vd's output data in it (a good choice would be the
+  winged edge data structure); add method returning objects of this class to Poly2VdConverter's
+  interface)
 
 
 TODO
@@ -38,6 +40,16 @@ TODO
   with more realistic passages 
 - create world map for the Stage with larger rooms in order to obtain larger unexplored areas
 - improve root node search
+- along with input segments and points, publish their ids as text markers (for debugging
+  purposes)
+- along with output (WMAT) edges, publish their (both left and right) source sites' types and
+  ids (for debugging purposes)
+- create some user interface enabling to set up Poly2VdConverter's internal parameters "online"
+  Parameters that could be tuned:
+	- COMPARISON_RATIO (currently defined in VroniUtils.hpp)
+	- switch the "experimental node markup" on/off (i.e. determine whether
+	  experimentallyMarkTheNode() should be called)
+- update READMEs
 
 FIXED ISSUES
 ============
