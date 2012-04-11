@@ -669,6 +669,7 @@ void addTheOtherNodeIfAppropriate(int edge, int sourceNode, GraphMeta & graph, V
 				if (isFrontierBasedEdge(edge)) {
 					status = FRONTIER;
 					exploreCriticalNodesOnPath(sourceNode, graph, vdPub);
+					vdPub.publishSphere(sourceNode, GetNodeCoord(sourceNode), GetNodeParam(sourceNode)/2.0, Color::BLUE);
 					// vdPub.appendPath(sourceNode, graph);
 				} else {
 					status = EXPLORED;
