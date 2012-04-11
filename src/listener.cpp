@@ -27,66 +27,119 @@ public:
 	SPosition getPosition(void) const {
 		return pos;
 	}
-
-	void checkMap(ClipperLib::ExPolygons & obj) {
-		//outer polygon
-		for (unsigned int i = 0; i < obj.size(); i++) {
-			for (unsigned int j = 1; j < obj[i].outer.size(); j++) {
-				//mark frontiers with legth < that treshold
-				if(euclideanDistance(obj[i].outer[j].X,obj[i].outer[j].Y,obj[i].outer[j-1].X,obj[i].outer[j-1].Y) < FRONTIER_RANGE*0.2 && obj[i].outer[j-1].outputEdge && obj[i].outer[j].inputEdge){
-					obj[i].outer[j-1].outputEdge = false;
-					obj[i].outer[j].inputEdge = false;
+		
+	void eliminateCoincidentFrontiers(ClipperLib::Polygon & p) {
+		//inline frontier
+		int s = p.size();
+		double maxDist = sqrt(2.0);
+		for (int i = 1; i < s-2; i++) {
+			if(!p[i].inputEdge && p[i].outputEdge && p[i+1].inputEdge && !p[i+1].outputEdge)	{
+				//is isolated
+				if(perpendicularDistance(p[i],p[i+1],p[i-1]) <= maxDist)	{
+					p[i].outputEdge = false;
+					p[i+1].inputEdge = false;
+				}
+				else if(perpendicularDistance(p[i],p[i+1],p[i+2]) <= maxDist)	{
+					p[i].outputEdge = false;
+					p[i+1].inputEdge = false;	
 				}
 			}
 		}
 	}
 	
-	void simplifyMap(ClipperLib::ExPolygons & obj) {
-		for (unsigned int i = 0; i < obj.size(); i++) {
-		//outer polygon
-		double lenA,lenB,lenAB;
-			for (unsigned int j = 1; j < obj[i].outer.size()-1; j++) {
-				if(obj[i].outer[j].inputEdge == obj[i].outer[j].outputEdge){
-					lenA = euclideanDistance(obj[i].outer[j].X,obj[i].outer[j].Y,obj[i].outer[j-1].X,obj[i].outer[j-1].Y);
-					lenB = euclideanDistance(obj[i].outer[j].X,obj[i].outer[j].Y,obj[i].outer[j+1].X,obj[i].outer[j+1].Y);
-					lenAB = euclideanDistance(obj[i].outer[j+1].X,obj[i].outer[j+1].Y,obj[i].outer[j-1].X,obj[i].outer[j-1].Y);
-//					ROS_INFO("difference: %f",lenA+lenB-lenAB);
-					if((lenA + lenB - lenAB) < 10)
-						obj[i].outer[j].intersectPt = true;	//mark for remove
+	void eliminateFalseFrontiers(ClipperLib::Polygon & p) {
+		//mark frontiers with legth < that treshold
+		double minSize = FRONTIER_RANGE;
+	
+		//first - find first non frontier point
+		int k = 1;
+		while(p[k-1].inputEdge){
+			k++;
+		}
+				
+		//second - find the frontier group
+		int s = p.size();
+		for (int i = k; i < s; i++) {
+			if(!p[i].inputEdge)
+				continue;
+			double len = 0.0;
+			int start = i-1;
+			int end = start;
+			while(p[end+1].inputEdge)	{
+				end++;
+				len += euclideanDistance(p[end].X,p[end].Y,p[end-1].X,p[end-1].Y); 
+				if(end == s-1)
+					break;
+			}
+	
+		//third - if it spreads over the end, continue searching fron the beginning
+			
+			bool spreaded = (end == s-1 && p[0].inputEdge) ? true : false;
+			if(spreaded) {
+				end = 0;
+				len += euclideanDistance(p[s-1].X,p[s-1].Y,p[0].X,p[0].Y); 
+				while(p[end+1].inputEdge)	{
+					end++;
+					len += euclideanDistance(p[end].X,p[end].Y,p[end-1].X,p[end-1].Y); 
+				}
+				if(len < minSize) {
+					p[start].outputEdge = false;
+					p[end].inputEdge = false;
+					for (int n = start+1; n < s; n++) {
+						p[n].inputEdge = false;
+						p[n].outputEdge = false;
+					}
+					for (int n = 0; n < end; n++) {
+						p[n].inputEdge = false;
+						p[n].outputEdge = false;
+					}
 				}	
+				break;
+			}
+			else	{	
+				if(len < minSize) {
+					p[start].outputEdge = false;
+					p[end].inputEdge = false;
+					for (int n = start+1; n < end; n++) {
+						p[n].inputEdge = false;
+						p[n].outputEdge = false;
+					}
+				}	
+				i = end + 1;
 			}
 		}
 	}
 	
-	bool lineIntersection(ClipperLib::IntPoint & p, const ClipperLib::IntPoint & p1, const ClipperLib::IntPoint & p2, const ClipperLib::IntPoint & p3, const ClipperLib::IntPoint & p4){
-		double den = (p4.Y - p3.Y)*(p2.X - p1.X) - (p4.X - p3.X)*(p2.Y - p1.Y);
-		// check if the lines are parallel
-		if(NEAR_EQUAL(den,0.0))
-			return false;
-		double s = (p4.X - p3.X)*(p1.Y - p3.Y) - (p4.Y - p3.Y)*(p1.X - p3.X)/den;
-		double t = (p2.X - p1.X)*(p1.Y - p3.Y) - (p2.Y - p1.Y)*(p1.X - p3.X)/den;
-		// check if they are in the interval <0,1>
-		// if so, the line segments intersect, otherwise lines intersect
-		if(s >= 0 && s <= 1 && t >= 0 && t <= 1) {
-			p.X = p1.X + s*(p2.X - p1.X);
-			p.Y = p1.Y + s*(p2.Y - p1.Y);
-			return true;
-		} else
-			return false;
-	}
-	
-	void clipScan(ClipperLib::Polygons & scan_n, const ClipperLib::Polygons & scan, const ClipperLib::Polygons & map){
-		for (unsigned int i = 0; i < scan[0].size(); i++) {
-			
+	void checkMap(ClipperLib::ExPolygons & obj) {		
+		for (unsigned int i = 0; i < obj.size(); i++) {
+			eliminateFalseFrontiers(obj[i].outer);
+			eliminateCoincidentFrontiers(obj[i].outer);
+			for(unsigned j = 0; j < obj[i].holes.size(); j++) {
+				eliminateFalseFrontiers(obj[i].holes[j]);
+				eliminateCoincidentFrontiers(obj[i].holes[j]);
+			}
 		}
 	}
 	
-	/*
-	void getIntersectPoint(ClipperLib::IntPoint & p, const ClipperLib::IntPoint & p1, const ClipperLib::IntPoint & p2, const ClipperLib::IntPoint & p3, const ClipperLib::IntPoint & p4){
-		p.X = ((p1.X*p2.Y - p1.Y*p2.X)*(p3.X - p4.X) - (p1.X - p2.X)*(p3.X*p4.Y - p3.Y*p4.X))/((p1.X - p2.X)*(p3.Y - p4.Y) - (p1.Y - p2.Y)*(p3.X - p4.X));
-		p.Y = ((p1.X*p2.Y - p1.Y*p2.X)*(p3.Y - p4.Y) - (p1.Y - p2.Y)*(p3.X*p4.Y - p3.Y*p4.X))/((p1.X - p2.X)*(p3.Y - p4.Y) - (p1.Y - p2.Y)*(p3.X - p4.X));
+	void simplifyMap(ClipperLib::ExPolygons & obj) {
+		int count = 0;
+		for (unsigned int i = 0; i < obj.size(); i++) {
+		//outer polygon
+		double lenA,lenB,lenAB;
+		for (unsigned int j = 1; j < obj[i].outer.size()-1; j++) {
+				if(obj[i].outer[j].inputEdge == obj[i].outer[j].outputEdge){
+					lenA = euclideanDistance(obj[i].outer[j].X,obj[i].outer[j].Y,obj[i].outer[j-1].X,obj[i].outer[j-1].Y);
+					lenB = euclideanDistance(obj[i].outer[j].X,obj[i].outer[j].Y,obj[i].outer[j+1].X,obj[i].outer[j+1].Y);
+					lenAB = euclideanDistance(obj[i].outer[j+1].X,obj[i].outer[j+1].Y,obj[i].outer[j-1].X,obj[i].outer[j-1].Y);
+					if(abs(lenA + lenB - lenAB) < CM/10000) {
+						obj[i].outer[j].intersectPt = true;	//mark for remove
+						count++;	
+					}
+				}	
+			}
+		}
 	}
-	*/
+
 private:
 	SPosition pos;
 	
@@ -105,7 +158,7 @@ private:
 	double euclideanDistance(const double x1, const double y1, const double x2, const double y2){
 		return sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1));
 	}
-	
+
 	/**
 	 * Ramer–Douglas–Peucker algorithm for reducing the number of points in a curve (polygon).
 	 */
