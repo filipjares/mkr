@@ -10,7 +10,7 @@
 #define FRONTIER_RANGE 300.0
 #define LASER_RANGE 30.0
 #define MAX_RANGE_CORR 100.0
-#define CM 100
+#define CM 100.0
 
 #endif
 

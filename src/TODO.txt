@@ -28,11 +28,6 @@ OTHER THINGS TO CHECK, DISCUSS AND IMPROVE
 # this is almost certainly misleading idea from me :) I'll check it.
 - frontiers in input segments for Vroni, frontier flag in Polygon segments:
   different definition of segment being frontier in "outer" segments and "holes"?
-- Shift exists between base_laser_link coordinate frame and base_link frames.
-  Is it taken into account? It seems that VD data and input data do not fit exactly.
-  VD edges seem to hang over input segments.
-- Is it possible that listener is providing different polygons to ROS (for visualization) and
-  different polygons as input for Vroni?
 
 
 TODO
@@ -44,3 +39,15 @@ TODO
 - create world map for the Stage with larger rooms in order to obtain larger unexplored areas
 - improve root node search
 
+FIXED ISSUES
+============
+
+- Issue: It seems that VD data and input data do not fit exactly.  VD edges seem to hang over
+  input segments.
+
+  Hypothesis: Is it possible that listener is providing different polygons to ROS (for
+  visualization) and different polygons as input for Vroni?
+
+  Answer: YES it was the case. The reason was that the CM macro, used in listener.cpp to
+  convert centimeters to meters, was defined as an integer. Therefore undesirable rounding
+  occured.
