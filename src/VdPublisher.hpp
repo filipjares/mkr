@@ -51,7 +51,7 @@ public:
 		wmat_marker.id = 0;
 		wmat_marker.lifetime = ros::Duration(duration);
 		wmat_marker.type = visualization_msgs::Marker::LINE_LIST;
-		wmat_marker.scale.x = 0.25;
+		wmat_marker.scale.x = VdPublisher::RVIZ_EDGES_WIDTH;
 		wmat_marker.color.g = 1.0f;
 		wmat_marker.color.a = 1.0;
 
@@ -64,7 +64,7 @@ public:
 		wmat_f_marker.id = 0;
 		wmat_f_marker.lifetime = ros::Duration(duration);
 		wmat_f_marker.type = visualization_msgs::Marker::LINE_LIST;
-		wmat_f_marker.scale.x = 0.25;
+		wmat_f_marker.scale.x = VdPublisher::RVIZ_EDGES_WIDTH;
 		wmat_f_marker.color.g = 0.5f;
 		wmat_f_marker.color.b = 1.0f;
 		wmat_f_marker.color.a = 1.0;
@@ -78,7 +78,7 @@ public:
 		path_marker.id = 0;
 		path_marker.lifetime = ros::Duration(duration);
 		path_marker.type = visualization_msgs::Marker::LINE_LIST;
-		path_marker.scale.x = 0.25;
+		path_marker.scale.x = VdPublisher::RVIZ_EDGES_WIDTH;
 		path_marker.color.r = 1.0f;
 		path_marker.color.g = 0.0f;
 		path_marker.color.b = 0.0f;
@@ -186,6 +186,13 @@ public:
 		marker_pub.publish(wmat_f_marker);
 		marker_pub.publish(path_marker);
 	}
+
+	/* *****************************************************************
+	 * PUBLIC CONSTANTS
+	 * *************************************************************** */
+
+	/// width of LINE_LIST Markers published for rviz:
+	static const double RVIZ_EDGES_WIDTH = 0.125;
 };
 
 }        /* ----- namespace poly2vd -----  */

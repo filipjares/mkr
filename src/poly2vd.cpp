@@ -209,7 +209,7 @@ static void publish_input_data(ros::Publisher & marker_pub, std::string frame_id
 	input_marker.id = 1;
 	input_marker.lifetime = ros::Duration(duration);
 	input_marker.type = visualization_msgs::Marker::LINE_LIST;
-	input_marker.scale.x = 2;
+	input_marker.scale.x = VdPublisher::RVIZ_EDGES_WIDTH;
 	input_marker.color.r = 1.0;
 	input_marker.color.a = 1.0;
 
@@ -223,7 +223,7 @@ static void publish_input_data(ros::Publisher & marker_pub, std::string frame_id
 	frontier_marker.id = 1;
 	frontier_marker.lifetime = ros::Duration(duration);
 	frontier_marker.type = visualization_msgs::Marker::LINE_LIST;
-	frontier_marker.scale.x = 2;
+	frontier_marker.scale.x = VdPublisher::RVIZ_EDGES_WIDTH;
 	frontier_marker.color.b = 1.0;
 	frontier_marker.color.a = 1.0;
 

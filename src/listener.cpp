@@ -6,6 +6,7 @@
 
 #include "poly2vd.hpp" // has to be included first because of the ZERO macro
 #include "listener.h"
+#include "VdPublisher.hpp"	// because of VdPublisher::RVIZ_EDGES_WIDTH
 
 #include <errno.h>
 #include <signal.h>
@@ -290,7 +291,7 @@ void visualizeMap(ros::Publisher & marker_pub, ClipperLib::Polygon & obj, const 
 	line_strip.pose.orientation.w = 1.0;
 	line_strip.id = id;
 	line_strip.type = visualization_msgs::Marker::LINE_LIST;
-	line_strip.scale.x = 0.5;
+	line_strip.scale.x = poly2vd::VdPublisher::RVIZ_EDGES_WIDTH;
 	line_strip.color.r = 1.0;
 	line_strip.color.a = 1.0;
 	geometry_msgs::Point p1;
@@ -329,7 +330,7 @@ void visualizeMap(ros::Publisher & marker_pub, ClipperLib::Polygon & obj, const 
 	line_list.pose.orientation.w = 1.0;
 	line_list.id = id;
 	line_list.type = visualization_msgs::Marker::LINE_LIST;
-	line_list.scale.x = 0.5;
+	line_list.scale.x = poly2vd::VdPublisher::RVIZ_EDGES_WIDTH;
 	line_list.color.b = 1.0f;
 	line_list.color.a = 1.0;
 	
