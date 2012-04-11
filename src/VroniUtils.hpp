@@ -359,7 +359,7 @@ static bool isOuterBasedEdge(int e)
 
 /* ********************** toString() functions *********************** */
 
-std::string coordToString(const coord & coord, bool addParentheses)
+static std::string coordToString(const coord & coord, bool addParentheses)
 {
 	using namespace std;
 
@@ -378,12 +378,12 @@ std::string coordToString(const coord & coord, bool addParentheses)
 	return ss.str();
 }
 
-std::string coordToString(const coord & coord)
+static std::string coordToString(const coord & coord)
 {
 	return coordToString(coord, true);
 }
 
-std::string nodeToString(int n)
+static std::string nodeToString(int n)
 {
 	coord c; double r;
 	GetNodeData(n, &c, &r);
@@ -396,7 +396,7 @@ std::string nodeToString(int n)
 	return ss.str();
 }
 
-std::string edgeToString(int e)
+static std::string edgeToString(int e)
 {
 	int n1 = GetStartNode(e);
 	int n2 = GetEndNode(e);

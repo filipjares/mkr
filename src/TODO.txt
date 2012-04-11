@@ -30,6 +30,9 @@ OTHER THINGS TO CHECK, DISCUSS AND IMPROVE
 - (create a class to store all the poly2vd's output data in it (a good choice would be the
   winged edge data structure); add method returning objects of this class to Poly2VdConverter's
   interface)
+- All the functions in VroniUtils.hpp are static. This means, I suppose, that there are as many
+  instances as there are modules (*.cpp files) that include VroniUtils.hpp. Is there some
+  better solution?
 
 
 TODO
