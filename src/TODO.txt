@@ -8,6 +8,7 @@ CRITICAL NODE DEFINITION
 
 - should the critical node really have strictly minimal clearance radius
   compared to its neighbours?
+- how to define what does it mean that critical nodes "lead from known to unknown areas"?
 
 
 TESTS to write
@@ -47,12 +48,17 @@ TODO
   purposes)
 - along with output (WMAT) edges, publish their (both left and right) source sites' types and
   ids (for debugging purposes)
-- create some user interface enabling to set up Poly2VdConverter's internal parameters "online"
-  Parameters that could be tuned:
-	- COMPARISON_RATIO (currently defined in VroniUtils.hpp)
-	- switch the "experimental node markup" on/off (i.e. determine whether
-	  experimentallyMarkTheNode() should be called)
+- create some (user) interface enabling to set up Poly2VdConverter's internal parameters
+  "online"
+	- use rosparam
+	- Parameters that could be tuned:
+		- COMPARISON_RATIO (currently defined in VroniUtils.hpp)
+		- switch the "experimental node markup" on/off (i.e. determine whether
+		  experimentallyMarkTheNode() should be called)
 - update READMEs
+- critical nodes are being looked for during the "backtracking phase", implement removal of
+  critical nodes being closer to the root than the newly found critical node into the
+  backtracking phase
 
 FIXED ISSUES
 ============
@@ -66,3 +72,12 @@ FIXED ISSUES
   Answer: YES it was the case. The reason was that the CM macro, used in listener.cpp to
   convert centimeters to meters, was defined as an integer. Therefore undesirable rounding
   occured.
+
+
+QUESTIONS TO ASK (C/C++ related)
+================================
+
+- What is the difference between primitive public static const member and non-primitive public
+  static const member? Why do I have to define Color constants outside the Color class
+  body? It is possible do define VdPublisher::RVIZ_EDGES_WIDTH inside the VdPublisher
+  class body...
