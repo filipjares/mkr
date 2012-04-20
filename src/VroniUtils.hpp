@@ -3,8 +3,8 @@
  *
  *       Filename:  VroniUtils.hpp
  *
- *    Description:  Utility functions helping to cope with Vroni's internal
- *                  data
+ *    Description:  Class containing static utility functions helping to cope
+ *                  with Vroni's internal data
  *
  *        Version:  1.0
  *        Created:  02/26/2012 09:39:36 PM
@@ -38,11 +38,16 @@ namespace poly2vd {
 
 #define UnscaleV(value)  (assert(scale_factor > 0.0), (value) / scale_factor)
 
+class VroniUtils {
+
+public:
+
+
 /* ******************* Constants ************************************* */
 
-static std::string site_type_names[] = {"SEG", "ARC", "PNT", "VDN", "VDE", "DTE", "CCW", "CW", "UNKNOWN" };
+static const std::string site_type_names[];
 
-const double COMPARISON_RATIO = 0.96;
+static const double COMPARISON_RATIO = 0.96;
 
 /* *************** Utility functions (VRONI-related) ***************** */
 
@@ -428,6 +433,8 @@ static std::string edgeDefiningSitesToString(int e)
 		<< " [" << site_type_names[t2] << "]";
 	return ss.str();
 }
+
+};        /* ----- class VroniUtils   ----- */
 
 }        /* ----- namespace poly2vd  ----- */
 

@@ -133,7 +133,7 @@ public:
 		p2.y = UnscaleY(c2.y);
 
 		// append them
-		if (isFrontierBasedEdge(edge)) {
+		if (VroniUtils::isFrontierBasedEdge(edge)) {
 			wmat_f_marker.points.push_back(p1);
 			wmat_f_marker.points.push_back(p2);
 		} else {

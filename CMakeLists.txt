@@ -29,9 +29,9 @@ rosbuild_gensrv()
 #rosbuild_add_executable(example examples/example.cpp)
 #target_link_libraries(example ${PROJECT_NAME})
 
-rosbuild_add_executable(listener src/listener.cpp src/clipper.cpp src/poly2vd.cpp src/Color.cpp)
+rosbuild_add_executable(listener src/listener.cpp src/clipper.cpp src/poly2vd.cpp src/Color.cpp src/VroniUtils.cpp)
 rosbuild_add_executable(odometry src/odometry.cpp)
-rosbuild_add_executable(poly2vd src/poly2vd.cpp src/Color.cpp)
+rosbuild_add_executable(poly2vd src/poly2vd.cpp src/Color.cpp src/VroniUtils.cpp)
 rosbuild_add_compile_flags(poly2vd -DPOLY2VD_STANDALONE) # poly2vd's own main()
 
 

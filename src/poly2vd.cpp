@@ -257,8 +257,8 @@ static void publishCriticalNodeCandidateIfAppropriate(int e, std::list<int> & us
 	int n2 = GetEndNode(e);
 
 	// are the end-nodes connecting this WMAT Edge (e) with just one other WMAT Edge?
-	bool isN1Deg2 = isDeg2WmatNode(n1); // IsDeg2Node(n1);
-	bool isN2Deg2 = isDeg2WmatNode(n2); // IsDeg2Node(n2);
+	bool isN1Deg2 = VroniUtils::isDeg2WmatNode(n1); // IsDeg2Node(n1);
+	bool isN2Deg2 = VroniUtils::isDeg2WmatNode(n2); // IsDeg2Node(n2);
 
 	// only degree 2 nodes are critical point candidates
 	if (!isN1Deg2 && !isN2Deg2) {
@@ -276,7 +276,7 @@ static void publishCriticalNodeCandidateIfAppropriate(int e, std::list<int> & us
 	// connected nodes.
 
 	// critical point candidate has to be local minimum
-	if (contrastCompare(r1, r2) == 0) {
+	if (VroniUtils::contrastCompare(r1, r2) == 0) {
 		return;
 	}
 
@@ -286,7 +286,7 @@ static void publishCriticalNodeCandidateIfAppropriate(int e, std::list<int> & us
 	double r_candidate;
 
 	// the one with smaller clearance radius is the candidate
-	if (contrastCompare(r1, r2) < 0) {
+	if (VroniUtils::contrastCompare(r1, r2) < 0) {
 		// the candidate is degree 3 -> not a critical point
 		if (!isN1Deg2) {
 			return;
@@ -338,10 +338,10 @@ static void publishCriticalNodeCandidateIfAppropriate(int e, std::list<int> & us
 		if (!IsDeg2Node(n_ccw)) {
 			hasNeighbourOfDeg3 = true;
 		}
-		if (areCoordsEqual(c_candidate, c_ccw)) {
+		if (VroniUtils::areCoordsEqual(c_candidate, c_ccw)) {
 			using namespace std;
 			cout << "The candidate (" << candidate << ") and node related to it through "
-				<< "e_ccw have the same coords: " << coordToString(c_candidate) << endl;
+				<< "e_ccw have the same coords: " << VroniUtils::coordToString(c_candidate) << endl;
 		}
 	}
 
@@ -357,10 +357,10 @@ static void publishCriticalNodeCandidateIfAppropriate(int e, std::list<int> & us
 		if (!IsDeg2Node(n_cw)) {
 			hasNeighbourOfDeg3 = true;
 		}
-		if (areCoordsEqual(c_candidate, c_cw)) {
+		if (VroniUtils::areCoordsEqual(c_candidate, c_cw)) {
 			using namespace std;
 			cout << "The candidate (" << candidate << ") and node related to it through "
-				<< "e_cw have the same coords: " << coordToString(c_candidate) << endl;
+				<< "e_cw have the same coords: " << VroniUtils::coordToString(c_candidate) << endl;
 		}
 	}
 
@@ -379,7 +379,7 @@ static void publishCriticalNodeCandidateIfAppropriate(int e, std::list<int> & us
 		using namespace std;
 
 		if (printIt) {
-			cout << setw(4) << right << candidate << ": " << coordToString(c_candidate)
+			cout << setw(4) << right << candidate << ": " << VroniUtils::coordToString(c_candidate)
 				<< " (" << fixed << setprecision(3) << r_candidate << ")"
 				<< ":\t"
 				<< endl;
@@ -441,7 +441,7 @@ bool testNForBeingFuzzyMinimum(int n, int e1, int n1)
 	double r = GetNodeParam(n);
 	double r1 = GetNodeParam(n1);
 
-	char comparison = contrastCompare(r, r1);
+	char comparison = VroniUtils::contrastCompare(r, r1);
 	if (comparison < 0) {
 		return true;
 	}
@@ -453,7 +453,7 @@ bool testNForBeingFuzzyMinimum(int n, int e1, int n1)
 	
 	// is such a situation likely to occur? However the response will be
 	// nagative in such a case
-	if (!isDeg2WmatNode(n1)) {
+	if (!VroniUtils::isDeg2WmatNode(n1)) {
 		return false;
 	}
 	
@@ -497,7 +497,7 @@ bool examineNode(int n, GraphMeta & graph, VdPublisher & vdPub)
 	// FIXME: examine only neighbours connected to n by EXAMINED WMAT edges?
 
 	// only degree 2 nodes are critical point candidates
-	if (!isDeg2WmatNode(n)) {
+	if (!VroniUtils::isDeg2WmatNode(n)) {
 		// std::cout << "It is not a Deg2 node." << std::endl;
 		// vdPub.publishPoint(n, Marker::CUBE, GetNodeCoord(n), 0.01, Color::PINK);
 		return false;
@@ -554,15 +554,15 @@ bool examineNode(int n, GraphMeta & graph, VdPublisher & vdPub)
 	bool isLocalMinimum1 = false;
 	bool isLocalMinimum2 = false;
 
-	if (contrastCompare(r, r1) == 0) {
+	if (VroniUtils::contrastCompare(r, r1) == 0) {
 		isLocalMinimum1 = testNForBeingFuzzyMinimum(n, e1, n1);
 	} else {
-		isLocalMinimum1 = (contrastCompare(r, r1) < 0);
+		isLocalMinimum1 = (VroniUtils::contrastCompare(r, r1) < 0);
 	}
-	if (contrastCompare(r, r2) == 0) {
+	if (VroniUtils::contrastCompare(r, r2) == 0) {
 		isLocalMinimum2 = testNForBeingFuzzyMinimum(n, e2, n2);
 	} else {
-		isLocalMinimum2 = (contrastCompare(r, r2) < 0);
+		isLocalMinimum2 = (VroniUtils::contrastCompare(r, r2) < 0);
 	}
 
 	// critical node has to be local minimum
@@ -575,7 +575,7 @@ bool examineNode(int n, GraphMeta & graph, VdPublisher & vdPub)
 	}
 
 	// FIXME rename the isDeg3Node() function
-	bool hasWmatDeg3Neighbour = isDeg3Node(n1) || isDeg3Node(n2);
+	bool hasWmatDeg3Neighbour = VroniUtils::isDeg3Node(n1) || VroniUtils::isDeg3Node(n2);
 
 	if (!hasWmatDeg3Neighbour) {
 		// std::cout << "It does not have a deg3 neighbour." << std::endl;
@@ -632,14 +632,14 @@ void experimentallyMarkTheNode(int n, VdPublisher & vdPub)
 	if (GetNodeParam(n) == 0) {
 		vdPub.publishPoint(n, Marker::CUBE, GetNodeCoord(n), 0.01, Color::RED);
 	} else {
-		if (isDeg3Node(n)) { // FIXME: rename (WMAT)
-			if (isDeg2WmatNode(n)) {
+		if (VroniUtils::isDeg3Node(n)) { // FIXME: rename (WMAT)
+			if (VroniUtils::isDeg2WmatNode(n)) {
 				std::cerr << "ERROR, inconsistence" << std::endl;
 				exit(2);
 			}
 			vdPub.publishPoint(n, Marker::CYLINDER, GetNodeCoord(n), 0.01, Color::YELLOW);
 		} else {
-			if (isDeg2WmatNode(n)) {
+			if (VroniUtils::isDeg2WmatNode(n)) {
 				vdPub.publishPoint(n, Marker::CYLINDER, GetNodeCoord(n), 0.01, Color::VIOLET);
 			} else {
 				published = false;
@@ -666,7 +666,7 @@ void addTheOtherNodeIfAppropriate(int edge, int sourceNode, GraphMeta & graph, V
 			if (prevEdge != -1 && graph.getEdgeStatus(prevEdge) == FRONTIER) {
 				status = FRONTIER;
 			} else {
-				if (isFrontierBasedEdge(edge)) {
+				if (VroniUtils::isFrontierBasedEdge(edge)) {
 					status = FRONTIER;
 					exploreCriticalNodesOnPath(sourceNode, graph, vdPub);
 					vdPub.publishSphere(sourceNode, GetNodeCoord(sourceNode), GetNodeParam(sourceNode)/2.0, Color::BLUE);
@@ -687,7 +687,7 @@ void addTheOtherNodeIfAppropriate(int edge, int sourceNode, GraphMeta & graph, V
 		}
 	} else {
 		// check for incident nodes and report such a situation
-		if (areNodesEqual(sourceNode, otherNode)) {
+		if (VroniUtils::areNodesEqual(sourceNode, otherNode)) {
 			std::cerr << "Nodes " << sourceNode << " and " << otherNode << " are equal"
 				<< std::endl;
 		}
@@ -793,7 +793,7 @@ bool rootNodeNotInsideHole(int root)
 		closed[n] = true;
 		
 		int e1 = GetIncidentEdge(n);				// get the first one
-		if(isOuterBasedEdge(e1))
+		if(VroniUtils::isOuterBasedEdge(e1))
 			return true;		
 		if(GetNodeParam(GetStartNode(e1)) != 0){
 			// FIXME: filling the open list even with the closed nodes
@@ -805,7 +805,7 @@ bool rootNodeNotInsideHole(int root)
 		}
 
 		int e_ccw = GetCCWEdge(e1, n);				// get the second one
-		if(isOuterBasedEdge(e_ccw))
+		if(VroniUtils::isOuterBasedEdge(e_ccw))
 			return true;		
 		if(GetNodeParam(GetStartNode(e_ccw)) != 0){
 			// FIXME: filling the open list even with the closed nodes
@@ -818,7 +818,7 @@ bool rootNodeNotInsideHole(int root)
 
 		int e_cw = GetCWEdge(e1, n);
 		if (e_cw != e_ccw){
-			if(isOuterBasedEdge(e_cw))
+			if(VroniUtils::isOuterBasedEdge(e_cw))
 				return true;		
 			if(GetNodeParam(GetStartNode(e_cw)) != 0){
 				// FIXME: filling the open list even with the closed nodes
@@ -847,7 +847,7 @@ int getNearestRootNode(const coord &p)
 			GetNodeData(GetStartNode(e), &c, &r);
 			cu.x = UnscaleX(c.x);
 			cu.y = UnscaleY(c.y);
-			double dist = coordDistance(p,cu);
+			double dist = VroniUtils::coordDistance(p,cu);
 			if (dist < min_dist && r > ZERO) {
 				root = GetStartNode(e);
 				min_dist = dist;
@@ -856,7 +856,7 @@ int getNearestRootNode(const coord &p)
 			GetNodeData(GetEndNode(e), &c, &r);
 			cu.x = UnscaleX(c.x);
 			cu.y = UnscaleY(c.y);
-			dist = coordDistance(p,cu);
+			dist = VroniUtils::coordDistance(p,cu);
 			if (dist < min_dist && r > ZERO) {
 				root = GetEndNode(e);
 				min_dist = dist;
@@ -899,7 +899,7 @@ int getRootNode(const coord & p)
 			GetNodeData(GetStartNode(e), &c, &r);
 			cu.x = UnscaleX(c.x);
 			cu.y = UnscaleY(c.y);
-			dist = coordDistance(p,cu);
+			dist = VroniUtils::coordDistance(p,cu);
 			if(dist < min_dist){
 				root = GetStartNode(e);
 				min_dist = dist;
@@ -908,7 +908,7 @@ int getRootNode(const coord & p)
 			GetNodeData(GetEndNode(e), &c, &r);
 			cu.x = UnscaleX(c.x);
 			cu.y = UnscaleY(c.y);
-			dist = coordDistance(p,cu);
+			dist = VroniUtils::coordDistance(p,cu);
 			if(dist < min_dist){
 				root = GetEndNode(e);
 				min_dist = dist;
@@ -1043,8 +1043,8 @@ void outputNodeForDot(std::ofstream &fout, int n, bool shuffle, bool shrink)
 	// shuffle the node position if needed
 	coord c; double r;
 	GetNodeData(n, &c, &r);
-	if (shuffle && hasCloseNeighbour(n)) {
-		coord d = determineNodeDisplacement(n);
+	if (shuffle && VroniUtils::hasCloseNeighbour(n)) {
+		coord d = VroniUtils::determineNodeDisplacement(n);
 		c.x += d.x;
 		c.y += d.y;
 	} else {
@@ -1054,10 +1054,10 @@ void outputNodeForDot(std::ofstream &fout, int n, bool shuffle, bool shrink)
 	using namespace std;
 	string otherparams = "fontsize=3,fixedsize=true,width=0.1,height=0.075,penwidth=0.5";
 	if (shrink) {
-		fout << "\t" << setw(2) << right << n << " [ pos=\"" << setw(18) << left << (coordToString(c, false) + "\"")
+		fout << "\t" << setw(2) << right << n << " [ pos=\"" << setw(18) << left << (VroniUtils::coordToString(c, false) + "\"")
 			<< ("," + otherparams) << " ];" << endl;
 	} else {
-		fout << "\t" << setw(2) << right << n << " [ pos=\"" << setw(18) << left << (coordToString(c, false) + "\"")
+		fout << "\t" << setw(2) << right << n << " [ pos=\"" << setw(18) << left << (VroniUtils::coordToString(c, false) + "\"")
 			<< ",label=\"" << setw(2) << n << " r=" << setprecision(3) << UnscaleV(r) << "\""
 			<< " ];" << endl;
 	}
@@ -1070,14 +1070,14 @@ void outputEdgeForDot(std::ofstream &fout, int e, bool shrink)
 	// color
 	string color = "black";
 	if (IsWmatEdge(e)) color = "blue";
-	if (isEdgeDefinedByDummyPoint(e)) color = "gold";
+	if (VroniUtils::isEdgeDefinedByDummyPoint(e)) color = "gold";
 
 	// output
 	fout << "\t" << setw(2) << right << GetStartNode(e) << " -- " << setw(2) << right<< GetEndNode(e)
 		<< "\t[ color=" << setw(6) << left << (color + ",") << (shrink?"penwidth=0.5,fontsize=2,":"")
 		<< "label=\"" << setw(4) << left << (to_string(e) + "\"") << " ]" << ";";
-	if (isEdgeDefinedByDummyPoint(e)) {
-		fout << "   /* " << edgeDefiningSitesToString(e) << " */";
+	if (VroniUtils::isEdgeDefinedByDummyPoint(e)) {
+		fout << "   /* " << VroniUtils::edgeDefiningSitesToString(e) << " */";
 	}
 	fout << endl;
 }
@@ -1117,14 +1117,14 @@ void testContrastCompare()
 	// contrastCompare supports only positive number copmarison for now
 	double x = 1;
 
-	assert(contrastCompare(0.999*COMPARISON_RATIO*x, x) < 0);
-	assert(contrastCompare(1.111*COMPARISON_RATIO*x, x) == 0);
-	assert(contrastCompare(x, 0.999*COMPARISON_RATIO*x) > 0);
-	assert(contrastCompare(x, 1.111*COMPARISON_RATIO*x) == 0);
-	assert(contrastCompare(x, x) == 0);
+	assert(VroniUtils::contrastCompare(0.999*VroniUtils::COMPARISON_RATIO*x, x) < 0);
+	assert(VroniUtils::contrastCompare(1.111*VroniUtils::COMPARISON_RATIO*x, x) == 0);
+	assert(VroniUtils::contrastCompare(x, 0.999*VroniUtils::COMPARISON_RATIO*x) > 0);
+	assert(VroniUtils::contrastCompare(x, 1.111*VroniUtils::COMPARISON_RATIO*x) == 0);
+	assert(VroniUtils::contrastCompare(x, x) == 0);
 
-	assert(contrastCompare(0.0, 0.00000000001) < 0);
-	assert(contrastCompare(0.00000000001, 0.0) > 0);
+	assert(VroniUtils::contrastCompare(0.0, 0.00000000001) < 0);
+	assert(VroniUtils::contrastCompare(0.00000000001, 0.0) > 0);
 }
 
 void performTests()
@@ -1162,8 +1162,8 @@ int main ( int argc, char *argv[] )
 	p2vd.prepareNewInput(argv[1]);
 	p2vd.convert();
 
-	cout << "total edges size: " << edges.size() << ", wmat edges: " << poly2vd::getWmatEdgeCount() << endl;
-	cout << "WMAT edges count: " << poly2vd::getWmatEdgeCount() << endl;
+	cout << "total edges size: " << edges.size() << ", wmat edges: " << poly2vd::VroniUtils::getWmatEdgeCount() << endl;
+	cout << "WMAT edges count: " << poly2vd::VroniUtils::getWmatEdgeCount() << endl;
 	cout << "node count: " << GetNumberOfNodes() << endl;
 	cout << "pnts count: " << num_pnts << endl;
 	cout << "segs count: " << num_segs << endl;
