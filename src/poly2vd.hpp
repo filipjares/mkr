@@ -17,26 +17,6 @@
 #ifndef  POLY2VD_H_INC
 #define  POLY2VD_H_INC
 
-/* ********************** VRONI includes ***************************** */
-
-#define HAVE_BOOL	// boolean defined in types.h, included by dvi_graphics_header.h
-#define MAT		// API_ComputeWMAT in ext_appl_inout.h
-
-#define EXT_APPL_SITES	// Vroni input needs to hold additional data (frontiers)
-
-#include "dvi_graphics_header.h"	// beacause of API_InitializeProgram()
-
-// access to VRONI's internal data
-#include "fpkernel.h"			// because of the double_arg macro
-#include "vronivector.h"
-#include "defs.h"
-#include "offset.h"
-
-// ext_appl_inout.h has to be included after "defs.h" (which includes coord.h)
-#include "ext_appl_inout.h"
-
-#undef ZERO // both src/consts.h and VRONI_6.0/src/consts.H define ZERO (differently)
-
 /* ********************** ROS includes ******************************* */
 
 #ifndef POLY2VD_WITHOUT_ROS
@@ -44,6 +24,11 @@
 #include <ros/ros.h>
 
 #endif
+
+/* ********************** Poly2VdConverter includes ****************** */
+
+#include "GraphMeta.hpp"
+#include "VdPublisher.hpp"
 
 /* ********************** Poly2VdConverter class ********************* */
 

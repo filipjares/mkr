@@ -17,6 +17,8 @@
 #ifndef  GRAPH_META_H_INC
 #define  GRAPH_META_H_INC
 
+#include "VroniUtils.hpp"
+
 namespace poly2vd {
 
 /// Status of WMAT Voronoi edges

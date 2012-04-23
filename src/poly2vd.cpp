@@ -14,23 +14,14 @@
  *
  * ===========================================================================
  */
-#include <stdio.h>
-#include <stdlib.h>
 #include <iostream>
 #include <sstream>
 #include <fstream>
-#include <iomanip>
 #include <string>
-#include <limits>
 #include <list>
-#include <map>
 #include <algorithm>
 #include <assert.h>
-#include <cmath>
 #include "poly2vd.hpp"
-#include "GraphMeta.hpp"
-#include "Color.hpp"
-#include "VroniUtils.hpp"
 
 /* ************ ROS includes (other than in poly2vd.hpp) ************* */
 
@@ -41,7 +32,9 @@
 #include <visualization_msgs/MarkerArray.h>
 
 // Our own helper class
-#include "VdPublisher.hpp"
+#include "Color.hpp"
+#include "GraphMeta.hpp"
+#include "VroniUtils.hpp"
 
 #endif
 

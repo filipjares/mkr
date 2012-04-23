@@ -18,10 +18,13 @@
 #ifndef  VD_PUBLISHER_H_INC
 #define  VD_PUBLISHER_H_INC
 
-#include "poly2vd.hpp"
 #include "GraphMeta.hpp"
 #include "Color.hpp"
 #include "VroniUtils.hpp"
+
+// ROS Messages
+#include <visualization_msgs/Marker.h>
+#include <visualization_msgs/MarkerArray.h>
 
 namespace poly2vd {
 
