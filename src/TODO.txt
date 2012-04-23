@@ -40,10 +40,6 @@ TODO
 ====
 
 - use euclidean lengths and when setting "pointers" to previous nodes, store the shortest path
-- create synthetic map similar to that in util/fiddling_with_vroni/data/map_from_the_paper.dxf
-  with more realistic passages 
-- create world map for the Stage with larger rooms in order to obtain larger unexplored areas
-- improve root node search
 - along with input segments and points, publish their ids as text markers (for debugging
   purposes)
 - along with output (WMAT) edges, publish their (both left and right) source sites' types and
@@ -56,9 +52,6 @@ TODO
 		- switch the "experimental node markup" on/off (i.e. determine whether
 		  experimentallyMarkTheNode() should be called)
 - update READMEs
-- critical nodes are being looked for during the "backtracking phase", implement removal of
-  critical nodes being closer to the root than the newly found critical node into the
-  backtracking phase
 
 FIXED ISSUES
 ============
