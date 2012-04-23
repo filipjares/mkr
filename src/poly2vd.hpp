@@ -42,6 +42,9 @@ private:
 	int rootNode;
 	// TODO:
 	bool result_ready;
+
+	std::list<int> criticalNodes;
+
 public:
 	Poly2VdConverter();
 
@@ -63,6 +66,10 @@ public:
 	void doTheSearch(const coord & start, ros::Publisher & marker_pub, const std::string & frame_id, double duration);
 #endif
 	void exportVdToDot(const std::string &fileName, bool shuffle, bool shrink);
+
+private:
+	void addTheOtherNodeIfAppropriate(int edge, int sourceNode, GraphMeta & graph, VdPublisher & vdPub);
+	void exploreCriticalNodesOnPath(int goalNode, GraphMeta & graph, VdPublisher & vdPub);
 };
 
 }        /* ----- namespace poly2vd ----- */

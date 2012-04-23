@@ -172,6 +172,13 @@ bool contains(std::list<int> & lst, int element)
 	return it != lst.end();
 }
 
+static void removeNodeFromListIfPresent(std::list<int> & lst, int element) {
+	std::list<int>::iterator it = find(lst.begin(), lst.end(), element);
+	if (it != lst.end()) {
+		lst.erase(it);
+	}
+}
+
 /** random double in range [-1, 1] */
 double random_double()
 {
@@ -580,13 +587,13 @@ bool examineNode(int n, GraphMeta & graph, VdPublisher & vdPub)
 	return true;
 }
 
-void exploreCriticalNodesOnPath(int goalNode, GraphMeta & graph, VdPublisher & vdPub)
+void Poly2VdConverter::exploreCriticalNodesOnPath(int goalNode, GraphMeta & graph, VdPublisher & vdPub)
 {
 	int prevEdge;
 	int n = goalNode;
+	bool criticalNodeFound = false;
 
 	while ((prevEdge = graph.getPreviousEdge(n)) != -1 && !graph.isFrontierBoundaryNodeSet(prevEdge)) {
-		int prevNode = graph.getPreviousNode(n);
 		assert(graph.getEdgeStatus(prevEdge) == EXPLORED);
 
 		// mark the explored prevEdge as edge leading from
@@ -594,19 +601,30 @@ void exploreCriticalNodesOnPath(int goalNode, GraphMeta & graph, VdPublisher & v
 		graph.setFrontierBoundaryNode(prevEdge, goalNode);
 
 		// examine node n for being a critical node
-		bool isCritical = examineNode(n, graph, vdPub);
-		// std::cout << "Node " << n << " is " << (isCritical?"":"NOT ")
+		criticalNodeFound = examineNode(n, graph, vdPub);
+		// std::cout << "Node " << n << " is " << (criticalNodeFound?"":"NOT ")
 		// 	<< "a critical node." << std::endl;
-		if (isCritical) {
-			vdPub.publishSphere(n, GetNodeCoord(n), GetNodeParam(n)/2.0, Color::YELLOW);
-			break; // no more critical points on this path
-		} /* else {
-			vdPub.publishSphere(n, GetNodeCoord(n), GetNodeParam(n)/5.0, Color::BLUE);
-		} */
+		if (criticalNodeFound) {
+			criticalNodes.push_back(n);
+		}
+		n = graph.getPreviousNode(n);
+		if (criticalNodeFound) {
+			break; // only have to remove the rest of critical nodes on this path
+		}
+	}
+	// if a new critical point was found on this path, reove the old ones
+	if (criticalNodeFound) {
+		while ((prevEdge = graph.getPreviousEdge(n)) != -1) {
+			assert(graph.getEdgeStatus(prevEdge) == EXPLORED);
 
-		n = prevNode;
+			// is the node n a critical point? if so, remove it
+			removeNodeFromListIfPresent(criticalNodes, n);
+
+			n = graph.getPreviousNode(n);
+		}
 	}
 }
+
 
 /**
  * Using the vdPub VdPublisher, this function publishes a Marker for the
@@ -645,7 +663,7 @@ void experimentallyMarkTheNode(int n, VdPublisher & vdPub)
 	}
 }
 
-void addTheOtherNodeIfAppropriate(int edge, int sourceNode, GraphMeta & graph, VdPublisher & vdPub)
+void Poly2VdConverter::addTheOtherNodeIfAppropriate(int edge, int sourceNode, GraphMeta & graph, VdPublisher & vdPub)
 {
 	int otherNode = GetOtherNode(edge, sourceNode);
 	if (IsWmatEdge(edge)) {
@@ -938,6 +956,9 @@ void Poly2VdConverter::doTheSearch(const coord & start, ros::Publisher & marker_
 	graph.addToOpenList(root);
 	graph.setNodeClosed(root);
 
+	// prepare the list of critical nodes (make it empty)
+	criticalNodes.clear();
+
 	// cout << "-------- root " << root << endl;
 
 	while (!graph.isOpenListEmpty()) {
@@ -955,6 +976,7 @@ void Poly2VdConverter::doTheSearch(const coord & start, ros::Publisher & marker_
 	}
 
 	vdPub.publishEdges();
+	vdPub.publishCriticalNodes(criticalNodes);
 }
 
 // FIXME: remove?

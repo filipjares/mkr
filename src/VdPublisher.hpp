@@ -26,6 +26,8 @@
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
 
+#include <list>
+
 namespace poly2vd {
 
 class VdPublisher
@@ -86,6 +88,16 @@ public:
 		path_marker.color.g = 0.0f;
 		path_marker.color.b = 0.0f;
 		path_marker.color.a = 1.0;
+	}
+
+	/** Publishes the specified critical node as a sphere immediately */
+	void publishCriticalNodes(std::list<int> & criticalNodes)
+	{
+		std::list<int>::iterator it;
+		for (it = criticalNodes.begin(); it != criticalNodes.end(); it++) {
+			int n = *it;
+			publishSphere(n, GetNodeCoord(n), GetNodeParam(n)/2.0, Color::YELLOW);
+		}
 	}
 
 	/** Publishes the specified sphere immediately */
@@ -195,7 +207,7 @@ public:
 	 * *************************************************************** */
 
 	/// width of LINE_LIST Markers published for rviz:
-	static const double RVIZ_EDGES_WIDTH = 0.125;
+	static const double RVIZ_EDGES_WIDTH = 0.2;
 };
 
 }        /* ----- namespace poly2vd -----  */
