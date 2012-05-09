@@ -2,10 +2,11 @@
 ABOUT
 =====
 
-This repository contains our attempt to implement and use some of the algorithms described in
-article "Coordinated multi-robot exploration using a segmentation of the environment" by Wurm,
-Stachniss and Burgard. See the "Wurm2008Coordinated" record in presentation/bibliography.bib
-for reference.
+This repository contains our attempt to implement and use an algorithm for finding of
+"critical nodes" in a geometrical map. Criteria for a critical node were described in the
+article "Coordinated multi-robot exploration using a segmentation of the environment" by
+Wurm, Stachniss and Burgard. See the "Wurm2008Coordinated" record in
+presentation/bibliography.bib for reference.
 
 This repository represents our semestral work for the MKR (Mobile and Collective Robotics
 course) at CTU / FEE (Czech Technical University, Faculty of Electrical Engineering) from
@@ -41,18 +42,22 @@ DIRECTORY STRUCTURE:
 Source files are located in src/ directory. Important (git) submodule is Vroni
 which resides in its VRONI_6.0 directory.
 
-	build/				# In future everything should be built
-					# here
-	build/vroni			# this is where Vroni is built
+	bin/				# directory containing build output (binaries)
+	build/				# build directory of this project
+					# ideally everything (including Vroni) should be built
+					# here; however currently Vroni is built separately in 
+					# the VRONI_6.0/build/ directory
 	VRONI_6.0/			# Vroni submodule tree
 	presentation/			# Slides for end-of-the-class presentation
 	src/				# source files (see src/README.txt for details)
+	srv/				# own ROS services definition
+	srv_gen/			# generated files for our services
 	util/				# utilities, scripts
-	CMakeLists.txt
-	Makefile
+	CMakeLists.txt			# CMake build configuration file
+	Makefile			# simple makefile referencing ROS's main makefile
 	README.txt			# this readme file
-	mainpage.dox
-	manifest.xml
+	mainpage.dox			# stub of project's doxygen documentation
+	manifest.xml			# project's manifest
 
 ROS HOWTO:
 ==========
