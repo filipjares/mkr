@@ -122,7 +122,7 @@ src/clipper.hpp		# Clipper library used for manipulation with
 src/clipper.cpp		# polygons.
 
 src/dijkstra_heap.h	# Dijkstra algorithm implementation
-src/dijkstra_lite.h     # by Jan Faigl
+src/dijkstra_lite.h     # by Jan Faigl (unused)
 
 src/listener.h		#
 src/listener.cpp	#

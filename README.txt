@@ -35,11 +35,6 @@ ROS					http://www.ros.org/
 
 	Robot Operating System -- software framework for robot software development.
 
-Boost Graph Library (BGL)		http://www.boost.org/libs/graph
-
-Dijkstra implementation by Jan Faigl
-
-
 DIRECTORY STRUCTURE:
 ====================
 
