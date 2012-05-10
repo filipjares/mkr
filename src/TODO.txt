@@ -51,7 +51,7 @@ TODO
 		- COMPARISON_RATIO (currently defined in VroniUtils.hpp)
 		- switch the "experimental node markup" on/off (i.e. determine whether
 		  experimentallyMarkTheNode() should be called)
-- update READMEs
+- rename project to something better than `project'
 
 FIXED ISSUES
 ============
