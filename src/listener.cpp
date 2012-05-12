@@ -4,7 +4,14 @@
 * Author:    Tomas Juchelka
 */
 
+#include "poly2vd.hpp" // has to be included first because of the ZERO macro
 #include "listener.h"
+#include "VdPublisher.hpp"	// because of VdPublisher::RVIZ_EDGES_WIDTH
+
+#include <errno.h>
+#include <signal.h>
+#include <termios.h>
+#include <fcntl.h>
 
 class Listener
 {
@@ -17,66 +24,126 @@ public:
 	{
 		init();
 	}
-	
-	void checkMap(ClipperLib::Polygons & obj) {
-		for (unsigned int i = 0; i < obj.size(); i++) {
-			for (unsigned int j = 1; j < obj[i].size(); j++) {
-				//mark frontiers with legth < that treshold
-				if(euclideanDistance(obj[i][j].X,obj[i][j].Y,obj[i][j-1].X,obj[i][j-1].Y) < FRONTIER_RANGE*2/3 && obj[i][j-1].outputEdge && obj[i][j].inputEdge){
-					obj[i][j-1].outputEdge = false;
-					obj[i][j].inputEdge = false;
+
+	SPosition getPosition(void) const {
+		return pos;
+	}
+		
+	void eliminateCoincidentFrontiers(ClipperLib::Polygon & p) {
+		//inline frontier
+		int s = p.size();
+		double maxDist = sqrt(2.0);
+		for (int i = 1; i < s-2; i++) {
+			if(!p[i].inputEdge && p[i].outputEdge && p[i+1].inputEdge && !p[i+1].outputEdge)	{
+				//is isolated
+				if(perpendicularDistance(p[i],p[i+1],p[i-1]) <= maxDist)	{
+					p[i].outputEdge = false;
+					p[i+1].inputEdge = false;
+				}
+				else if(perpendicularDistance(p[i],p[i+1],p[i+2]) <= maxDist)	{
+					p[i].outputEdge = false;
+					p[i+1].inputEdge = false;	
 				}
 			}
 		}
 	}
 	
-	void simplifyMap(ClipperLib::Polygons & obj) {
-		for (unsigned int i = 0; i < obj.size(); i++) {
-			for (unsigned int j = 1; j < obj[i].size()-1; j++) {
-				//simplifying map
-				if((obj[i][j-1].outputEdge && obj[i][j+1].inputEdge) || (!obj[i][j-1].outputEdge && !obj[i][j+1].inputEdge)) {
-					if(perpendicularDistance(obj[i][j-1], obj[i][j+1], obj[i][j]) < EPSILON) {
-						obj[i][j].intersectPt = true;
-						j = j+1;
-					}		
-				}
-			}
+	void eliminateFalseFrontiers(ClipperLib::Polygon & p) {
+		//mark frontiers with legth < that treshold
+		double minSize = FRONTIER_RANGE;
+	
+		//first - find first non frontier point
+		int k = 1;
+		while(p[k-1].inputEdge){
+			k++;
 		}
-	}
+				
+		//second - find the frontier group
+		int s = p.size();
+		for (int i = k; i < s; i++) {
+			if(!p[i].inputEdge)
+				continue;
+			double len = 0.0;
+			int start = i-1;
+			int end = start;
+			while(p[end+1].inputEdge)	{
+				end++;
+				len += euclideanDistance(p[end].X,p[end].Y,p[end-1].X,p[end-1].Y); 
+				if(end == s-1)
+					break;
+			}
 	
-	bool lineIntersection(ClipperLib::IntPoint & p, const ClipperLib::IntPoint & p1, const ClipperLib::IntPoint & p2, const ClipperLib::IntPoint & p3, const ClipperLib::IntPoint & p4){
-		double den = (p4.Y - p3.Y)*(p2.X - p1.X) - (p4.X - p3.X)*(p2.Y - p1.Y);
-		// check if the lines are parallel
-		if(NEAR_EQUAL(den,0.0))
-			return false;
-		double s = (p4.X - p3.X)*(p1.Y - p3.Y) - (p4.Y - p3.Y)*(p1.X - p3.X)/den;
-		double t = (p2.X - p1.X)*(p1.Y - p3.Y) - (p2.Y - p1.Y)*(p1.X - p3.X)/den;
-		// check if they are in the interval <0,1>
-		// if so, the line segments intersect, otherwise lines intersect
-		if(s >= 0 && s <= 1 && t >= 0 && t <= 1) {
-			p.X = p1.X + s*(p2.X - p1.X);
-			p.Y = p1.Y + s*(p2.Y - p1.Y);
-			return true;
-		} else
-			return false;
-	}
-	
-	void clipScan(ClipperLib::Polygons & scan_n, const ClipperLib::Polygons & scan, const ClipperLib::Polygons & map){
-		for (unsigned int i = 0; i < scan[0].size(); i++) {
+		//third - if it spreads over the end, continue searching fron the beginning
 			
+			bool spreaded = (end == s-1 && p[0].inputEdge) ? true : false;
+			if(spreaded) {
+				end = 0;
+				len += euclideanDistance(p[s-1].X,p[s-1].Y,p[0].X,p[0].Y); 
+				while(p[end+1].inputEdge)	{
+					end++;
+					len += euclideanDistance(p[end].X,p[end].Y,p[end-1].X,p[end-1].Y); 
+				}
+				if(len < minSize) {
+					p[start].outputEdge = false;
+					p[end].inputEdge = false;
+					for (int n = start+1; n < s; n++) {
+						p[n].inputEdge = false;
+						p[n].outputEdge = false;
+					}
+					for (int n = 0; n < end; n++) {
+						p[n].inputEdge = false;
+						p[n].outputEdge = false;
+					}
+				}	
+				break;
+			}
+			else	{	
+				if(len < minSize) {
+					p[start].outputEdge = false;
+					p[end].inputEdge = false;
+					for (int n = start+1; n < end; n++) {
+						p[n].inputEdge = false;
+						p[n].outputEdge = false;
+					}
+				}	
+				i = end + 1;
+			}
 		}
 	}
 	
-	/*
-	void getIntersectPoint(ClipperLib::IntPoint & p, const ClipperLib::IntPoint & p1, const ClipperLib::IntPoint & p2, const ClipperLib::IntPoint & p3, const ClipperLib::IntPoint & p4){
-		p.X = ((p1.X*p2.Y - p1.Y*p2.X)*(p3.X - p4.X) - (p1.X - p2.X)*(p3.X*p4.Y - p3.Y*p4.X))/((p1.X - p2.X)*(p3.Y - p4.Y) - (p1.Y - p2.Y)*(p3.X - p4.X));
-		p.Y = ((p1.X*p2.Y - p1.Y*p2.X)*(p3.Y - p4.Y) - (p1.Y - p2.Y)*(p3.X*p4.Y - p3.Y*p4.X))/((p1.X - p2.X)*(p3.Y - p4.Y) - (p1.Y - p2.Y)*(p3.X - p4.X));
+	void checkMap(ClipperLib::ExPolygons & obj) {		
+		for (unsigned int i = 0; i < obj.size(); i++) {
+			eliminateFalseFrontiers(obj[i].outer);
+			eliminateCoincidentFrontiers(obj[i].outer);
+			for(unsigned j = 0; j < obj[i].holes.size(); j++) {
+				eliminateFalseFrontiers(obj[i].holes[j]);
+				eliminateCoincidentFrontiers(obj[i].holes[j]);
+			}
+		}
 	}
-	*/
+	
+	void simplifyMap(ClipperLib::ExPolygons & obj) {
+		int count = 0;
+		for (unsigned int i = 0; i < obj.size(); i++) {
+		//outer polygon
+		double lenA,lenB,lenAB;
+		for (unsigned int j = 1; j < obj[i].outer.size()-1; j++) {
+				if(obj[i].outer[j].inputEdge == obj[i].outer[j].outputEdge){
+					lenA = euclideanDistance(obj[i].outer[j].X,obj[i].outer[j].Y,obj[i].outer[j-1].X,obj[i].outer[j-1].Y);
+					lenB = euclideanDistance(obj[i].outer[j].X,obj[i].outer[j].Y,obj[i].outer[j+1].X,obj[i].outer[j+1].Y);
+					lenAB = euclideanDistance(obj[i].outer[j+1].X,obj[i].outer[j+1].Y,obj[i].outer[j-1].X,obj[i].outer[j-1].Y);
+					/* reasonable range of the divisor on the right side is between 10 (coarse polygons) and 10000 (fine polygons) */
+					if(lenA + lenB - lenAB < 0.3) {
+						obj[i].outer[j].intersectPt = true;	//mark for remove
+						count++;	
+					}
+				}	
+			}
+		}
+	}
+
 private:
-	float orientation;
-	float posX;
-	float posY;
+	SPosition pos;
 	
 	void init() {
 		subs_.push_back(node_handle_.subscribe("base_scan", 1, &Listener::laserCallback,this));
@@ -93,7 +160,7 @@ private:
 	double euclideanDistance(const double x1, const double y1, const double x2, const double y2){
 		return sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1));
 	}
-	
+
 	/**
 	 * Ramer–Douglas–Peucker algorithm for reducing the number of points in a curve (polygon).
 	 */
@@ -115,7 +182,7 @@ private:
 			RDP(scan, epsilon, idx, endIdx);
 		}
 	}
-	
+		
 	void tfScanToPoints(const sensor_msgs::LaserScan msg, std::vector<ClipperLib::IntPoint> & scan, double angle_min, double angle_max, const double angle_offset)
 	{
 		if(msg.angle_min > angle_min)
@@ -125,29 +192,29 @@ private:
 		double angle = msg.angle_max;
 		double x,y;
 		for(int i = msg.ranges.size()-1; i>=0;i--){
-			if(angle < angle_min || angle > angle_max) {
+	/*  		if(angle < angle_min || angle > angle_max) {
 				angle -= msg.angle_increment;
 				continue;
-			}
+			}*/
 			// in centimeters	
 			double r = msg.ranges[i]*CM;
-			if(msg.ranges[i] == LASER_RANGE)
-				r-= MAX_RANGE_CORR;
+			if(abs(msg.ranges[i] - LASER_RANGE) < 0.1)
+				r -= MAX_RANGE_CORR;
 			y = r*sin(angle+angle_offset);
 			x = r*cos(angle+angle_offset);
 			bool frontierIn = false;
 			bool frontierOut = false;
 			if(scan.size() > 0) {
-				if(msg.ranges[i] == LASER_RANGE && msg.ranges[i+1] == LASER_RANGE) {
+				if(abs(msg.ranges[i] - LASER_RANGE) < 0.1 && abs(msg.ranges[i+1] - LASER_RANGE) < 0.1) {
 					frontierIn = true;
 					scan[scan.size()-1].outputEdge = true;
 				}
 			}
-			scan.push_back(ClipperLib::IntPoint(posX+x,posY+y,frontierIn,frontierOut));
+			scan.push_back(ClipperLib::IntPoint(pos.x+x,pos.y+y,frontierIn,frontierOut));
 			angle -= msg.angle_increment;
 		}
 	}
-	
+
 	void processScan(std::vector<ClipperLib::IntPoint> & scan)
 	{
 		scan[0].intersectPt = true;
@@ -155,8 +222,8 @@ private:
 		scan[scan.size()-1].intersectPt = true;
 		scan[scan.size()-1].outputEdge = true;
 		unsigned int idx = 0; 
-		double x = posX;
-		double y = posY;
+		double x = pos.x;
+		double y = pos.y;
 		for(unsigned int i = 0; i<scan.size()-1;i++) {
 			if(abs(euclideanDistance(scan[i].X,scan[i].Y,x,y) - euclideanDistance(scan[i+1].X,scan[i+1].Y,x,y)) > FRONTIER_RANGE) {
 				RDP(scan, EPSILON, idx, i);
@@ -171,7 +238,7 @@ private:
 				RDP(scan, EPSILON, idx, scan.size()-1);
 		}
 		//adding position of robot to polygon
-		scan.push_back(ClipperLib::IntPoint(posX,posY,true,true));
+		scan.push_back(ClipperLib::IntPoint(pos.x,pos.y,true,true));
 		scan[scan.size()-1].intersectPt = true;
 	}
 	
@@ -192,7 +259,7 @@ private:
 			}
 		}	
 	/*	ROS_INFO("new scan");
-		ROS_INFO("robot position %f %f",posX,posY);
+		ROS_INFO("robot position %f %f",pos.x,pos.y);
 		for(unsigned int i = 0; i<clip[0].size();i++) {
 			ROS_INFO("%lld %lld %d %d", CLIP(i).X,CLIP(i).Y,CLIP(i).inputEdge,CLIP(i).outputEdge);
 		}*/	
@@ -202,44 +269,19 @@ private:
 	{
 		project::GetOdometry srv;
 		if(odom_client.call(srv)){
-			posX = srv.response.x;
-			posY = srv.response.y;
-			orientation = srv.response.angle;
+			pos.x = srv.response.x;
+			pos.y = srv.response.y;
+			pos.yaw = srv.response.angle;
 		}else
 			ROS_ERROR("Failed to call service get_robot_state. Position is not actual!");
 		std::vector<ClipperLib::IntPoint> scan;
-		tfScanToPoints(msg, scan, MIN_ANGLE, MAX_ANGLE, orientation);
+		tfScanToPoints(msg, scan, MIN_ANGLE, MAX_ANGLE, pos.yaw);
 		processScan(scan);
 		selectFrontiers(scan);
 	}
 };
 
-void visualizeVD(ros::Publisher & marker_pub, in_segs * segs, unsigned int size) {
-	visualization_msgs::Marker line_list;
-	line_list.header.frame_id = "/odom";
-	line_list.ns = "VD";
-	line_list.lifetime = ros::Duration(3);
-	line_list.action = visualization_msgs::Marker::ADD;
-	line_list.pose.orientation.w = 1.0;
-	line_list.id = 0;
-	line_list.type = visualization_msgs::Marker::LINE_LIST;
-	line_list.scale.x = 0.1;
-	line_list.color.g = 1.0f;
-	line_list.color.a = 1.0;
-	//adding point only for vizualization
-	geometry_msgs::Point p;
-	for(unsigned int i = 0; i<size;i++){
-		p.x = segs[i].x1/CM;
-		p.y = segs[i].y1/CM;
-		line_list.points.push_back(p);
-		p.x = segs[i].x2/CM;
-		p.y = segs[i].y2/CM;
-		line_list.points.push_back(p);
-	}
-	marker_pub.publish(line_list);
-}
-
-void visualizeMap(ros::Publisher & marker_pub, ClipperLib::Polygons & obj, const int id) {
+void visualizeMap(ros::Publisher & marker_pub, ClipperLib::Polygon & obj, const int id) {
 	visualization_msgs::Marker line_strip, line_list, text;
 	line_strip.header.frame_id = "/odom";
 //	line_strip.header.stamp = ros::Time::now();
@@ -249,17 +291,17 @@ void visualizeMap(ros::Publisher & marker_pub, ClipperLib::Polygons & obj, const
 	line_strip.pose.orientation.w = 1.0;
 	line_strip.id = id;
 	line_strip.type = visualization_msgs::Marker::LINE_LIST;
-	line_strip.scale.x = 0.5;
+	line_strip.scale.x = poly2vd::VdPublisher::RVIZ_EDGES_WIDTH;
 	line_strip.color.r = 1.0;
 	line_strip.color.a = 1.0;
 	geometry_msgs::Point p1;
 	geometry_msgs::Point p2;
-	for(unsigned int i = 0; i<obj[id].size()-1;i++) {
-		p1.x = obj[id][i].X/CM;
-		p1.y = obj[id][i].Y/CM;
-		p2.x = obj[id][i+1].X/CM;
-		p2.y = obj[id][i+1].Y/CM;
-		if(obj[id][i].outputEdge && obj[id][i+1].inputEdge) {
+	for(unsigned int i = 0; i<obj.size()-1;i++) {
+		p1.x = obj[i].X/CM;
+		p1.y = obj[i].Y/CM;
+		p2.x = obj[i+1].X/CM;
+		p2.y = obj[i+1].Y/CM;
+		if(obj[i].outputEdge && obj[i+1].inputEdge) {
 			line_list.points.push_back(p1);
 			line_list.points.push_back(p2);
 		}
@@ -269,11 +311,11 @@ void visualizeMap(ros::Publisher & marker_pub, ClipperLib::Polygons & obj, const
 		}
 	}
 	//adding point to join last point with robot pose
-	p1.x = obj[id][obj[id].size()-1].X/CM;
-	p1.y = obj[id][obj[id].size()-1].Y/CM;
-	p2.x = obj[id][0].X/CM;
-	p2.y = obj[id][0].Y/CM;
-	if(obj[id][obj[id].size()-1].outputEdge && obj[id][0].inputEdge) {
+	p1.x = obj[obj.size()-1].X/CM;
+	p1.y = obj[obj.size()-1].Y/CM;
+	p2.x = obj[0].X/CM;
+	p2.y = obj[0].Y/CM;
+	if(obj[obj.size()-1].outputEdge && obj[0].inputEdge) {
 		line_list.points.push_back(p1);
 		line_list.points.push_back(p2);
 	}
@@ -288,7 +330,7 @@ void visualizeMap(ros::Publisher & marker_pub, ClipperLib::Polygons & obj, const
 	line_list.pose.orientation.w = 1.0;
 	line_list.id = id;
 	line_list.type = visualization_msgs::Marker::LINE_LIST;
-	line_list.scale.x = 0.5;
+	line_list.scale.x = poly2vd::VdPublisher::RVIZ_EDGES_WIDTH;
 	line_list.color.b = 1.0f;
 	line_list.color.a = 1.0;
 	
@@ -296,65 +338,7 @@ void visualizeMap(ros::Publisher & marker_pub, ClipperLib::Polygons & obj, const
 	marker_pub.publish(line_list);
 }
 
-int poly2VD(in_segs * segs, in_segs * vd, unsigned int size) {
-	boolean new_input = true;
-	API_InitializeProgram();
-	API_ArrayInput(0,NULL, size, segs,0,NULL, &new_input);
-
-	char ofile[]="";
-	API_ComputeVD(
-		false,    /* save input data to file?     */
-		true,     /* first call for this data?    */
-		false,    /* don't measure time           */
-		3,        /* scale factor for bounding box; default: 1 */
-		0,        /* sampling factor              */
-		0,        /* approximation factor for circular arcs */
-		ofile,    /* name of the output file;     */
-		false,    /* check for duplicate segs prior to the computation?     */
-		false,    /* compute an approximate VD for circular arcs and        */
-				  /*  use it for subsequent operations (such as offsetting) */
-		0.0,      /* approximation threshold for  */
-				  /* circular arcs; see           */
-				  /* see ApproxArcsBounded() in   */
-				  /* in approx.cc; default = 0.0  */
-		0.0,      /* approximation threshold for  */
-				  /* circular arcs; see           */
-				  /* see ApproxArcsBounded() in   */
-				  /* in approx.cc; default = 0.0  */
-		false,    /* shall we use my heuristic    */
-				  /* approximation threshold?     */
-		false,    /* compute VD/DT of points only */
-		false,    /* output point VD/DT           */
-		ofile,    /* output file for point VD/DT  */
-		false);   /* shall we clean up the data prior to the VD computation? */
-
-	API_ComputeWMAT(
-		false,    /* shall we use my heuristic    */
-				  /* for finding nice WMAT        */
-				  /* thresholds?                  */
-		0.0,      /* angle threshold for WMAT     */
-				  /* computation;in radians, out  */
-				  /* of the interval [0, pi]      */
-		0.0,      /* distance threshold for WMAT  */
-				  /* computation                  */
-        false,    /* do you want to time the      */
-				  /* computation?                 */
-        false,    /* true if WMAT is to be        */
-				  /* computed only on the left    */
-				  /* side of input segments       */
-        false);   /* true if WMAT is to be        */
-				  /* computed only on the right   */
-				  /* side of input segments       */
-
-	int num = API_getVD();
-	ROS_INFO("Number of edges: %d", num);
-	API_getVDedges(vd);
-	API_ResetAll();
-	API_TerminateProgram();
-	return num;
-}				/* ----------  end of function poly2VD -------- */
-
-void convertPoly2Segs(ClipperLib::Polygons & poly, in_segs * s, unsigned int size) {
+void convertPolyInCentimeters2SegsInMeters(ClipperLib::ExPolygons & poly, in_segs * s, unsigned int size) {
 	in_segs init;
 	init.x1 = 0.0;
 	init.x2 = 0.0;
@@ -364,27 +348,137 @@ void convertPoly2Segs(ClipperLib::Polygons & poly, in_segs * s, unsigned int siz
 		s[i] = init;
 	unsigned int k = 0;
 	for(unsigned int n = 0; n < poly.size(); n++)	{
-		unsigned int sz = poly[n].size();
+		unsigned int sz = poly[n].outer.size();
 		for(unsigned int i = 0; i < sz - 1; i++)	{
-			s[k].x1 = (double)poly[n][i].X;
-			s[k].y1 = (double)poly[n][i].Y;
-			s[k].x2 = (double)poly[n][i+1].X;
-			s[k].y2 = (double)poly[n][i+1].Y;
+			// endpoint coords
+			s[k].x1 = (double)poly[n].outer[i].X/CM;
+			s[k].y1 = (double)poly[n].outer[i].Y/CM;
+			s[k].x2 = (double)poly[n].outer[i+1].X/CM;
+			s[k].y2 = (double)poly[n].outer[i+1].Y/CM;
+			// is it a frontier
+			s[k].ext_appl.isFrontier = (poly[n].outer[i].outputEdge && poly[n].outer[i+1].inputEdge);
+			s[k].ext_appl.isOuter = true;
 			k++;
 		}
-		s[k].x1 = (double)poly[n][sz-1].X;
-		s[k].y1 = (double)poly[n][sz-1].Y;
-		s[k].x2 = (double)poly[n][0].X;
-		s[k].y2 = (double)poly[n][0].Y;
+		// endpoint coords
+		s[k].x1 = (double)poly[n].outer[sz-1].X/CM;
+		s[k].y1 = (double)poly[n].outer[sz-1].Y/CM;
+		s[k].x2 = (double)poly[n].outer[0].X/CM;
+		s[k].y2 = (double)poly[n].outer[0].Y/CM;
+		// is it a frontier
+		s[k].ext_appl.isFrontier = (poly[n].outer[sz-1].outputEdge && poly[n].outer[0].inputEdge);
+		s[k].ext_appl.isOuter = true;
 		k++;
+
+		for(unsigned int m = 0; m < poly[n].holes.size(); m++)	{	
+			unsigned int sz = poly[n].holes[m].size();
+			for(unsigned int i = 0; i < sz - 1; i++)	{
+				// endpoint coords
+				s[k].x1 = (double)poly[n].holes[m][i].X/CM;
+				s[k].y1 = (double)poly[n].holes[m][i].Y/CM;
+				s[k].x2 = (double)poly[n].holes[m][i+1].X/CM;
+				s[k].y2 = (double)poly[n].holes[m][i+1].Y/CM;
+				// is it a frontier
+				s[k].ext_appl.isFrontier = (poly[n].holes[m][i].outputEdge && poly[n].holes[m][i+1].inputEdge);
+				s[k].ext_appl.isOuter = false;
+				k++;
+			}
+			// endpoint coords
+			s[k].x1 = (double)poly[n].holes[m][sz-1].X/CM;
+			s[k].y1 = (double)poly[n].holes[m][sz-1].Y/CM;
+			s[k].x2 = (double)poly[n].holes[m][0].X/CM;
+			s[k].y2 = (double)poly[n].holes[m][0].Y/CM;
+			// is it a frontier
+			s[k].ext_appl.isFrontier = (poly[n].holes[m][sz-1].outputEdge && poly[n].holes[m][0].inputEdge);
+			s[k].ext_appl.isOuter = false;
+			k++;
+		}
 	}	
 }
+
+/* ************* Terminal handling and DOT export ******************** */
+
+int kfd = 0; // stdin
+struct termios cooked, raw;
+
+void terminal_setup()
+{
+	// get the console in raw mode                                                              
+	tcgetattr(kfd, &cooked);
+	memcpy(&raw, &cooked, sizeof(struct termios));
+	raw.c_lflag &=~ (ICANON | ECHO);
+	// Setting a new line, then end of file                         
+	raw.c_cc[VEOL] = 1;
+	raw.c_cc[VEOF] = 2;
+	tcsetattr(kfd, TCSANOW, &raw);
+	// want non-blocking input; FIXME: check efficiency of this solution
+	int flags = fcntl(kfd, F_GETFL);
+	flags |= O_NONBLOCK;
+	fcntl(kfd, F_SETFL, flags);
+}
+
+void terminal_cleanup(int sig)
+{
+	tcsetattr(kfd, TCSANOW, &cooked);
+	ros::shutdown();
+}
+
+void quit(int status)
+{
+	terminal_cleanup(0);
+	exit(status);
+}
+
+#define EXPORT_KEY_LOWERCASE		'e'
+#define EXPORT_KEY_UPPERCASE		'E'
+#define DOT_FILE_PATH_AND_PREFIX	"/tmp/vd-"
+#define DOT_FILE_SUFFIX				".dot"
+
+/* If EXPORT_KEY_* was pressed, this function performs the export
+ * of resulting Voronoi diagram into DOT file */
+void handleDotExport(poly2vd::Poly2VdConverter &poly2vd)
+{
+	char ch;
+	// FIXME: check efficiency of this solution
+	// (the call to read and checking for error)
+	if (read(kfd, &ch, 1) < 0) {
+		if (errno == EAGAIN) {
+			ch = 0;
+		} else {
+			perror("read():");
+			quit(-1);
+		}
+	}
+
+	static int exportCounter = 0;
+	if (ch == EXPORT_KEY_LOWERCASE || ch == EXPORT_KEY_UPPERCASE) {
+		std::stringstream fileName;
+		fileName << DOT_FILE_PATH_AND_PREFIX << std::setfill('0') << std::setw(2) << std::right
+			<< exportCounter++ << DOT_FILE_SUFFIX;
+		poly2vd.exportVdToDot(fileName.str(), false, false);
+		std::cout << "DOT description of the Voronoi diagram saved to"
+			<< fileName.str() << std::endl;
+	}
+}
+
+/* **************************** main() ******************************* */
 
 int main(int argc, char **argv) {
 	ros::init(argc, argv, "listener");
 	ros::NodeHandle n;
-	ros::Publisher marker_pub = n.advertise<visualization_msgs::Marker>("visualization_marker", 1);
+	ros::Publisher marker_pub = n.advertise<visualization_msgs::Marker>("visualization_marker", 10);
 	Listener l(n);
+
+	// Setup the terminal in order to be able to handle keypresses
+	terminal_setup();
+	signal(SIGINT,terminal_cleanup);
+	// Let the user know of the exportToDot feature
+	std::cout << "Pressing '" << EXPORT_KEY_LOWERCASE << "' produces DOT files "
+		<< DOT_FILE_PATH_AND_PREFIX << "XX" << DOT_FILE_SUFFIX << " for graphviz.  "
+		<< "This is however " << std::endl << "an experimental feature and resulting files are "
+		<< "too big to be processed by graphviz." << std::endl << std::endl;
+
+	poly2vd::Poly2VdConverter poly2vd;	// Vroni based polygons -> VD converter
 	
 	ros::Rate r(0.5); // hz
 	while (ros::ok()) {
@@ -394,41 +488,62 @@ int main(int argc, char **argv) {
 		ClipperLib::Clipper c;
 		c.AddPolygons(subj, ClipperLib::ptSubject);
 		c.AddPolygons(clip, ClipperLib::ptClip);
-		c.Execute(ClipperLib::ctUnion, solution, ClipperLib::pftNonZero);
-		for(unsigned int i = 0;i<solution.size();i++){
-			visualizeMap(marker_pub,solution,i);
-		}
+		c.Execute(ClipperLib::ctUnion, solution, ClipperLib::pftNonZero, ClipperLib::pftNonZero, ClipperLib::pftOn);
 		clip[0].clear();
-		l.checkMap(solution);
-
-		// computation of VD by VRONI 
-		unsigned int size = 0;
-		for(unsigned int i = 0; i < solution.size(); i++)
-			size += solution[i].size();
-		
-		in_segs segs[size];
-		in_segs VD[1000];
-		int s = 0;
-		convertPoly2Segs(solution, segs, size);
-		if(size > 3)
-		s = poly2VD(segs, VD, size);
-
-		/*
-		ROS_INFO("Polygon structure after conversion");
-		for(unsigned int i = 0; i < size; i++) {
-			ROS_INFO("x1: %f",segs[i].x1); 
-			ROS_INFO("y1: %f",segs[i].y1); 
-			ROS_INFO("x2: %f",segs[i].x2); 
-			ROS_INFO("y2: %f",segs[i].y2); 
-			ROS_INFO("-----------"); 
+		unsigned int idx = 0;
+		for(unsigned int i = 0;i<solution.size();i++){
+			visualizeMap(marker_pub,solution[i].outer,++idx);
+			for (unsigned int j = 0; j < solution[i].holes.size(); j++) {
+				visualizeMap(marker_pub,solution[i].holes[j],++idx);
+			}	
 		}
-		*/
-		visualizeVD(marker_pub,VD,s);
-		// END of VRONI
-		ROS_INFO("loop");
-		// cant be done so
-		//	l.simplifyMap(solution);
-			subj = solution;
+
+		// Compute and publish VD / WMAT
+		unsigned int size = 0; // polygonal segments count
+		for(unsigned int i = 0; i < solution.size(); i++) {
+			size += solution[i].outer.size();
+			for (unsigned int j = 0; j < solution[i].holes.size(); j++) {
+				size += solution[i].holes[j].size();
+			}	
+		}
+
+		if (size > 3) {
+			// convert polygons to segments
+			in_segs segs[size];
+			convertPolyInCentimeters2SegsInMeters(solution, segs, size);
+			// pass segments to Vroni
+			poly2vd.prepareNewInput(segs, size);
+			// let the Vroni compute the VD
+			poly2vd.convert();
+			// publish results
+			SPosition p = l.getPosition();
+			coord start;
+			start.x = p.x / CM;
+			start.y = p.y / CM;
+			// poly2vd.publish_root(marker_pub, start, "/odom", 2.0);
+			poly2vd.doTheSearch(start, marker_pub, "/odom", 2.5);
+		}
+
+		// if key pressed, export Voronoi diagram to DOT file in /tmp/
+		handleDotExport(poly2vd);
+
+		l.checkMap(solution);
+		l.simplifyMap(solution);
+
+		subj.clear();
+		for (unsigned int i = 0; i < solution.size(); i++) {
+			subj.push_back(solution[i].outer);
+			//just for test
+			subj[i].clear();
+			for (unsigned int j = 0; j < solution[i].outer.size(); j++) {
+				if(!solution[i].outer[j].intersectPt)
+				subj[i].push_back(solution[i].outer[j]);
+			}	
+			for (unsigned int j = 0; j < solution[i].holes.size(); j++) {
+				subj.push_back(solution[i].holes[j]);
+			}	
+		}
+		
 		ros::spinOnce();
 		r.sleep();
 	}

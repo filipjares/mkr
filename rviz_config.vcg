@@ -1,0 +1,47 @@
+Background\ ColorR=0
+Background\ ColorG=0
+Background\ ColorB=0
+Fixed\ Frame=/odom
+Target\ Frame=/odom
+Map.Alpha=0.7
+Map.Draw\ Behind=0
+Map.Enabled=0
+Map.Topic=
+Marker.Enabled=1
+Marker.Marker\ Topic=visualization_marker
+Robot\ Model.Alpha=1
+Robot\ Model.Collision\ Enabled=0
+Robot\ Model.Enabled=0
+Robot\ Model.Robot\ Description=robot_description
+Robot\ Model.TF\ Prefix=
+Robot\ Model.Update\ Interval=0
+Robot\ Model.Visual\ Enabled=1
+TF.All\ Enabled=1
+TF.Enabled=0
+TF.Frame\ Timeout=15
+TF.Marker\ Scale=1
+TF.Show\ Arrows=1
+TF.Show\ Axes=1
+TF.Show\ Names=1
+TF.Update\ Interval=0.05
+Tool\ 2D\ Nav\ GoalTopic=goal
+Tool\ 2D\ Pose\ EstimateTopic=initialpose
+Camera\ Type=rviz::OrbitViewController
+Camera\ Config=0.001 0.00080204 153.891 2.20939 -0.00220099 -10.9992
+Property\ Grid\ State=selection=Marker.Enabled;expanded=Robot Model.Enabled.Robot Model.StatusTopStatus,Robot Model.Enabled.Robot: Robot ModelLinks,TF.Enabled.TF.StatusTopStatus,TF.Enabled.TF.Tree,Marker.Enabled,Marker.Enabled.Marker.Namespaces;scrollpos=0,0;splitterpos=150,301;ispageselected=1
+[Display0]
+Name=Robot Model
+Package=rviz
+ClassName=rviz::RobotModelDisplay
+[Display1]
+Name=Map
+Package=rviz
+ClassName=rviz::MapDisplay
+[Display2]
+Name=TF
+Package=rviz
+ClassName=rviz::TFDisplay
+[Display3]
+Name=Marker
+Package=rviz
+ClassName=rviz::MarkerDisplay

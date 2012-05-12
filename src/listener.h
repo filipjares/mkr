@@ -15,14 +15,12 @@
 #include <cmath>
 #include <iostream>
 #include "consts.h"
-
-#define MAT
-#define HAVE_BOOL
-
-#include "dvi_graphics_header.h"
-#include "ext_appl_inout.h"
+#include "types.h"
 
 #define CLIP(i) clip[0][i]
+#define OUTER(i) obj[0].outer[i]
+#define HOLE(i,j) obj[0].holes[i][j]
+
 #define TOLERANCE (1.0e-4)
 #define NEAR_ZERO(val) (((val) > -TOLERANCE) && ((val) < TOLERANCE))
 #define NEAR_EQUAL(a, b) NEAR_ZERO((a) - (b))
@@ -35,7 +33,9 @@ std::string toString(T val)
     return ss.str();
 }
 
-ClipperLib::Polygons subj(1), clip(1), clip_tmp(1), solution;
+ClipperLib::Polygons subj(1), clip(1), clip_tmp(1);
+ClipperLib::ExPolygons solution;
+
 
 #endif
 

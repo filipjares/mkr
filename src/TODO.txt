@@ -1,0 +1,76 @@
+
+===============================================================================
+				TODO LISTS
+===============================================================================
+
+CRITICAL NODE DEFINITION
+========================
+
+- should the critical node really have strictly minimal clearance radius
+  compared to its neighbours?
+- how to define what does it mean that critical nodes "lead from known to unknown areas"?
+
+
+TESTS to write
+==============
+
+VRONI's representation of nodes of degree higher than 3
+-------------------------------------------------------
+
+- does exist node having only single edge?
+- does exist node having multiple 
+
+
+OTHER THINGS TO CHECK, DISCUSS AND IMPROVE
+==========================================
+
+- Is it possible to search for the root node in a more efficient and correct way?
+- frontiers in input segments for Vroni, frontier flag in Polygon segments:
+  different definition of segment being frontier in "outer" segments and "holes"?
+  Note by Tomáš: this is almost certainly misleading idea from me :) I'll check it.
+- (create a class to store all the poly2vd's output data in it (a good choice would be the
+  winged edge data structure); add method returning objects of this class to Poly2VdConverter's
+  interface)
+- All the functions in VroniUtils.hpp are static. This means, I suppose, that there are as many
+  instances as there are modules (*.cpp files) that include VroniUtils.hpp. Is there some
+  better solution?
+
+
+TODO
+====
+
+- use euclidean lengths and when setting "pointers" to previous nodes, store the shortest path
+- along with input segments and points, publish their ids as text markers (for debugging
+  purposes)
+- along with output (WMAT) edges, publish their (both left and right) source sites' types and
+  ids (for debugging purposes)
+- create some (user) interface enabling to set up Poly2VdConverter's internal parameters
+  "online"
+	- use rosparam
+	- Parameters that could be tuned:
+		- COMPARISON_RATIO (currently defined in VroniUtils.hpp)
+		- switch the "experimental node markup" on/off (i.e. determine whether
+		  experimentallyMarkTheNode() should be called)
+- rename project to something better than `project'
+
+FIXED ISSUES
+============
+
+- Issue: It seems that VD data and input data do not fit exactly.  VD edges seem to hang over
+  input segments.
+
+  Hypothesis: Is it possible that listener is providing different polygons to ROS (for
+  visualization) and different polygons as input for Vroni?
+
+  Answer: YES it was the case. The reason was that the CM macro, used in listener.cpp to
+  convert centimeters to meters, was defined as an integer. Therefore undesirable rounding
+  occured.
+
+
+QUESTIONS TO ASK (C/C++ related)
+================================
+
+- What is the difference between primitive public static const member and non-primitive public
+  static const member? Why do I have to define Color constants outside the Color class
+  body? It is possible do define VdPublisher::RVIZ_EDGES_WIDTH inside the VdPublisher
+  class body...

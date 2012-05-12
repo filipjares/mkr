@@ -53,10 +53,10 @@ interval_sim 100  # simulation timestep in milliseconds
 
 window
 ( 
-  size [ 745.000 448.000 ] 
-  center [ -33.000 -3.000 ]
+  size [ 745.000 745.000 ] 
+  center [ -3.000 -3.000 ]
   rotate [ 0.000 -1.560 ]
-  scale 7.806
+  scale 5.806
 
   show_data 1
 )
@@ -65,8 +65,8 @@ window
 floorplan
 ( 
   name "willow"
-  bitmap "my_office2.pgm"
-  size [100.0 100.0 0.5]
+  bitmap "big_rooms.pgm"
+  size [200.0 200.0 0.5]
   pose [ 0.000 0.000 0 0.000 ]
 )
 
@@ -77,4 +77,4 @@ name "era"
 color "blue" 
 #ctrl "wander"
 )
-block( pose [ -10.924 20.020 0 180.000 ] color "red")
+#block( pose [ -10.924 20.020 0 180.000 ] color "red")

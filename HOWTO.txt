@@ -1,0 +1,108 @@
+
+ABOUT THIS FILE
+===============
+
+This file contains a brief description of the steps to be taken in order to
+build and run the project (i.e. to run a demonstration of the algorithm that
+performs the search for critical points in a given map.  The demonstration
+binary name is `listener' and needs running roscore and uses Rviz for
+visualization).
+
+
+DEPENDENCIES
+============
+
+To clone the project you will need git. To build and run it you will need
+also CMake and ROS.
+
+
+INITIAL CONFIGURATION OF THE VRONI_6.0 SUBMODULE (only has to be done once)
+===========================================================================
+
+Excuse and explanation:  We are not allowed to publish the (modified) Vroni
+and therefore we mantain its code in separate repository. The VRONI_6.0/
+directory forms a git submodule of this "superproject" MKR repository. 
+
+- Clone this repository (you have apparently already done that).
+    - Note that in the freshly cloned repository, the directory
+      VRONI_6.0/ is empty
+- Setup the VRONI_6.0 git submodule. The procedure is as follows:
+    - Run the following command from the repository root.
+        git submodule init
+      It transfers the information stored in the .gitmodules file into
+      the [submodule "VRONI_6.0"] record in the .git/config file; This
+      leaves the VRONI_6.0/ directory untouched.
+    - in case you need to use a VRONI_6.0 repository located elswhere than
+      in the location specified by the .gitmodules file (that is in fact
+      very likely), update the reference in .git/config.
+
+
+UPDATE THE VRONI_6.0 SUBMODULE CONTENTS
+=======================================
+
+(This has to be done every time you checkout a different branch such that it
+refers to different submodule commit.)
+
+- Update the VRONI_6.0/ directory contents (submodule) by running the
+  following command.
+                git submodule update
+  Now, the VRONI_6.0/ directory should have been populated with the right
+  content.
+
+BUILD THE CODE
+==============
+
+The Vroni library and the project itself are built separately (we don't know
+yet how to set up the CMake in order to build them together)
+
+- You need to build the VRONI_6.0 submodule first. You can do that by
+  following the instructions in VRONI_6.0/INSTALL.txt. You have to build
+  the Vroni library in the first place. In short:
+                cd VRONI_6.0/
+                mkdir build
+                cd build
+                cmake -D WITH_LIB=ON -D CMAKE_BUILD_TYPE=Release ..
+                make
+  Along with `WITH_LIB=ON', you may consider using these options too.
+                -D WITH_VERBOSE=1
+                -D WITH_EXE=ON      # build Vroni as standalone app
+                -D WITH_MIC=ON
+                -D CMAKE_BUILD_TYPE=Debug ..
+- Later, in order to run our code, you will need to ensure that the libvroni.so
+  dynamic library you created in the previous step is present in the path of
+  your operating systems' dynamic loader. (Under GNU/Linux, see `man ld.so'. You
+  can for example add the directory containing libvroni.so to the contents of
+  the LD_LIBRARY_PATH environment variable.)
+- In order to build our code, you have to have working ROS environemnt on your
+  system. Add the directory containing this project's contents to the
+  ROS_PACKAGE_PATH environment variable.  For example if you cloned this
+  repository into ~/work/project directory, you may add the following line
+  into your ~/.bashrc file in order to do this.
+                export ROS_PACKAGE_PATH=~/work:$ROS_PACKAGE_PATH
+- To build the code, run the rosmake command in the root of the repository.
+                rosmake
+  This produces the binaries in the bin/ directory. NOTE: In order for this
+  to be successful, the directory that contains this repository has to be
+  named accordingly to the name of the package (mentioned in manifest.xml
+  and elsewhere) which is (silly, I know) just `project'.
+
+RUN THE CODE
+============
+
+In order to run the code (listener binary) together with roscore, Rviz and
+Stage, you have to run
+                roslaunch project node.launch 
+
+
+RUNNING STANDALONE VRONI
+========================
+
+If you have built Vroni using the WITH_EXE parameter, you may try to run
+Vroni as standalone application:
+
+    <path-to>/vroni --file <path-to-input-file> --wmat --OGL --full
+
+Then press the `v' key and see what happens. Help will be printed to the
+console if you pres the `h' key. Among others you may use .dxf format as
+the input. Some such files can be found in util/fiddling_with_vroni/data/.
+

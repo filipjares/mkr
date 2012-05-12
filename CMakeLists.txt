@@ -7,7 +7,7 @@ include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 #  Release        : w/o debug symbols, w/ optimization
 #  RelWithDebInfo : w/ debug symbols, w/ optimization
 #  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-#set(ROS_BUILD_TYPE RelWithDebInfo)
+set(ROS_BUILD_TYPE Debug)
 
 rosbuild_init()
 
@@ -29,9 +29,12 @@ rosbuild_gensrv()
 #rosbuild_add_executable(example examples/example.cpp)
 #target_link_libraries(example ${PROJECT_NAME})
 
-rosbuild_add_executable(listener src/listener.cpp)
-rosbuild_add_executable(listener src/clipper.cpp)
+rosbuild_add_executable(listener src/listener.cpp src/clipper.cpp src/poly2vd.cpp src/Color.cpp src/VroniUtils.cpp)
 rosbuild_add_executable(odometry src/odometry.cpp)
+rosbuild_add_executable(poly2vd src/poly2vd.cpp src/Color.cpp src/VroniUtils.cpp)
+rosbuild_add_compile_flags(poly2vd -DPOLY2VD_STANDALONE) # poly2vd's own main()
+
 
 include_directories(VRONI_6.0/src)
 target_link_libraries(listener ${PROJECT_SOURCE_DIR}/VRONI_6.0/build/src/libvroni.so)
+target_link_libraries(poly2vd ${PROJECT_SOURCE_DIR}/VRONI_6.0/build/src/libvroni.so)
