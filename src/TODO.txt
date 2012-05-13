@@ -52,6 +52,8 @@ TODO
 		- switch the "experimental node markup" on/off (i.e. determine whether
 		  experimentallyMarkTheNode() should be called)
 - rename project to something better than `project'
+- rename poly2vd,{c,h}pp to Poly2VdConverter? or to something better? Poly2VdConverter
+  is not very appropriate
 
 FIXED ISSUES
 ============

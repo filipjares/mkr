@@ -83,15 +83,20 @@ yet how to set up the CMake in order to build them together)
                 rosmake
   This produces the binaries in the bin/ directory. NOTE: In order for this
   to be successful, the directory that contains this repository has to be
-  named accordingly to the name of the package (mentioned in manifest.xml
-  and elsewhere) which is (silly, I know) just `project'.
+  named accordingly (does it really?) to the name of the package (mentioned
+  in manifest.xml and elsewhere) which is (silly, I know) just `project'.
+  I'm not sure about this, maybe you just have to avoid some characters like
+  the dash in the name of the project, I just know that 'MKR-cviceni' is not
+  valid...
 
 RUN THE CODE
 ============
 
 In order to run the code (listener binary) together with roscore, Rviz and
 Stage, you have to run
-                roslaunch project node.launch 
+                roslaunch <package-name> node.launch 
+where <package-name> is name of the directory that contains copy of this
+repository (`project').
 
 
 RUNNING STANDALONE VRONI
