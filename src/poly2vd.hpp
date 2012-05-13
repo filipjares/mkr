@@ -57,12 +57,6 @@ public:
 	void convert();
 
 #ifndef POLY2VD_WITHOUT_ROS
-	// FIXME: remove?
-	void publish_root(ros::Publisher & marker_pub, const coord & start, const std::string & frame_id, double duration);
-	
-	// FIXME: remove?
-	void publish_wmat_deg2_nodes(ros::Publisher & marker_pub, const std::string & frame_id, double duration);
-
 	void doTheSearch(const coord & start, ros::Publisher & marker_pub, const std::string & frame_id, double duration);
 #endif
 	void exportVdToDot(const std::string &fileName, bool shuffle, bool shrink);

@@ -250,144 +250,6 @@ static void publish_input_data(ros::Publisher & marker_pub, std::string frame_id
 	marker_pub.publish(frontier_marker);
 }
 
-/* e - edge id */
-static void publishCriticalNodeCandidateIfAppropriate(int e, std::list<int> & usedNodes, ros::Publisher & marker_pub, std::string frame_id, double duration, bool printIt)
-{
-	int n1 = GetStartNode(e);
-	int n2 = GetEndNode(e);
-
-	// are the end-nodes connecting this WMAT Edge (e) with just one other WMAT Edge?
-	bool isN1Deg2 = VroniUtils::isDeg2WmatNode(n1); // IsDeg2Node(n1);
-	bool isN2Deg2 = VroniUtils::isDeg2WmatNode(n2); // IsDeg2Node(n2);
-
-	// only degree 2 nodes are critical point candidates
-	if (!isN1Deg2 && !isN2Deg2) {
-		return;
-	}
-
-	coord c1, c2; double r1, r2;
-	GetNodeData(n1, &c1, &r1);
-	GetNodeData(n2, &c2, &r2);
-
-	// FIXME: VRONI does not have VD nodes with degree higher than 3. Nodes
-	// of higher degree are represented by multiple nodes of maximum
-	// degree 3 located at the same position and iterconnected together.
-	// Have to cope with that... For now, I am pretending there are no such
-	// connected nodes.
-
-	// critical point candidate has to be local minimum
-	if (VroniUtils::contrastCompare(r1, r2) == 0) {
-		return;
-	}
-
-	bool hasNeighbourOfDeg3 = false;
-	int candidate;
-	coord c_candidate;
-	double r_candidate;
-
-	// the one with smaller clearance radius is the candidate
-	if (VroniUtils::contrastCompare(r1, r2) < 0) {
-		// the candidate is degree 3 -> not a critical point
-		if (!isN1Deg2) {
-			return;
-		}
-		// clearance radius has to be positive
-		if (r1 == 0) {
-			return;
-		}
-		if (!isN2Deg2) {
-			hasNeighbourOfDeg3 = true;
-		}
-		candidate = n1;
-		r_candidate = r1;
-		c_candidate = c1;
-	} else {
-		// the candidate is degree 3 -> not a critical point
-		if (!isN2Deg2) {
-			return;
-		}
-		// clearance radius has to be positive
-		if (r2 == 0) {
-			return;
-		}
-		if (!isN1Deg2) {
-			hasNeighbourOfDeg3 = true;
-		}
-		candidate = n2;
-		r_candidate = r2;
-		c_candidate = c2;
-	}
-
-	coord c_ccw, c_cw; double r_ccw, r_cw;
-
-	// Note: e_ccw and e_cw are not neccessarily equal now.  Even though the
-	// candidate node is has WMAT degree of 2, its VD degree may be higher.
-
-	int e_ccw = GetCCWEdge(e,candidate);
-	int e_cw = GetCWEdge(e,candidate);
-
-	if (IsWmatEdge(e_ccw)) {
-		assert(e_ccw == e_cw || !IsWmatEdge(e_cw));
-
-		int n_ccw = GetOtherNode(e_ccw, candidate);
-		GetNodeData(n_ccw, &c_ccw, &r_ccw);
-		// clearance radii of all the neighbours have to be greater than ours
-		if (r_candidate >= r_ccw) {
-			return;
-		}
-		if (!IsDeg2Node(n_ccw)) {
-			hasNeighbourOfDeg3 = true;
-		}
-		if (VroniUtils::areCoordsEqual(c_candidate, c_ccw)) {
-			using namespace std;
-			cout << "The candidate (" << candidate << ") and node related to it through "
-				<< "e_ccw have the same coords: " << VroniUtils::coordToString(c_candidate) << endl;
-		}
-	}
-
-	if (IsWmatEdge(e_cw)) {
-		assert(e_ccw == e_cw || !IsWmatEdge(e_ccw));
-
-		int n_cw = GetOtherNode(e_cw, candidate);
-		GetNodeData(n_cw, &c_cw, &r_cw);
-		// clearance radii of all neighbours have to be greater than ours
-		if (r_candidate >= r_cw) {
-			return;
-		}
-		if (!IsDeg2Node(n_cw)) {
-			hasNeighbourOfDeg3 = true;
-		}
-		if (VroniUtils::areCoordsEqual(c_candidate, c_cw)) {
-			using namespace std;
-			cout << "The candidate (" << candidate << ") and node related to it through "
-				<< "e_cw have the same coords: " << VroniUtils::coordToString(c_candidate) << endl;
-		}
-	}
-
-	// candidate node has to have neighbour of degree 3
-	if (!hasNeighbourOfDeg3) {
-		return;
-	}
-
-	// All right. Our candidate node is a true critical node!
-
-	if (!contains(usedNodes, candidate)) {
-		VdPublisher vdPub(marker_pub, frame_id, duration);
-		vdPub.publishSphere(candidate, c_candidate, r_candidate, Color::BLUE);
-		usedNodes.push_back(candidate);
-
-		using namespace std;
-
-		if (printIt) {
-			cout << setw(4) << right << candidate << ": " << VroniUtils::coordToString(c_candidate)
-				<< " (" << fixed << setprecision(3) << r_candidate << ")"
-				<< ":\t"
-				<< endl;
-			// TODO
-		}
-	}
-}
-
 // FIXME: use VRONI's definition
 #define  ZERO      1.0e-13   /* small number, greater than machine precision */
 
@@ -979,49 +841,6 @@ void Poly2VdConverter::doTheSearch(const coord & start, ros::Publisher & marker_
 	vdPub.publishCriticalNodes(criticalNodes);
 }
 
-// FIXME: remove?
-void Poly2VdConverter::publish_wmat_deg2_nodes(ros::Publisher & marker_pub, const std::string & frame_id, double duration)
-{
-	static int printed = 0;
-	bool printIt = (printed % 20 == 0);
-
-	using namespace std;
-	using namespace visualization_msgs;
-
-	list<int> usedNodes;
-
-	for (int e = 0;  e < GetNumberOfEdges(); e++) {
-		if (!IsWmatEdge(e)) {
-			continue;
-		}
-
-		publishCriticalNodeCandidateIfAppropriate(e, usedNodes, marker_pub, frame_id, duration, printIt);
-	}
-
-	if (printIt) {
-		cout << "publishing " << usedNodes.size() << " critical nodes: ";
-		list<int>::iterator it;
-		for (it = usedNodes.begin(); it != usedNodes.end(); it++) {
-			cout << *it << ", ";
-		}
-		cout << endl;
-	}
-	printed++;
-}
-
-// FIXME: remove?
-void Poly2VdConverter::publish_root(ros::Publisher & marker_pub, const coord & start, const std::string & frame_id, double duration)
-{
-	int root = getRootNode(start);
-	rootNode = root;
-//	ROS_INFO("root: %d", root);
-	// publish the root node as red sphere
-	coord c; double r;
-	GetNodeData(root, &c, &r);
-	VdPublisher vdPub(marker_pub, frame_id, duration);
-	vdPub.publishSphere(root, c, 0.05, Color::RED);
-}
-
 /* Sends single message with input and output data */
 void publish_result( int argc, char *argv[], Poly2VdConverter & p2vd )
 {
@@ -1041,7 +860,6 @@ void publish_result( int argc, char *argv[], Poly2VdConverter & p2vd )
 	{
 		// publish both input segments and output wmat data
 		publish_input_data(marker_pub, "/odom", 5.0);
-		p2vd.publish_wmat_deg2_nodes(marker_pub, "/odom", 5.0);
 		p2vd.doTheSearch(start, marker_pub, "/odom", 5.0);
 
 		r.sleep();
