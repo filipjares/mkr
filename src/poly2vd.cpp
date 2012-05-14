@@ -801,7 +801,7 @@ int getRootNode(const coord & p)
 	return root;
 }
 
-void Poly2VdConverter::doTheSearch(const coord & start)
+void Poly2VdConverter::findCriticalNodes(const coord & start)
 {
 	assert(state == VD_READY);
 	using namespace std;
@@ -874,7 +874,8 @@ void publish_result( int argc, char *argv[], Poly2VdConverter & p2vd )
 	{
 		// publish both input segments and output wmat data
 		publish_input_data(marker_pub, "/odom", 5.0);
-		p2vd.doTheSearch(start);
+		p2vd.findCriticalNodes(start);
+		p2vd.publishResults();
 
 		r.sleep();
  	}

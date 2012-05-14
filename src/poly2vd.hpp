@@ -64,7 +64,7 @@ public:
 
 	void convert();
 
-	void doTheSearch(const coord & start);
+	void findCriticalNodes(const coord & start);
 #ifndef POLY2VD_WITHOUT_ROS
 	void publishResults();
 #endif
