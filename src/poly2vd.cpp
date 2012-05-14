@@ -854,6 +854,29 @@ void Poly2VdConverter::publishResults()
 	vdPub.publishCriticalNodes(criticalNodes);
 }
 
+/**
+ * Creates new instance of a vector of coords and returns pointer to
+ * that vector. You can call this method only after you called
+ * findCriticalNodes() for the current data set.
+ */
+std::vector<Node> * Poly2VdConverter::getCriticalNodes()
+{
+	assert(state == CRITICAL_POINTS_READY);
+
+	using std::vector;
+	using std::list;
+
+	vector<Node> * result = new vector<Node>();
+	result->reserve(criticalNodes.size());
+
+	for (std::list<int>::iterator it = criticalNodes.begin(); it != criticalNodes.end(); it++) {
+		Node criticalPoint(GetNodeCoord(*it), GetNodeParam(*it));
+		result->push_back(criticalPoint);
+	}
+
+	return result;
+}
+
 /* Sends single message with input and output data */
 void publish_result( int argc, char *argv[], Poly2VdConverter & p2vd )
 {

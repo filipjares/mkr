@@ -18,6 +18,7 @@
 #define  GRAPH_META_H_INC
 
 #include "VroniUtils.hpp"
+#include <list>
 
 namespace poly2vd {
 

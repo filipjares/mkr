@@ -25,6 +25,11 @@
 
 #endif
 
+/* ********************** std includes ******************************* */
+
+#include <list>
+#include <vector>
+
 /* ********************** Poly2VdConverter includes ****************** */
 
 #include "GraphMeta.hpp"
@@ -33,6 +38,13 @@
 /* ********************** Poly2VdConverter class ********************* */
 
 namespace poly2vd {
+
+struct Node
+{
+	coord location;
+	double radius;
+	Node(const coord & c, double r): location(c.x, c.y), radius(r) {}
+};
 
 class Poly2VdConverter
 {
@@ -65,6 +77,8 @@ public:
 	void convert();
 
 	void findCriticalNodes(const coord & start);
+
+	std::vector<Node> * getCriticalNodes();
 #ifndef POLY2VD_WITHOUT_ROS
 	void publishResults();
 #endif
