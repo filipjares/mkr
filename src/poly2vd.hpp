@@ -37,33 +37,42 @@ namespace poly2vd {
 class Poly2VdConverter
 {
 private:
-	bool input_prepared;
-	
+
+	enum {
+		NO_INPUT,
+		INPUT_PREPARED,
+		VD_READY,
+		CRITICAL_POINTS_READY
+	} state;
+
 	int rootNode;
-	// TODO:
-	bool result_ready;
 
 	std::list<int> criticalNodes;
+
+	VdPublisher vdPub;
 
 public:
 	Poly2VdConverter();
 
 	~Poly2VdConverter();
-
+#ifndef POLY2VD_WITHOUT_ROS
+	void usePublisher(const ros::Publisher * marker_pub, const std::string & frame_id, double duration);
+#endif
 	void prepareNewInput(in_segs * segs, unsigned int size);
 
 	void prepareNewInput(char * const fileName);
 
 	void convert();
 
+	void doTheSearch(const coord & start);
 #ifndef POLY2VD_WITHOUT_ROS
-	void doTheSearch(const coord & start, ros::Publisher & marker_pub, const std::string & frame_id, double duration);
+	void publishResults();
 #endif
 	void exportVdToDot(const std::string &fileName, bool shuffle, bool shrink);
 
 private:
-	void addTheOtherNodeIfAppropriate(int edge, int sourceNode, GraphMeta & graph, VdPublisher & vdPub);
-	void exploreCriticalNodesOnPath(int goalNode, GraphMeta & graph, VdPublisher & vdPub);
+	void addTheOtherNodeIfAppropriate(int edge, int sourceNode, GraphMeta & graph);
+	void exploreCriticalNodesOnPath(int goalNode, GraphMeta & graph);
 };
 
 }        /* ----- namespace poly2vd ----- */

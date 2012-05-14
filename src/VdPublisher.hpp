@@ -33,9 +33,11 @@ namespace poly2vd {
 class VdPublisher
 {
 private:
-	const ros::Publisher & marker_pub;
+	const ros::Publisher * marker_pub;
 	std::string frame_id;
 	double duration;
+
+	bool initialized;
 
 	//  line segment markers
 	/// non-frontier WMAT edges
@@ -45,29 +47,33 @@ private:
 	/// edges representing paths leading (from the root node direction) to frontier nodes
 	visualization_msgs::Marker path_marker;
 public:
-	VdPublisher(const ros::Publisher & _marker_pub, const std::string & _frame_id, double _duration): marker_pub(_marker_pub), frame_id(_frame_id), duration(_duration)
+	/**
+	 * Creates an instance of VdPublisher that is not ready for
+	 * publication; to publish anything, the init() method has
+	 * to be called first. Calling publish...() methods on an
+	 * uninitialized VdPublisher is a no-op.
+	 */
+	VdPublisher()
 	{
+		initialized = false;
+
 		// prepare Markers for both "ordinary" (non-frontier based)...
-		wmat_marker.header.frame_id = frame_id;
 		wmat_marker.header.stamp = ros::Time::now();
 		wmat_marker.ns = "wmat";
 		wmat_marker.action = visualization_msgs::Marker::ADD;
 		wmat_marker.pose.orientation.w = 1.0;
 		wmat_marker.id = 0;
-		wmat_marker.lifetime = ros::Duration(duration);
 		wmat_marker.type = visualization_msgs::Marker::LINE_LIST;
 		wmat_marker.scale.x = VdPublisher::RVIZ_EDGES_WIDTH;
 		wmat_marker.color.g = 1.0f;
 		wmat_marker.color.a = 1.0;
 
 		// ... and frontier-based edges
-		wmat_f_marker.header.frame_id = frame_id;
 		wmat_f_marker.header.stamp = ros::Time::now();
 		wmat_f_marker.ns = "wmatF";
 		wmat_f_marker.action = visualization_msgs::Marker::ADD;
 		wmat_f_marker.pose.orientation.w = 1.0;
 		wmat_f_marker.id = 0;
-		wmat_f_marker.lifetime = ros::Duration(duration);
 		wmat_f_marker.type = visualization_msgs::Marker::LINE_LIST;
 		wmat_f_marker.scale.x = VdPublisher::RVIZ_EDGES_WIDTH;
 		wmat_f_marker.color.g = 0.5f;
@@ -75,13 +81,11 @@ public:
 		wmat_f_marker.color.a = 1.0;
 
 		// prepare path marker
-		path_marker.header.frame_id = frame_id;
 		path_marker.header.stamp = ros::Time::now();
 		path_marker.ns = "wmat_paths";
 		path_marker.action = visualization_msgs::Marker::ADD;
 		path_marker.pose.orientation.w = 1.0;
 		path_marker.id = 0;
-		path_marker.lifetime = ros::Duration(duration);
 		path_marker.type = visualization_msgs::Marker::LINE_LIST;
 		path_marker.scale.x = VdPublisher::RVIZ_EDGES_WIDTH;
 		path_marker.color.r = 1.0f;
@@ -90,9 +94,30 @@ public:
 		path_marker.color.a = 1.0;
 	}
 
+	/**
+	 * Performs a setup needed to publish the data.
+	 */
+	void init(const ros::Publisher * marker_pub, const std::string & frame_id, double duration)
+    {
+		this->marker_pub = marker_pub;
+		this->frame_id = frame_id;
+		this->duration = duration;
+
+		wmat_marker.header.frame_id = frame_id;
+		wmat_f_marker.header.frame_id = frame_id;
+		path_marker.header.frame_id = frame_id;
+		wmat_marker.lifetime = ros::Duration(duration);
+		wmat_f_marker.lifetime = ros::Duration(duration);
+		path_marker.lifetime = ros::Duration(duration);
+
+		initialized = true;
+    }
+
 	/** Publishes the specified critical node as a sphere immediately */
 	void publishCriticalNodes(std::list<int> & criticalNodes)
 	{
+		if (!initialized) return;
+
 		std::list<int>::iterator it;
 		for (it = criticalNodes.begin(); it != criticalNodes.end(); it++) {
 			int n = *it;
@@ -103,12 +128,16 @@ public:
 	/** Publishes the specified sphere immediately */
 	void publishSphere(int id, coord location, double diameter, Color color)
 	{
+		// initialized has to be true, it is checked in the publishPoint() method
+
 		publishPoint(id, visualization_msgs::Marker::SPHERE, location, diameter, color);
 	}
 
 	/** Publishes the specified point marker immediately */
 	void publishPoint(int id, int32_t type, coord location, double diameter, Color color)
 	{
+		if (!initialized) return;
+
 		// prepare the Marker
 		visualization_msgs::Marker marker;
 		marker.header.frame_id = frame_id;
@@ -128,7 +157,18 @@ public:
 		marker.color.a = color.a;
 
 		// publish it using given publisher
-		marker_pub.publish(marker);
+		marker_pub->publish(marker);
+	}
+
+	/**
+	 * Removes the data stored (by appendEdge(int) and
+	 * appendPath(int, GraphMeta &)) during the previous use.
+	 */
+	void clear()
+	{
+		wmat_marker.points.clear();
+		wmat_f_marker.points.clear();
+		path_marker.points.clear();
 	}
 
 	/**
@@ -197,9 +237,11 @@ public:
 	/** Publishes Vroni's edges */
 	void publishEdges()
 	{
-		marker_pub.publish(wmat_marker);
-		marker_pub.publish(wmat_f_marker);
-		marker_pub.publish(path_marker);
+		if (!initialized) { std::cout << "uninit" << std::endl; return; }
+
+		marker_pub->publish(wmat_marker);
+		marker_pub->publish(wmat_f_marker);
+		marker_pub->publish(path_marker);
 	}
 
 	/* *****************************************************************

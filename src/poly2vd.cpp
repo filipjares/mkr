@@ -54,7 +54,7 @@ namespace poly2vd {
 Poly2VdConverter::Poly2VdConverter()
 {
 	API_InitializeProgram();
-	input_prepared = false;
+	state = NO_INPUT;
 }
 
 Poly2VdConverter::~Poly2VdConverter()
@@ -65,6 +65,11 @@ Poly2VdConverter::~Poly2VdConverter()
 /* ******************************************************************* */
 /* ********************** Public methods ***************************** */
 /* ******************************************************************* */
+
+void Poly2VdConverter::usePublisher(const ros::Publisher * marker_pub, const std::string & frame_id, double duration)
+{
+	vdPub.init(marker_pub, frame_id, duration);
+}
 
 void Poly2VdConverter::prepareNewInput(in_segs * segs, unsigned int size)
 {
@@ -81,7 +86,7 @@ void Poly2VdConverter::prepareNewInput(in_segs * segs, unsigned int size)
 	// new_input == false means nothing but no input data
 
 	// now, client code can call convert();
-	input_prepared = true;
+	state = INPUT_PREPARED;
 }
 
 void Poly2VdConverter::prepareNewInput(char * const inputFileName)
@@ -92,12 +97,12 @@ void Poly2VdConverter::prepareNewInput(char * const inputFileName)
 	API_FileInput(inputFileName, &input_ok);
 
 	// Vroni calls exit() on error, nothing to check here :-(
-	input_prepared = true;
+	state = INPUT_PREPARED;
 }
 
 void Poly2VdConverter::convert()
 {
-	assert(input_prepared);
+	assert(state == INPUT_PREPARED);
 
 	char emptyString[] = "";
 	API_ComputeVD(
@@ -151,7 +156,7 @@ void Poly2VdConverter::convert()
 	// char o_file[] = "/tmp/my_ma_output.txt";
 	// API_OutputMA(o_file);
 	
-	input_prepared = false;
+	state = VD_READY;
 }
 
 /* ******************************************************************* */
@@ -352,7 +357,7 @@ bool testNForBeingFuzzyMinimum(int n, int e1, int n1)
  * Another implicit criterion for the critical node is that its clearance radius
  * it has to have positive (non-zero) clearance radius.
  */
-bool examineNode(int n, GraphMeta & graph, VdPublisher & vdPub)
+bool examineNode(int n, GraphMeta & graph)
 {
 	using visualization_msgs::Marker;
 
@@ -449,7 +454,7 @@ bool examineNode(int n, GraphMeta & graph, VdPublisher & vdPub)
 	return true;
 }
 
-void Poly2VdConverter::exploreCriticalNodesOnPath(int goalNode, GraphMeta & graph, VdPublisher & vdPub)
+void Poly2VdConverter::exploreCriticalNodesOnPath(int goalNode, GraphMeta & graph)
 {
 	int prevEdge;
 	int n = goalNode;
@@ -463,7 +468,7 @@ void Poly2VdConverter::exploreCriticalNodesOnPath(int goalNode, GraphMeta & grap
 		graph.setFrontierBoundaryNode(prevEdge, goalNode);
 
 		// examine node n for being a critical node
-		criticalNodeFound = examineNode(n, graph, vdPub);
+		criticalNodeFound = examineNode(n, graph);
 		// std::cout << "Node " << n << " is " << (criticalNodeFound?"":"NOT ")
 		// 	<< "a critical node." << std::endl;
 		if (criticalNodeFound) {
@@ -525,7 +530,7 @@ void experimentallyMarkTheNode(int n, VdPublisher & vdPub)
 	}
 }
 
-void Poly2VdConverter::addTheOtherNodeIfAppropriate(int edge, int sourceNode, GraphMeta & graph, VdPublisher & vdPub)
+void Poly2VdConverter::addTheOtherNodeIfAppropriate(int edge, int sourceNode, GraphMeta & graph)
 {
 	int otherNode = GetOtherNode(edge, sourceNode);
 	if (IsWmatEdge(edge)) {
@@ -541,7 +546,7 @@ void Poly2VdConverter::addTheOtherNodeIfAppropriate(int edge, int sourceNode, Gr
 			} else {
 				if (VroniUtils::isFrontierBasedEdge(edge)) {
 					status = FRONTIER;
-					exploreCriticalNodesOnPath(sourceNode, graph, vdPub);
+					exploreCriticalNodesOnPath(sourceNode, graph);
 					vdPub.publishSphere(sourceNode, GetNodeCoord(sourceNode), GetNodeParam(sourceNode)/2.0, Color::BLUE);
 					// vdPub.appendPath(sourceNode, graph);
 				} else {
@@ -796,46 +801,54 @@ int getRootNode(const coord & p)
 	return root;
 }
 
-void Poly2VdConverter::doTheSearch(const coord & start, ros::Publisher & marker_pub, const std::string & frame_id, double duration)
+void Poly2VdConverter::doTheSearch(const coord & start)
 {
-	VdPublisher vdPub(marker_pub, frame_id, duration);
-
+	assert(state == VD_READY);
 	using namespace std;
 
 	// get the rootNode
-	// int root = getRootNode(start);
-	int root = getNearestRootNode(start);	// FIXME: this is faster but is not correct
-	assert(root >= 0 && root < GetNumberOfNodes());
-
-	// publish the root node as red sphere
-	coord c; double r;
-	GetNodeData(root, &c, &r);
-	vdPub.publishSphere(root, c, 0.01, Color::RED);
+	// int rootNode = getRootNode(start);
+	rootNode = getNearestRootNode(start);	// FIXME: this is faster but is not correct
+	assert(rootNode >= 0 && rootNode < GetNumberOfNodes());
 
 	// prepare open and closed "lists" and other graph metadata:
 	GraphMeta graph(GetNumberOfNodes(), GetNumberOfEdges());
 
-	graph.addToOpenList(root);
-	graph.setNodeClosed(root);
+	graph.addToOpenList(rootNode);
+	graph.setNodeClosed(rootNode);
 
 	// prepare the list of critical nodes (make it empty)
 	criticalNodes.clear();
+	// prepare the publisher, remove the data stored in the previous run
+	vdPub.clear();
 
-	// cout << "-------- root " << root << endl;
+	// cout << "-------- rootNode " << rootNode << endl;
 
 	while (!graph.isOpenListEmpty()) {
 		int n = graph.getFirstNodeFromOpenList();
 
 		// each Vroni's node has at most three incident edges
 		int e1 = GetIncidentEdge(n);				// get the first one
-		addTheOtherNodeIfAppropriate(e1, n, graph, vdPub);
+		addTheOtherNodeIfAppropriate(e1, n, graph);
 
 		int e_ccw = GetCCWEdge(e1, n);				// get the second one
-		addTheOtherNodeIfAppropriate(e_ccw, n, graph, vdPub);
+		addTheOtherNodeIfAppropriate(e_ccw, n, graph);
 
 		int e_cw = GetCWEdge(e1, n);
-		if (e_cw != e_ccw) addTheOtherNodeIfAppropriate(e_cw, n, graph, vdPub);
+		if (e_cw != e_ccw) addTheOtherNodeIfAppropriate(e_cw, n, graph);
 	}
+
+	state = CRITICAL_POINTS_READY;
+}
+
+void Poly2VdConverter::publishResults()
+{
+	assert(state == CRITICAL_POINTS_READY);
+
+	// publish the rootNode node as red sphere
+	coord c; double r;
+	GetNodeData(rootNode, &c, &r);
+	vdPub.publishSphere(rootNode, c, 0.01, Color::RED);
 
 	vdPub.publishEdges();
 	vdPub.publishCriticalNodes(criticalNodes);
@@ -853,6 +866,7 @@ void publish_result( int argc, char *argv[], Poly2VdConverter & p2vd )
 	ros::init(argc, argv, "poly2vd");
 	ros::NodeHandle n;
 	ros::Publisher marker_pub = n.advertise<visualization_msgs::Marker>("visualization_marker", 10);
+	p2vd.usePublisher(&marker_pub, "/odom", 5.0);
 
 	ros::Rate r(1);
 
@@ -860,7 +874,7 @@ void publish_result( int argc, char *argv[], Poly2VdConverter & p2vd )
 	{
 		// publish both input segments and output wmat data
 		publish_input_data(marker_pub, "/odom", 5.0);
-		p2vd.doTheSearch(start, marker_pub, "/odom", 5.0);
+		p2vd.doTheSearch(start);
 
 		r.sleep();
  	}

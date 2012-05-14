@@ -479,6 +479,7 @@ int main(int argc, char **argv) {
 		<< "too big to be processed by graphviz." << std::endl << std::endl;
 
 	poly2vd::Poly2VdConverter poly2vd;	// Vroni based polygons -> VD converter
+	poly2vd.usePublisher(&marker_pub, "/odom", 2.5);
 	
 	ros::Rate r(0.5); // hz
 	while (ros::ok()) {
@@ -521,7 +522,8 @@ int main(int argc, char **argv) {
 			start.x = p.x / CM;
 			start.y = p.y / CM;
 			// poly2vd.publish_root(marker_pub, start, "/odom", 2.0);
-			poly2vd.doTheSearch(start, marker_pub, "/odom", 2.5);
+			poly2vd.doTheSearch(start);
+			poly2vd.publishResults();
 		}
 
 		// if key pressed, export Voronoi diagram to DOT file in /tmp/
