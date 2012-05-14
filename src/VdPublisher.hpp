@@ -58,7 +58,7 @@ public:
 		initialized = false;
 
 		// prepare Markers for both "ordinary" (non-frontier based)...
-		wmat_marker.header.stamp = ros::Time::now();
+		wmat_marker.header.stamp = ros::Time();
 		wmat_marker.ns = "wmat";
 		wmat_marker.action = visualization_msgs::Marker::ADD;
 		wmat_marker.pose.orientation.w = 1.0;
@@ -69,7 +69,7 @@ public:
 		wmat_marker.color.a = 1.0;
 
 		// ... and frontier-based edges
-		wmat_f_marker.header.stamp = ros::Time::now();
+		wmat_f_marker.header.stamp = ros::Time();
 		wmat_f_marker.ns = "wmatF";
 		wmat_f_marker.action = visualization_msgs::Marker::ADD;
 		wmat_f_marker.pose.orientation.w = 1.0;
@@ -81,7 +81,7 @@ public:
 		wmat_f_marker.color.a = 1.0;
 
 		// prepare path marker
-		path_marker.header.stamp = ros::Time::now();
+		path_marker.header.stamp = ros::Time();
 		path_marker.ns = "wmat_paths";
 		path_marker.action = visualization_msgs::Marker::ADD;
 		path_marker.pose.orientation.w = 1.0;
