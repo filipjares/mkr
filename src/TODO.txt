@@ -54,6 +54,8 @@ TODO
 - rename project to something better than `project'
 - rename poly2vd,{c,h}pp to Poly2VdConverter? or to something better? Poly2VdConverter
   is not very appropriate
+- change to ReadSiteData() in Vroni probably corrupted reading of other formats,
+  check it and fix it
 
 FIXED ISSUES
 ============

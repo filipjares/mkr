@@ -4,6 +4,41 @@
 * Author:    Tomas Juchelka
 */
 
+/**
+ * @mainpage
+ *
+ * @section About About the project
+ *
+ * <p>
+ *     This project contains
+ *     a demonstration of two algorithms bundled together in
+ *     the "listener" binary. The first one handles fusion
+ *     of polygons obtained from range-finder sensors and
+ *     builds a polygonal map. The second algorithm searches
+ *     for "critical points" in this map.
+ * </p>
+ *
+ * <p>
+ *     Fusion of polygons is based on the
+ *     <a href="http://angusj.com/delphi/clipper.php">Clipper
+ *     library</a>. Search for "critical points" is performed
+ *     on top of medial axis obtained from the polygonal map
+ *     by using the <a href="http://www.cosy.sbg.ac.at/~held/projects/vroni/vroni.html">Vroni
+ *     library</a>. The use of the Vroni library and the
+ *     algorithm for the search of critical nodes is
+ *     encapsulated in the poly2vd::Poly2VdConverter class.
+ * </p>
+ *
+ * <p>
+ *     Criteria that our "critical point" has to satisfy are
+ *     described in the article
+ *     <a href="http://www.informatik.uni-freiburg.de/~wurm/papers/wurm08iros.pdf">Coordinated multi-robot
+ *     exploration using a segmentation of the environment</a>
+ *     by Wurm, Stachniss and Burgard.
+ * </p>
+ *
+ * */
+
 #include "poly2vd.hpp" // has to be included first because of the ZERO macro
 #include "listener.h"
 #include "VdPublisher.hpp"	// because of VdPublisher::RVIZ_EDGES_WIDTH
