@@ -16,15 +16,13 @@ Faculty of Electrical Engineering) from fall/winter 2011/2012.
 For information on about how to build and run the project, please see the
 HOWTO.txt file.
 
-- Brief description of used source files is in ...
-- Implementation description
-
-Below you can see list of used libraries and frameworks and directory tree
-description.
+The rest of the file contains list of used libraries and frameworks and
+directory tree description.
 
 Authors:
     Filip Jares jaresfil@fel.cvut.cz
     Tomas Juchelka  juchetom@fel.cvut.cz
+
 
 LIBRARIES, CODE AND FRAMEWORKS USED
 ===================================
@@ -45,6 +43,7 @@ ROS                 http://www.ros.org/
 
     Robot Operating System -- software framework for robot software
     development. It was used for demonstration and visualization.
+
 
 DIRECTORY STRUCTURE:
 ====================
